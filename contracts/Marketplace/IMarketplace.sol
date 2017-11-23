@@ -3,7 +3,7 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 import "./../IPausable.sol";
 
-contract IMarketplaceImpl is IOwnableUpgradeableImplementation, IPausable {
+contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 
     event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
 

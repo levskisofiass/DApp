@@ -1,7 +1,7 @@
 const web3 = require("web3");
 const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol");
-const MarketplaceImpl = artifacts.require("./Marketplace/MarketplaceImpl.sol");
-const IMarketplaceImpl = artifacts.require("./Marketplace/IMarketplaceImpl.sol");
+const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
+const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
 const expectThrow = util.expectThrow;
@@ -26,9 +26,9 @@ contract('Marketplace', function (accounts) {
 
 	describe("creating marketplace proxy", () => {
 		beforeEach(async function () {
-			impl = await MarketplaceImpl.new();
+			impl = await Marketplace.new();
 			proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplaceImpl.at(proxy.address);
+      marketplaceContract = await IMarketplace.at(proxy.address);
       await marketplaceContract.init();
 		});
 
@@ -40,9 +40,9 @@ contract('Marketplace', function (accounts) {
 
 	describe("create new Marketplace", () => {
     beforeEach(async function () {
-      impl = await MarketplaceImpl.new();
+      impl = await Marketplace.new();
       proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplaceImpl.at(proxy.address);
+      marketplaceContract = await IMarketplace.at(proxy.address);
       await marketplaceContract.init();
     });
 
@@ -238,10 +238,10 @@ contract('Marketplace', function (accounts) {
 
 	describe("upgrade marketplace contract", () => {
 		beforeEach(async function () {
-			impl = await MarketplaceImpl.new();
-			impl2 = await MarketplaceImpl.new();
+			impl = await Marketplace.new();
+			impl2 = await Marketplace.new();
 			proxy = await MarketplaceProxy.new(impl.address);
-			marketplaceContract = await IMarketplaceImpl.at(proxy.address);
+			marketplaceContract = await IMarketplace.at(proxy.address);
 			await marketplaceContract.init();
 		});
 

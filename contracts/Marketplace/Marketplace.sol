@@ -1,10 +1,10 @@
 pragma solidity ^0.4.17;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
-import "./IMarketplaceImpl.sol";
+import "./IMarketplace.sol";
 import "./../Pausable.sol";
 
-contract MarketplaceImpl is IMarketplaceImpl, OwnableUpgradeableImplementation, Pausable {
+contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
 
     struct Marketplace {
         address adminAddress;
