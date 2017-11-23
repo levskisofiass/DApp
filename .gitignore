@@ -1,0 +1,9 @@
+node_modules
+build
+dist
+liferay-theme.json
+.web_bundle_build
+.yo-rc.json
+.DS_Store
+.idea
+config.json
