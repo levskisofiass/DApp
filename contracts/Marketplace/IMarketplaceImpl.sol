@@ -1,14 +1,24 @@
 pragma solidity ^0.4.17;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
+import "./../IPausable.sol";
 
-contract IMarketplaceImpl is OwnableUpgradeableImplementation, Pausable {
+contract IMarketplaceImpl is IOwnableUpgradeableImplementation, IPausable {
 
-	function createMarketplace(
+    event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
+
+    function createMarketplace(
 		bytes32 _marketplaceId,
-		bytes _url,
-		bytes _propertyAPI,
-		bytes _disputeAPI,
+		bytes32 _url,
+		bytes32 _propertyAPI,
+		bytes32 _disputeAPI,
 		address _exchangeContractAddress
-	) public onlyInactive(_marketplaceId) whenNotPaused returns(bool success);
+	) public returns(bool success);
+
+    function marketplacesCount() public constant returns(uint);
+
+    function getMarketplace(bytes32 marketplaceId) public constant
+        returns(address, bytes32, bytes32, bytes32, address, uint, bool, bool);
+
+    function getMarketplaceId(uint index) public constant returns(bytes32);
 }

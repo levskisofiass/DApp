@@ -8,9 +8,9 @@ contract MarketplaceImpl is IMarketplaceImpl, OwnableUpgradeableImplementation, 
 
     struct Marketplace {
         address adminAddress;
-        bytes url;
-        bytes propertyAPI;
-        bytes disputeAPI;
+        bytes32 url;
+        bytes32 propertyAPI;
+        bytes32 disputeAPI;
         address exchangeContractAddress;
         uint marketplaceArrayIndex;
         bool isApproved;
@@ -20,9 +20,9 @@ contract MarketplaceImpl is IMarketplaceImpl, OwnableUpgradeableImplementation, 
     bytes32[] public marketplaceIds;
     mapping (bytes32 => Marketplace) public marketplaces;
 
-	bool isApprovalPolicyActive;
+	bool approveOnCreation;
 
-	event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes url);
+	event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
 
 	uint public rate;
 
@@ -46,14 +46,43 @@ contract MarketplaceImpl is IMarketplaceImpl, OwnableUpgradeableImplementation, 
         _;
     }
 
+    function marketplacesCount() public constant returns(uint) {
+        return marketplaceIds.length;
+    }
+
+    function getMarketplace(bytes32 marketplaceId) public constant
+        returns(address, bytes32, bytes32, bytes32, address, uint, bool, bool)
+    {
+        Marketplace storage m = marketplaces[marketplaceId];
+        return (
+            m.adminAddress,
+            m.url,
+            m.propertyAPI,
+            m.disputeAPI,
+            m.exchangeContractAddress,
+            m.marketplaceArrayIndex,
+            m.isApproved,
+            m.isActive
+        );
+    }
+
+    function getMarketplaceId(uint index) public constant returns(bytes32) {
+        return marketplaceIds[index];
+    }
+
 	function createMarketplace(
 		bytes32 _marketplaceId, 
-		bytes _url, 
-		bytes _propertyAPI, 
-		bytes _disputeAPI, 
+		bytes32 _url,
+		bytes32 _propertyAPI,
+		bytes32 _disputeAPI,
 		address _exchangeContractAddress
 		) public onlyInactive(_marketplaceId) whenNotPaused returns(bool success)
 	{
+        require(_exchangeContractAddress != address(0));
+        require(_url != "");
+        require(_propertyAPI != "");
+        require(_disputeAPI != "");
+
 		marketplaces[_marketplaceId] = Marketplace({
         	adminAddress: msg.sender,
 			url: _url,
@@ -61,7 +90,7 @@ contract MarketplaceImpl is IMarketplaceImpl, OwnableUpgradeableImplementation, 
         	disputeAPI: _disputeAPI,
          	exchangeContractAddress: _exchangeContractAddress,
         	marketplaceArrayIndex: marketplaceIds.length,
-        	isApproved: !isApprovalPolicyActive,
+        	isApproved: approveOnCreation,
 			isActive: true
         });
 
