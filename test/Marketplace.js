@@ -29,7 +29,7 @@ contract('Marketplace', function (accounts) {
 			impl = await MarketplaceImpl.new();
 			proxy = await MarketplaceProxy.new(impl.address);
       marketplaceContract = await IMarketplaceImpl.at(proxy.address);
-      marketplaceContract.init();
+      await marketplaceContract.init();
 		});
 
 		it("should get the owner of the first contract", async function () {
@@ -43,7 +43,7 @@ contract('Marketplace', function (accounts) {
       impl = await MarketplaceImpl.new();
       proxy = await MarketplaceProxy.new(impl.address);
       marketplaceContract = await IMarketplaceImpl.at(proxy.address);
-      marketplaceContract.init();
+      await marketplaceContract.init();
     });
 
     it("should create new marketplace", async () => {
@@ -242,7 +242,7 @@ contract('Marketplace', function (accounts) {
 			impl2 = await MarketplaceImpl.new();
 			proxy = await MarketplaceProxy.new(impl.address);
 			marketplaceContract = await IMarketplaceImpl.at(proxy.address);
-			marketplaceContract.init();
+			await marketplaceContract.init();
 		});
 
 		it("should upgrade contract from owner", async function () {
