@@ -112,8 +112,8 @@ contract('Marketplace', function (accounts) {
       assert.strictEqual(web3.utils.hexToAscii(result[3]), _disputeAPI, "The disputeAPI was not set correctly");
       assert.strictEqual(result[4], _exchangeContractAddress, "The exchange contract address was not set correctly");
       assert(result[5].eq(0), "The index array was not set correctly");
-      assert.isTrue(!result[6], "The reservation was approved");
-      assert.isTrue(result[7], "The reservation was not active");
+      assert.isTrue(!result[6], "The marketplace was approved");
+      assert.isTrue(result[7], "The marketplace was not active");
     });
 
     it("should append to the indexes array and set the last element correctly", async function() {
@@ -219,7 +219,7 @@ contract('Marketplace', function (accounts) {
       ));
     });
 
-    it("should emit event on reservation", async function() {
+    it("should emit event on marketplace creation", async function() {
       const expectedEvent = 'LogCreateMarketplace';
       let result = await marketplaceContract.createMarketplace(
           _marketplaceId,
@@ -232,6 +232,129 @@ contract('Marketplace', function (accounts) {
       );
 
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from marketplace creation!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
+  describe("approve Marketplace", () => {
+    beforeEach(async function () {
+      impl = await Marketplace.new();
+      proxy = await MarketplaceProxy.new(impl.address);
+      marketplaceContract = await IMarketplace.at(proxy.address);
+      await marketplaceContract.init();
+
+      await marketplaceContract.createMarketplace(
+          _marketplaceId,
+          _url,
+          _propertyAPI,
+          _disputeAPI,
+          _exchangeContractAddress, {
+            from: _marketplaceAdmin
+          }
+      );
+    });
+
+    it("should approve marketplace", async () => {
+      let approveResult = await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+      assert.isTrue(Boolean(approveResult.receipt.status), "The marketplace approval was not successful");
+      
+      let result = await marketplaceContract.getMarketplace(_marketplaceId);
+      assert.isTrue(result[6], "The marketplace was not approved");
+    });
+
+    it("should throw if not owner trying to approve marketplace", async function() {
+      await expectThrow(marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _notOwner
+        }));
+    });
+
+    it("should throw if trying to approve marketplace when paused", async function() {
+      await marketplaceContract.pause({from: _owner});
+
+      await expectThrow(marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }));
+    });
+
+    it("should emit event on marketplace approval", async function() {
+      const expectedEvent = 'LogApproveMarketplace';
+      let result = await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from marketplace approval!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
+  describe("reject Marketplace", () => {
+    beforeEach(async function () {
+      impl = await Marketplace.new();
+      proxy = await MarketplaceProxy.new(impl.address);
+      marketplaceContract = await IMarketplace.at(proxy.address);
+      await marketplaceContract.init();
+
+      await marketplaceContract.createMarketplace(
+          _marketplaceId,
+          _url,
+          _propertyAPI,
+          _disputeAPI,
+          _exchangeContractAddress, {
+            from: _marketplaceAdmin
+          }
+      );
+      await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+    });
+
+    it("should reject marketplace", async () => {
+      let rejectResult = await marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+      assert.isTrue(Boolean(rejectResult.receipt.status), "The marketplace rejection was not successful");
+      
+      let result = await marketplaceContract.getMarketplace(_marketplaceId);
+      assert.isTrue(!result[6], "The marketplace was not rejected");
+    });
+
+    it("should throw if not owner trying to reject marketplace", async function() {
+      await expectThrow(marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _notOwner
+        }));
+    });
+
+    it("should throw if trying to reject marketplace when paused", async function() {
+      await marketplaceContract.pause({from: _owner});
+
+      await expectThrow(marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }));
+    });
+
+    it("should emit event on marketplace rejection", async function() {
+      const expectedEvent = 'LogRejectMarketplace';
+      let result = await marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from marketplace approval!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
     });
   });
