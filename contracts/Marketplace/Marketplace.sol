@@ -24,6 +24,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
+	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
 
 	uint public rate;
 
@@ -52,7 +53,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     }
 
     function getMarketplace(bytes32 marketplaceId) public constant
-        returns(address, bytes32, bytes32, bytes32, address, uint, bool, bool)
+        returns(address adminAddress, bytes32 url, bytes32 propertyAPI, bytes32 disputeAPI, address exchangeContractAddress, uint marketplaceArrayIndex, bool isApproved, bool isActive)
     {
         MarketplaceStruct storage m = marketplaces[marketplaceId];
         return (
@@ -118,5 +119,23 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	    LogRejectMarketplace(_marketplaceId);
 
         return true;
+    }
+
+    function activateApprovalPolicy() public onlyOwner whenNotPaused returns(bool success) {
+        approveOnCreation = false;
+	    LogChangeApprovalPolicy(true);
+
+        return true;
+    }
+
+    function deactivateApprovalPolicy() public onlyOwner whenNotPaused returns(bool success) {
+        approveOnCreation = true;
+	    LogChangeApprovalPolicy(false);
+
+        return true;
+    }
+
+    function isApprovalPolicyActive() public constant returns(bool) {
+        return !approveOnCreation;
     }
 }

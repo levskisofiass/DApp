@@ -5,4 +5,5 @@ module.exports = async function(deployer) {
     await deployer.deploy(Marketplace);
     let MarketplaceInstance = await Marketplace.deployed();
     await deployer.deploy(MarketplaceProxy, MarketplaceInstance.address);   
+    await MarketplaceInstance.init();
 };
