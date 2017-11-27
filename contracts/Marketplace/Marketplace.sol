@@ -5,8 +5,7 @@ import "./IMarketplace.sol";
 import "./../Pausable.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
-
-    struct Marketplace {
+    struct MarketplaceStruct {
         address adminAddress;
         bytes32 url;
         bytes32 propertyAPI;
@@ -18,11 +17,13 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     }
 
     bytes32[] public marketplaceIds;
-    mapping (bytes32 => Marketplace) public marketplaces;
+    mapping (bytes32 => MarketplaceStruct) public marketplaces;
 
 	bool approveOnCreation;
 
 	event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
+	event LogApproveMarketplace(bytes32 marketplaceId);
+	event LogRejectMarketplace(bytes32 marketplaceId);
 
 	uint public rate;
 
@@ -53,7 +54,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     function getMarketplace(bytes32 marketplaceId) public constant
         returns(address, bytes32, bytes32, bytes32, address, uint, bool, bool)
     {
-        Marketplace storage m = marketplaces[marketplaceId];
+        MarketplaceStruct storage m = marketplaces[marketplaceId];
         return (
             m.adminAddress,
             m.url,
@@ -83,7 +84,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         require(_propertyAPI != "");
         require(_disputeAPI != "");
 
-		marketplaces[_marketplaceId] = Marketplace({
+		marketplaces[_marketplaceId] = MarketplaceStruct({
         	adminAddress: msg.sender,
 			url: _url,
         	propertyAPI: _propertyAPI,
@@ -98,4 +99,24 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         LogCreateMarketplace(_marketplaceId, msg.sender, _url);
 		return true;
 	}
+
+    function approveMarketplace(
+        bytes32 _marketplaceId
+        ) public onlyOwner onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+    {
+        marketplaces[_marketplaceId].isApproved = true;
+	    LogApproveMarketplace(_marketplaceId);
+
+        return true;
+    }
+
+    function rejectMarketplace(
+        bytes32 _marketplaceId
+        ) public onlyOwner onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+    {
+        marketplaces[_marketplaceId].isApproved = false;
+	    LogRejectMarketplace(_marketplaceId);
+
+        return true;
+    }
 }
