@@ -359,6 +359,97 @@ contract('Marketplace', function (accounts) {
     });
   });
 
+  describe("change approval policy", () => {
+    beforeEach(async function () {
+      impl = await Marketplace.new();
+      proxy = await MarketplaceProxy.new(impl.address);
+      marketplaceContract = await IMarketplace.at(proxy.address);
+      await marketplaceContract.init();
+    });
+
+    it("should switch off the approval policy", async () => {
+      let result = await marketplaceContract.deactivateApprovalPolicy({from: _owner});
+      assert.isTrue(Boolean(result.receipt.status), "Changing approval policy failed");
+      
+      let isApprovalPolicyActive = await marketplaceContract.isApprovalPolicyActive();
+      assert.isTrue(!isApprovalPolicyActive, "The approval policy was not changed");
+    });
+
+    it("should create approved marketplaces when approval policy is turned off", async () => {
+      await marketplaceContract.deactivateApprovalPolicy({from: _owner});
+      await marketplaceContract.createMarketplace(
+          _marketplaceId,
+          _url,
+          _propertyAPI,
+          _disputeAPI,
+          _exchangeContractAddress, {
+            from: _marketplaceAdmin
+          }
+      );
+
+      let result = await marketplaceContract.getMarketplace(_marketplaceId);
+      assert.isTrue(result[6], "The marketplace was not created approved");
+    });
+
+    it("should create two marketplaces with status depends on approval policy", async () => {
+      await marketplaceContract.deactivateApprovalPolicy({from: _owner});
+      await marketplaceContract.createMarketplace(
+          _marketplaceId,
+          _url,
+          _propertyAPI,
+          _disputeAPI,
+          _exchangeContractAddress, {
+            from: _marketplaceAdmin
+          }
+      );
+
+      let marketplace1 = await marketplaceContract.getMarketplace(_marketplaceId);
+      assert.isTrue(marketplace1[6], "The marketplace was not created approved");
+
+      await marketplaceContract.activateApprovalPolicy({from: _owner});
+      await marketplaceContract.createMarketplace(
+        _marketplaceId2,
+        _url,
+        _propertyAPI,
+        _disputeAPI,
+        _exchangeContractAddress, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      let marketplace2 = await marketplaceContract.getMarketplace(_marketplaceId2);
+      assert.isTrue(!marketplace2[6], "The marketplace was created approved");
+    });
+
+    it("should throw if not owner trying to change the approval policy", async function() {
+      await expectThrow(marketplaceContract.deactivateApprovalPolicy({from: _notOwner}));
+      await expectThrow(marketplaceContract.activateApprovalPolicy({from: _notOwner}));
+    });
+
+    it("should throw if trying to change the approval policy when paused", async function() {
+      await marketplaceContract.pause({from: _owner});
+
+      await expectThrow(marketplaceContract.deactivateApprovalPolicy({from: _owner}));
+      await expectThrow(marketplaceContract.activateApprovalPolicy({from: _owner}));
+    });
+
+    it("should emit event on deactivating approval policy", async function() {
+      const expectedEvent = 'LogChangeApprovalPolicy';
+      let result = await marketplaceContract.deactivateApprovalPolicy({from: _owner});
+
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from deactivating approval policy!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+
+    it("should emit event on activating approval policy", async function() {
+      const expectedEvent = 'LogChangeApprovalPolicy';
+      let result = await marketplaceContract.activateApprovalPolicy({from: _owner});
+
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from activating approval policy!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
 	describe("upgrade marketplace contract", () => {
 		beforeEach(async function () {
 			impl = await Marketplace.new();
@@ -382,5 +473,4 @@ contract('Marketplace', function (accounts) {
 			}));
 		});
 	});
-
 });

@@ -8,6 +8,7 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
+	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
 
     function createMarketplace(
 		bytes32 _marketplaceId,
@@ -20,10 +21,14 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     function approveMarketplace(bytes32 _marketplaceId) public returns(bool success);
     function rejectMarketplace(bytes32 _marketplaceId) public returns(bool success);
 
+    function activateApprovalPolicy() public returns(bool success);
+    function deactivateApprovalPolicy() public returns(bool success);
+    function isApprovalPolicyActive() public constant returns(bool success);
+
     function marketplacesCount() public constant returns(uint);
 
     function getMarketplace(bytes32 marketplaceId) public constant
-        returns(address, bytes32, bytes32, bytes32, address, uint, bool, bool);
+        returns(address adminAddress, bytes32 url, bytes32 propertyAPI, bytes32 disputeAPI, address exchangeContractAddress, uint marketplaceArrayIndex, bool isApproved, bool isActive);
 
     function getMarketplaceId(uint index) public constant returns(bytes32);
 }
