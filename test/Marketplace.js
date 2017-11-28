@@ -16,13 +16,18 @@ contract('Marketplace', function (accounts) {
 	const _owner = accounts[0];
   const _notOwner = accounts[1];
   const _marketplaceAdmin = accounts[2];
+  const _newMarketplaceAdmin = accounts[3];
 
   const _marketplaceId = util.toBytes32("5a9d0e1a87");
   const _marketplaceId2 = util.toBytes32("5a9d0e1a88");
   const _url = "https://lockchain.co/marketplace";
+  const _url2 = "https://lockchain.co/mp";
   const _propertyAPI = "https://lockchain.co/PropertyAPI";
+  const _propertyAPI2 = "https://lockchain.co/propAPI";
   const _disputeAPI = "https://lockchain.co/DisuputeAPI";
+  const _disputeAPI2 = "https://lockchain.co/disAPI";
   const _exchangeContractAddress = "0x2988ae7f92f5c8cad1997ae5208aeaa68878f76d";
+  const _exchangeContractAddress2 = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76d";
 
 	describe("creating marketplace proxy", () => {
 		beforeEach(async function () {
@@ -234,6 +239,174 @@ contract('Marketplace', function (accounts) {
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from marketplace creation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
     });
+  });
+
+	describe("update existing Marketplace", () => {
+    beforeEach(async function () {
+      impl = await Marketplace.new();
+      proxy = await MarketplaceProxy.new(impl.address);
+      marketplaceContract = await IMarketplace.at(proxy.address);
+      await marketplaceContract.init();
+
+      await marketplaceContract.createMarketplace(
+        _marketplaceId,
+        _url,
+        _propertyAPI,
+        _disputeAPI,
+        _exchangeContractAddress, {
+          from: _marketplaceAdmin
+        }
+      );
+    });
+
+    it("should update marketplace", async () => {
+      let result = await marketplaceContract.updateMarketplace(
+          _marketplaceId,
+          _url2,
+          _propertyAPI2,
+          _disputeAPI2,
+          _exchangeContractAddress2,
+          _newMarketplaceAdmin, {
+            from: _marketplaceAdmin
+          }
+      );
+
+      assert.isTrue(Boolean(result.receipt.status), "The marketplace update was not successful");
+    });
+
+    it("should update values in a marketplace correctly", async function() {
+      await marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        _propertyAPI2,
+        _disputeAPI2,
+        _exchangeContractAddress2,
+        _newMarketplaceAdmin, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      let result = await marketplaceContract.getMarketplace(_marketplaceId);
+      assert.strictEqual(result[0], _newMarketplaceAdmin, "The admin was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[1]), _url2, "The url was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[2]), _propertyAPI2, "The propertyAPI was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[3]), _disputeAPI2, "The disputeAPI was not set correctly");
+      assert.strictEqual(result[4], _exchangeContractAddress2, "The exchange contract address was not set correctly");
+      assert(result[5].eq(0), "The index array was not set correctly");
+      assert.isTrue(!result[6], "The marketplace was approved");
+      assert.isTrue(result[7], "The marketplace was not active");
+    });
+
+    it("should throw if non admin trying to update", async function() {
+      await expectThrow(marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        _propertyAPI2,
+        _disputeAPI2,
+        _exchangeContractAddress2,
+        _newMarketplaceAdmin, {
+          from: _newMarketplaceAdmin
+        }
+      ));
+    });
+
+    it("should throw if trying to update marketplace when paused", async function() {
+      await marketplaceContract.pause({from: _owner});
+
+      await expectThrow(marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        _propertyAPI2,
+        _disputeAPI2,
+        _exchangeContractAddress2,
+        _newMarketplaceAdmin, {
+          from: _marketplaceAdmin
+        }
+      ));
+    });
+
+    it("should throw if trying to update marketplace with empty url", async function() {
+      await expectThrow(marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        "",
+        _propertyAPI2,
+        _disputeAPI2,
+        _exchangeContractAddress2,
+        _newMarketplaceAdmin, {
+          from: _marketplaceAdmin
+        }
+      ));
+    });
+
+    it("should throw if trying to update marketplace with empty propertyAPI", async function() {
+      await expectThrow(marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        "",
+        _disputeAPI2,
+        _exchangeContractAddress2,
+        _newMarketplaceAdmin, {
+          from: _marketplaceAdmin
+        }
+      ));
+    });
+
+    it("should throw if trying to update marketplace with empty disputeAPI", async function() {
+      await expectThrow(marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        _propertyAPI2,
+        "",
+        _exchangeContractAddress2,
+        _newMarketplaceAdmin, {
+          from: _marketplaceAdmin
+        }
+      ));
+    });
+
+    it("should throw if trying to update marketplace with empty exchange address", async function() {
+      await expectThrow(marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        _propertyAPI2,
+        _disputeAPI2,
+        0x0,
+        _newMarketplaceAdmin, {
+          from: _marketplaceAdmin
+        }
+      ));
+    });
+
+    it("should throw if trying to update marketplace with empty admin address", async function() {
+      await expectThrow(marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        _propertyAPI2,
+        _disputeAPI2,
+        _exchangeContractAddress2,
+        0x0, {
+          from: _marketplaceAdmin
+        }
+      ));
+    });
+
+    it("should emit event on marketplace update", async function() {
+      const expectedEvent = 'LogUpdateMarketplace';
+      let result = await marketplaceContract.updateMarketplace(
+        _marketplaceId,
+        _url2,
+        _propertyAPI2,
+        _disputeAPI2,
+        _exchangeContractAddress2,
+        _newMarketplaceAdmin, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from marketplace creation!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+
   });
 
   describe("approve Marketplace", () => {

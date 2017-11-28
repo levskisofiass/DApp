@@ -6,6 +6,7 @@ import "./../IPausable.sol";
 contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 
     event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
+    event LogUpdateMarketplace(bytes32 marketplaceId, address newAdminAddress, bytes32 url);
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
@@ -17,6 +18,15 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 		bytes32 _disputeAPI,
 		address _exchangeContractAddress
 	) public returns(bool success);
+
+    function updateMarketplace(
+		bytes32 _marketplaceId,
+		bytes32 _url,
+		bytes32 _propertyAPI,
+		bytes32 _disputeAPI,
+		address _exchangeContractAddress,
+        address _newAdmin
+    ) public returns(bool success);
 
     function approveMarketplace(bytes32 _marketplaceId) public returns(bool success);
     function rejectMarketplace(bytes32 _marketplaceId) public returns(bool success);

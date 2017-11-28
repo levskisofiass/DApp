@@ -22,6 +22,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	bool approveOnCreation;
 
 	event LogCreateMarketplace(bytes32 marketplaceId, address adminAddress, bytes32 url);
+	event LogUpdateMarketplace(bytes32 marketplaceId, address newAdminAddress, bytes32 url);
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
@@ -33,7 +34,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
      * @param marketplaceId - the identifier of the marketplace
      */
     modifier onlyActive(bytes32 marketplaceId) {
-        require(marketplaceId != 0);
+        require(marketplaceId != "");
         require(marketplaces[marketplaceId].isActive);
         _;
     }
@@ -43,8 +44,18 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
      * @param marketplaceId - the identifier of the marketplace
      */
     modifier onlyInactive(bytes32 marketplaceId) {
-        require(marketplaceId != 0);
+        require(marketplaceId != "");
         require(!marketplaces[marketplaceId].isActive);
+        _;
+    }
+
+    /**
+     * @dev modifier ensuring that the modified method is only called by the admin of current marketplace
+     * @param marketplaceId - the identifier of the marketplace
+     */
+    modifier onlyAdmin(bytes32 marketplaceId) {
+        require(marketplaceId != "");
+        require(marketplaces[marketplaceId].adminAddress == msg.sender);
         _;
     }
 
@@ -98,6 +109,33 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
         marketplaceIds.push(_marketplaceId);
         LogCreateMarketplace(_marketplaceId, msg.sender, _url);
+		return true;
+	}
+
+    function updateMarketplace(
+		bytes32 _marketplaceId, 
+		bytes32 _url,
+		bytes32 _propertyAPI,
+		bytes32 _disputeAPI,
+		address _exchangeContractAddress,
+        address _newAdmin
+		) public onlyAdmin(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success)
+	{
+        require(_url != "");
+        require(_propertyAPI != "");
+        require(_disputeAPI != "");
+        require(_newAdmin != address(0));
+        require(_exchangeContractAddress != address(0));
+
+        MarketplaceStruct storage marketplace = marketplaces[_marketplaceId];
+
+        marketplace.adminAddress = _newAdmin;
+        marketplace.url = _url;
+        marketplace.propertyAPI = _propertyAPI;
+        marketplace.disputeAPI = _disputeAPI;
+        marketplace.exchangeContractAddress = _exchangeContractAddress;
+
+        LogUpdateMarketplace(_marketplaceId, _newAdmin, _url);
 		return true;
 	}
 
