@@ -34,7 +34,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
      * @param marketplaceId - the identifier of the marketplace
      */
     modifier onlyActive(bytes32 marketplaceId) {
-        require(marketplaceId != 0);
+        require(marketplaceId != "");
         require(marketplaces[marketplaceId].isActive);
         _;
     }
@@ -44,7 +44,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
      * @param marketplaceId - the identifier of the marketplace
      */
     modifier onlyInactive(bytes32 marketplaceId) {
-        require(marketplaceId != 0);
+        require(marketplaceId != "");
         require(!marketplaces[marketplaceId].isActive);
         _;
     }
@@ -54,7 +54,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
      * @param marketplaceId - the identifier of the marketplace
      */
     modifier onlyAdmin(bytes32 marketplaceId) {
-        require(marketplaceId != 0);
+        require(marketplaceId != "");
         require(marketplaces[marketplaceId].adminAddress == msg.sender);
         _;
     }
