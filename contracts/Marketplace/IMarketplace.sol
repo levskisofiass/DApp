@@ -1,7 +1,7 @@
 pragma solidity ^0.4.17;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
-import "./../IPausable.sol";
+import "./../Lifecycle/IPausable.sol";
 
 contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 
