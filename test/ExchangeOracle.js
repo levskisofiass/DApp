@@ -76,6 +76,12 @@ contract('ExchangeOracle', function(accounts) {
             assert.lengthOf(result.logs, 1, "There should be 1 event emitted from setRate!");
             assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
         });
+
+        it("should throw if newRate is equally to zero", async function() {
+            await expectThrow(ExchangeOracleInstance.setRate(0, {
+                from: _owner
+            })); 
+        });
     });
 
     describe("changing minWeiAmount", () => {
