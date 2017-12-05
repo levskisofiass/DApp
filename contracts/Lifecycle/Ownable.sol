@@ -29,6 +29,10 @@ contract Ownable {
     _;
   }
 
+  function getOwner() constant public returns(address) {
+    return owner;
+  }
+
 
   /**
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
