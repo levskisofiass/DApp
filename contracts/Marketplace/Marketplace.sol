@@ -3,8 +3,12 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IMarketplace.sol";
 import "./../Lifecycle/Pausable.sol";
+import "./../Property/Property.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
+
+    bool public isMarketPlace = true;
+
     struct MarketplaceStruct {
         address adminAddress;
         bytes32 url;
@@ -56,6 +60,12 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     modifier onlyAdmin(bytes32 marketplaceId) {
         require(marketplaceId != "");
         require(marketplaces[marketplaceId].adminAddress == msg.sender);
+        _;
+    }
+
+    modifier onlyApproved(bytes32 marketplaceId) {
+        require(marketplaceId != "");
+        require(marketplaces[marketplaceId].isApproved);
         _;
     }
 
@@ -175,5 +185,30 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
     function isApprovalPolicyActive() public constant returns(bool) {
         return !approveOnCreation;
+    }
+
+    function createProperty(
+        bytes32 _propertyId,
+		bytes32 _marketplaceId, 
+		uint _workingDayPrice,
+        uint _nonWorkingDayPrice,
+        uint _cleaningFee,
+        uint _refundPercent,
+        uint _daysBeforeStartForRefund,
+        bool _isInstantBooking
+    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId)  returns(bool success) 
+    {
+        Property(msg.sender).create(
+            _propertyId,
+            _marketplaceId, 
+            _workingDayPrice,
+            _nonWorkingDayPrice,
+            _cleaningFee,
+            _refundPercent,
+            _daysBeforeStartForRefund,
+            _isInstantBooking
+        );
+
+        return true;
     }
 }

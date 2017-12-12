@@ -5,7 +5,7 @@ var MintableToken = artifacts.require("./Tokens/MintableToken.sol");
 module.exports = async function(deployer) {
     const initialRate = 5000; 
 
-    let account1 = '0x009001BB05d1042A5dA4ce0479510e629A7b82dd';
+    let account1 = '0x627306090abaB3A6e1400e9345bC60c78a8BEf57';
     let account2 = '0xf17f52151EbEF6C7334FAD080c5704D77216b732';
 
     let ERC20Instance;

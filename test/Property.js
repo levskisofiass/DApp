@@ -74,7 +74,7 @@ contract('Property', function (accounts) {
     });
 
     it("should create new Property", async () => {
-      let result = await PropertyContract.createProperty(
+      let result = await PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -95,7 +95,7 @@ contract('Property', function (accounts) {
     });
 
     it("should create two new Properties", async () => {
-      let result = await PropertyContract.createProperty(
+      let result = await PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -131,7 +131,7 @@ contract('Property', function (accounts) {
     });
 
     it("should set the values in a Property correctly", async function () {
-      await PropertyContract.createProperty(
+      await PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -158,7 +158,7 @@ contract('Property', function (accounts) {
     });
 
     it("should append to the indexes array and set the last element correctly", async function () {
-      await PropertyContract.createProperty(
+      await PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -182,7 +182,7 @@ contract('Property', function (accounts) {
     it("should throw if trying to create Property when paused", async function () {
       await PropertyContract.pause({ from: _owner });
 
-      await expectThrow(PropertyContract.createProperty(
+      await expectThrow(PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -197,7 +197,7 @@ contract('Property', function (accounts) {
     });
 
     it("should throw if the same PropertyId is used twice", async function () {
-      await PropertyContract.createProperty(
+      await PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -210,7 +210,7 @@ contract('Property', function (accounts) {
         }
       );
 
-      await expectThrow(PropertyContract.createProperty(
+      await expectThrow(PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -225,7 +225,7 @@ contract('Property', function (accounts) {
     });
 
     it("should throw if trying to create Property with empty marketplaceId", async function () {
-      await expectThrow(PropertyContract.createProperty(
+      await expectThrow(PropertyContract.create(
         _propertyId,
         "",
         _workingDayPrice,
@@ -241,7 +241,7 @@ contract('Property', function (accounts) {
 
     it("should emit event on Property creation", async function () {
       const expectedEvent = 'LogCreateProperty';
-      let result = await PropertyContract.createProperty(
+      let result = await PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,

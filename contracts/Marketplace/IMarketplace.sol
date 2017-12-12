@@ -41,4 +41,15 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
         returns(address adminAddress, bytes32 url, bytes32 propertyAPI, bytes32 disputeAPI, address exchangeContractAddress, uint marketplaceArrayIndex, bool isApproved, bool isActive);
 
     function getMarketplaceId(uint index) public constant returns(bytes32);
+
+    function createProperty(
+        bytes32 _propertyId,
+		bytes32 _marketplaceId, 
+		uint _workingDayPrice,
+        uint _nonWorkingDayPrice,
+        uint _cleaningFee,
+        uint _refundPercent,
+        uint _daysBeforeStartForRefund,
+        bool _isInstantBooking
+    ) public returns(bool success);
 }
