@@ -57,6 +57,10 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         return propertyIds.length;
     }
 
+    function getPropertyId(uint index) public constant returns(bytes32) {
+        return propertyIds[index];
+    }
+
     function getProperty(bytes32 propertyId) public constant
         returns(address hostAddress, bytes32 marketplaceId, uint workingDayPrice, uint nonWorkingDayPrice, uint cleaningFee, uint refundPercent, uint daysBeforeStartForRefund, uint propertyArrayIndex, bool isInstantBooking, bool isActive)
     {

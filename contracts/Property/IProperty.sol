@@ -18,6 +18,8 @@ contract IProperty is IOwnableUpgradeableImplementation, IPausable {
 		) public returns(bool success);
 
     function propertiesCount() public constant returns(uint);
+    
+    function getPropertyId(uint index) public constant returns(bytes32);
 
     function getProperty(bytes32 propertyId) public constant
         returns(address hostAddress, bytes32 marketplaceId, uint workingDayPrice, uint nonWorkingDayPrice, uint cleaningFee, uint refundPercent, uint daysBeforeStartForRefund, uint propertyArrayIndex, bool isInstantBooking, bool isActive);
