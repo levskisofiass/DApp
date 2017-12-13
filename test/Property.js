@@ -73,8 +73,8 @@ contract('Property', function (accounts) {
       await PropertyContract.init();
     });
 
-    it("should create new Property", async () => {
-      let result = await PropertyContract.create(
+    it("should throw on create new Property without Marketplace contract", async () => {
+      await expectThrow(PropertyContract.create(
         _propertyId,
         _marketplaceId,
         _workingDayPrice,
@@ -85,13 +85,7 @@ contract('Property', function (accounts) {
         _isInstantBooking, {
           from: _propertyHost
         }
-      );
-
-      assert.isTrue(Boolean(result.receipt.status), "The Property creation was not successful");
-
-      let propertiesCount = await PropertyContract.propertiesCount();
-      assert(propertiesCount.eq(1), "The Propertys count was not correct");
-
+      ));
     });
 
     it("should create two new Properties", async () => {

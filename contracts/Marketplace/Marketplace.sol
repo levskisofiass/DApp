@@ -3,11 +3,10 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IMarketplace.sol";
 import "./../Lifecycle/Pausable.sol";
-import "./../Property/Property.sol";
+import "./../Property/IProperty.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
-
-    bool public isMarketPlace = true;
+    IProperty public PropertyContract;
 
     struct MarketplaceStruct {
         address adminAddress;
@@ -30,8 +29,15 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
+    event LogInitMarketplace(address propertyContractAddress);
 
 	uint public rate;
+
+    function init(address propertyContractAddress) public {
+        super.init();
+        PropertyContract = IProperty(propertyContractAddress);
+        LogInitMarketplace(propertyContractAddress);
+    }
 
     /**
      * @dev modifier ensuring that the modified method is only called on active marketplaces
@@ -67,6 +73,10 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         require(marketplaceId != "");
         require(marketplaces[marketplaceId].isApproved);
         _;
+    }
+
+    function isMarketplace() public constant returns(bool result) {
+        return true;
     }
 
     function marketplacesCount() public constant returns(uint) {
@@ -190,17 +200,19 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     function createProperty(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
+        address _marketplaceAdress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId)  returns(bool success) 
+    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) returns(bool success) 
     {
-        Property(msg.sender).create(
+        PropertyContract.create(
             _propertyId,
             _marketplaceId, 
+            _marketplaceAdress,
             _workingDayPrice,
             _nonWorkingDayPrice,
             _cleaningFee,

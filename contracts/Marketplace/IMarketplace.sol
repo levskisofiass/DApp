@@ -10,6 +10,11 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
+    event LogInitMarketplace(address propertyContractAddress);
+
+    function init(address propertyContractAddress) public;
+
+    function isMarketplace() public constant returns(bool result);
 
     function createMarketplace(
 		bytes32 _marketplaceId,
@@ -45,6 +50,7 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     function createProperty(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
+        address _marketplaceAdress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,

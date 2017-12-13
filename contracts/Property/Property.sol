@@ -3,9 +3,12 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IProperty.sol";
 import "./../Lifecycle/Pausable.sol";
-import "./../Marketplace/Marketplace.sol";
+import "./../Marketplace/IMarketplace.sol";
 
 contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
+    
+    IMarketplace public MarketplaceContract; 
+
     struct PropertyStruct {
         address hostAddress;
         bytes32 marketplaceId;
@@ -83,16 +86,23 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
     function create(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
+        address _marketplaceAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-		) public onlyInactive(_propertyId) whenNotPaused returns(bool success)
+		) public onlyInactive(_propertyId) returns(bool success)
 	{
-        require(Marketplace(msg.sender).isMarketPlace());
+        
+
         require(_marketplaceId != "");
+        require(_marketplaceAddress != address(0));
+
+        MarketplaceContract = IMarketplace(_marketplaceAddress);
+        require(MarketplaceContract.isMarketplace());
+        
 
 		properties[_propertyId] = PropertyStruct({
             hostAddress: msg.sender,
