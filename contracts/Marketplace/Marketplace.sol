@@ -29,14 +29,12 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
-    event LogInitMarketplace(address propertyContractAddress);
 
 	uint public rate;
 
     function init(address propertyContractAddress) public {
         super.init();
         PropertyContract = IProperty(propertyContractAddress);
-        LogInitMarketplace(propertyContractAddress);
     }
 
     /**
@@ -200,7 +198,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     function createProperty(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
-        address _marketplaceAdress,
+        address _marketplaceAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
@@ -212,7 +210,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         PropertyContract.create(
             _propertyId,
             _marketplaceId, 
-            _marketplaceAdress,
+            _marketplaceAddress,
             _workingDayPrice,
             _nonWorkingDayPrice,
             _cleaningFee,
