@@ -17,12 +17,11 @@ contract('Marketplace', function (accounts) {
 
   let marketplaceContract;
   let propertyContract;
-  let proxy;
-  let proxy2;
-  let proxy3;
-  let impl;
-  let impl2;
-  let impl3;
+  let marketplaceProxy;
+  let propertyProxy;
+  let marketplaceImpl;
+  let marketplaceImpl2;
+  let propertyImpl;
 
   const _owner = accounts[0];
   const _notOwner = accounts[1];
@@ -50,15 +49,15 @@ contract('Marketplace', function (accounts) {
   const _daysBeforeStartForRefund = '10';
   const _isInstantBooking = true;
 
-  describe("creating marketplace proxy", () => {
+  describe("creating marketplaceProxy", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
     });
@@ -71,13 +70,13 @@ contract('Marketplace', function (accounts) {
 
   describe("create new Marketplace", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
     });
@@ -276,13 +275,13 @@ contract('Marketplace', function (accounts) {
 
   describe("update existing Marketplace", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
 
@@ -451,13 +450,13 @@ contract('Marketplace', function (accounts) {
 
   describe("approve Marketplace", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
 
@@ -517,13 +516,13 @@ contract('Marketplace', function (accounts) {
 
   describe("reject Marketplace", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
 
@@ -588,13 +587,13 @@ contract('Marketplace', function (accounts) {
 
   describe("change approval policy", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
     });
@@ -706,28 +705,28 @@ contract('Marketplace', function (accounts) {
 
   describe("upgrade marketplace contract", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      impl2 = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceImpl2 = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
     });
 
     it("should upgrade contract from owner", async function () {
-      const upgradeableContract = await IOwnableUpgradeableImplementation.at(proxy.address);
-      await upgradeableContract.upgradeImplementation(impl2.address);
+      const upgradeableContract = await IOwnableUpgradeableImplementation.at(marketplaceProxy.address);
+      await upgradeableContract.upgradeImplementation(marketplaceImpl2.address);
       const newImplAddress = await upgradeableContract.getImplementation();
-      assert.strictEqual(impl2.address, newImplAddress, "The owner is not set correctly");
+      assert.strictEqual(marketplaceImpl2.address, newImplAddress, "The owner is not set correctly");
     });
 
     it("should throw on upgrade contract from not owner", async function () {
-      const upgradeableContract = await IOwnableUpgradeableImplementation.at(proxy.address);
-      await expectThrow(upgradeableContract.upgradeImplementation(impl2.address, {
+      const upgradeableContract = await IOwnableUpgradeableImplementation.at(marketplaceProxy.address);
+      await expectThrow(upgradeableContract.upgradeImplementation(marketplaceImpl2.address, {
         from: _notOwner
       }));
     });
@@ -735,13 +734,13 @@ contract('Marketplace', function (accounts) {
 
   describe("Create property with Marketplace", () => {
     beforeEach(async function () {
-      impl = await Marketplace.new();
-      proxy = await MarketplaceProxy.new(impl.address);
-      marketplaceContract = await IMarketplace.at(proxy.address);
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      impl3 = await Property.new();
-      proxy3 = await PropertyProxy.new(impl3.address);
-      propertyContract = await IProperty.at(proxy3.address);
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
 
       await marketplaceContract.init(propertyContract.address);
 
@@ -767,7 +766,6 @@ contract('Marketplace', function (accounts) {
       let result = await marketplaceContract.createProperty(
         _propertyId,
         _marketplaceId,
-        marketplaceContract.address,
         _workingDayPrice,
         _nonWorkingDayPrice,
         _refundPercent,

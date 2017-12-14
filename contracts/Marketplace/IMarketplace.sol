@@ -15,6 +15,8 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 
     function isMarketplace() public constant returns(bool result);
 
+    function isApprovedMarketplace(bytes32 _marketplaceId) public constant returns(bool result);
+
     function createMarketplace(
 		bytes32 _marketplaceId,
 		bytes32 _url,
@@ -49,7 +51,6 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     function createProperty(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
-        address _marketplaceAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,

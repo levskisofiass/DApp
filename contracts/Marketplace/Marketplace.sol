@@ -77,6 +77,10 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return true;
     }
 
+    function isApprovedMarketplace(bytes32 marketplaceId) public constant returns(bool result) {
+        return marketplaces[marketplaceId].isApproved;
+    }
+
     function marketplacesCount() public constant returns(uint) {
         return marketplaceIds.length;
     }
@@ -198,7 +202,6 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     function createProperty(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
-        address _marketplaceAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
@@ -210,7 +213,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         PropertyContract.create(
             _propertyId,
             _marketplaceId, 
-            _marketplaceAddress,
+            msg.sender,
             _workingDayPrice,
             _nonWorkingDayPrice,
             _cleaningFee,

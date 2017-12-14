@@ -86,7 +86,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
     function create(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
-        address _marketplaceAddress,
+        address _hostAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
@@ -98,14 +98,15 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         
 
         require(_marketplaceId != "");
-        require(_marketplaceAddress != address(0));
+        require(_hostAddress != address(0));
 
-        MarketplaceContract = IMarketplace(_marketplaceAddress);
+        MarketplaceContract = IMarketplace(msg.sender);
         require(MarketplaceContract.isMarketplace());
+        require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
         
 
 		properties[_propertyId] = PropertyStruct({
-            hostAddress: msg.sender,
+            hostAddress: _hostAddress,
             marketplaceId: _marketplaceId,
             workingDayPrice: _workingDayPrice,
             nonWorkingDayPrice: _nonWorkingDayPrice,
@@ -118,7 +119,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         });
 
         propertyIds.push(_propertyId);
-        LogCreateProperty(_propertyId, msg.sender);
+        LogCreateProperty(_propertyId, _hostAddress);
         
 		return true;
 	}

@@ -9,7 +9,7 @@ contract IProperty is IOwnableUpgradeableImplementation, IPausable {
     function create(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
-        address _marketplaceAddress,
+        address __hostAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
