@@ -144,5 +144,26 @@ contract('Property', function (accounts) {
         }
       ));
     });
+
+    it("should throw if trying to create Property when empty marketplaceId", async function () {
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      await marketplaceContract.init(PropertyContract.address);
+
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        "",
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
   });
 });
