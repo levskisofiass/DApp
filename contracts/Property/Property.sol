@@ -96,7 +96,6 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
 		) public onlyInactive(_propertyId) whenNotPaused returns(bool success)
 	{
         
-
         require(_marketplaceId != "");
         require(_hostAddress != address(0));
 
@@ -104,7 +103,6 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         require(MarketplaceContract.isMarketplace());
         require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
         
-
 		properties[_propertyId] = PropertyStruct({
             hostAddress: _hostAddress,
             marketplaceId: _marketplaceId,

@@ -7,7 +7,6 @@ const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
 const PropertyProxy = artifacts.require('./Property/PropertyProxy.sol')
 const Property = artifacts.require('./Property/Property.sol')
 const IProperty = artifacts.require('./Property/IProperty.sol')
-
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
 const expectThrow = util.expectThrow;
@@ -25,7 +24,8 @@ contract('Property', function (accounts) {
 
   const _owner = accounts[0];
   const _notOwner = accounts[1];
-  const _propertyHost = accounts[2];
+  const _marketplaceAdmin = accounts[2];
+  const _propertyHost = accounts[3];
 
   const _propertyId = "testId123";
   const _propertyId2 = "testId223";
@@ -36,6 +36,11 @@ contract('Property', function (accounts) {
   const _refundPercent = '80';
   const _daysBeforeStartForRefund = '10';
   const _isInstantBooking = true;
+
+  const _url = "https://lockchain.co/marketplace";
+  const _propertyAPI = "https://lockchain.co/PropertyAPI";
+  const _disputeAPI = "https://lockchain.co/DisuputeAPI";
+  const _exchangeContractAddress = "0x2988ae7f92f5c8cad1997ae5208aeaa68878f76d";
 
   describe("creating property proxy", () => {
     beforeEach(async function () {
@@ -81,11 +86,6 @@ contract('Property', function (accounts) {
       proxy = await PropertyProxy.new(impl.address);
       PropertyContract = await IProperty.at(proxy.address);
       await PropertyContract.init();
-
-      marketplaceImpl = await Marketplace.new();
-      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-      await marketplaceContract.init(PropertyContract.address);
     });
 
     it("should throw on create new Property without Marketplace contract", async() => {
@@ -105,6 +105,28 @@ contract('Property', function (accounts) {
     });
 
     it("should throw if trying to create Property when paused", async function () {
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      await marketplaceContract.init(PropertyContract.address);
+
+      await marketplaceContract.createMarketplace(
+        _marketplaceId,
+        _url,
+        _propertyAPI,
+        _disputeAPI,
+        _exchangeContractAddress, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
       await PropertyContract.pause({
         from: _owner
       });
