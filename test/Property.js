@@ -1,7 +1,13 @@
 const web3 = require("web3");
+
+const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol");
+const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
+const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
+
 const PropertyProxy = artifacts.require('./Property/PropertyProxy.sol')
 const Property = artifacts.require('./Property/Property.sol')
 const IProperty = artifacts.require('./Property/IProperty.sol')
+
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
 const expectThrow = util.expectThrow;
@@ -12,6 +18,10 @@ contract('Property', function (accounts) {
   let proxy;
   let impl;
   let impl2;
+
+  let marketplaceProxy;
+  let marketplaceImpl;
+  let marketplaceContract;
 
   const _owner = accounts[0];
   const _notOwner = accounts[1];
@@ -71,6 +81,11 @@ contract('Property', function (accounts) {
       proxy = await PropertyProxy.new(impl.address);
       PropertyContract = await IProperty.at(proxy.address);
       await PropertyContract.init();
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      await marketplaceContract.init(PropertyContract.address);
     });
 
     it("should throw on create new Property without Marketplace contract", async() => {
@@ -94,10 +109,9 @@ contract('Property', function (accounts) {
         from: _owner
       });
 
-      await expectThrow(PropertyContract.create(
+      await expectThrow(marketplaceContract.createProperty(
         _propertyId,
         _marketplaceId,
-        _owner,
         _workingDayPrice,
         _nonWorkingDayPrice,
         _cleaningFee,

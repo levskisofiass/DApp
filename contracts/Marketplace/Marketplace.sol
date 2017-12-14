@@ -29,7 +29,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
-    event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress);
+    event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
 
 	uint public rate;
 
@@ -223,7 +223,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
             _isInstantBooking
         );
 
-        LogCreatePropertyFromMarketplace(_propertyId, msg.sender);
+        LogCreatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
 
         return true;
     }

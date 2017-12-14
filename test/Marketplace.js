@@ -1,10 +1,9 @@
 const web3 = require("web3");
-//Marketplace
+
 const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol");
 const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
 const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
 
-//Property
 const PropertyProxy = artifacts.require("./Property/PropertyProxy.sol");
 const Property = artifacts.require("./Property/Property.sol");
 const IProperty = artifacts.require("./Property/IProperty.sol");
@@ -867,25 +866,6 @@ contract('Marketplace', function (accounts) {
 
     it("should throw if trying to create Property when paused", async function () {
       await marketplaceContract.pause({
-        from: _owner
-      });
-
-      await expectThrow(marketplaceContract.createProperty(
-        _propertyId,
-        _marketplaceId,
-        _workingDayPrice,
-        _nonWorkingDayPrice,
-        _cleaningFee,
-        _refundPercent,
-        _daysBeforeStartForRefund,
-        _isInstantBooking, {
-          from: _propertyHost
-        }
-      ));
-    });
-
-    it("should throw if trying to create Property when Property contract is paused", async function () {
-      await propertyContract.pause({
         from: _owner
       });
 
