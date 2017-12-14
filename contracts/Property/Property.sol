@@ -93,7 +93,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-		) public onlyInactive(_propertyId) returns(bool success)
+		) public onlyInactive(_propertyId) whenNotPaused returns(bool success)
 	{
         
 

@@ -29,6 +29,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
+    event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress);
 
 	uint public rate;
 
@@ -208,7 +209,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) returns(bool success) 
+    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
     {
         PropertyContract.create(
             _propertyId,
@@ -221,6 +222,8 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
             _daysBeforeStartForRefund,
             _isInstantBooking
         );
+
+        LogCreatePropertyFromMarketplace(_propertyId, msg.sender);
 
         return true;
     }

@@ -732,7 +732,7 @@ contract('Marketplace', function (accounts) {
     });
   });
 
-  describe("Create property with Marketplace", () => {
+  describe("Create property from Marketplace", () => {
     beforeEach(async function () {
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
@@ -741,6 +741,7 @@ contract('Marketplace', function (accounts) {
       propertyImpl = await Property.new();
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
+      await propertyContract.init();
 
       await marketplaceContract.init(propertyContract.address);
 
@@ -768,15 +769,222 @@ contract('Marketplace', function (accounts) {
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
-        _refundPercent,
         _cleaningFee,
+        _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _owner
+          from: _propertyHost
         }
       );
 
       assert.isTrue(Boolean(result.receipt.status), "The propertiesCount creation was not successful");
+    });
+
+    it("should create two new Properties", async() => {
+      let result = await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+
+      assert.isTrue(Boolean(result.receipt.status), "The Property creation was not successful");
+
+      let result2 = await marketplaceContract.createProperty(
+        _propertyId2,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+
+      assert.isTrue(Boolean(result2.receipt.status), "The propertiesCount creation was not successful");
+
+      let propertiesCount = await propertyContract.propertiesCount();
+      assert(propertiesCount.eq(2), "The propertiesCount count was not correct");
+
+    });
+
+    it("should set the values in a Property correctly", async function () {
+      await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+
+      let result = await propertyContract.getProperty(_propertyId);
+      assert.strictEqual(result[0], _propertyHost, "The host was not set correctly");
+      assert.strictEqual(result[1], _marketplaceId, "The marketplaceId was not set correctly");
+      assert.strictEqual(result[2].toString(), _workingDayPrice, "The workingDayPrice was not set correctly");
+      assert.strictEqual(result[3].toString(), _nonWorkingDayPrice, "The nonWorkingDayPrice was not set correctly");
+      assert.strictEqual(result[4].toString(), _cleaningFee, "The cleaningFee was not set correctly");
+      assert.strictEqual(result[5].toString(), _refundPercent, "The refundPercent was not set correctly");
+      assert.strictEqual(result[6].toString(), _daysBeforeStartForRefund, "The daysBeforeStartForRefund was not set correctly");
+      assert(result[7].eq(0), "The arrayIndex was not set correctly");
+      assert.isTrue(result[8], "The isInstantBooking was not set correctly");
+      assert.isTrue(result[9], "The Property was not active");
+    });
+
+    it("should append to the indexes array and set the last element correctly", async function () {
+      await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+
+      let result = await propertyContract.getProperty(_propertyId);
+
+      let result1 = await propertyContract.getPropertyId(0);
+      assert.strictEqual(web3.utils.hexToUtf8(result1), _propertyId, "The Property id was not set correctly");
+      let result2 = await propertyContract.getPropertyId(result[7].toNumber());
+      assert.strictEqual(web3.utils.hexToUtf8(result2), _propertyId, "The Property index was not set correctly");
+    });
+
+    it("should throw if trying to create Property when paused", async function () {
+      await marketplaceContract.pause({
+        from: _owner
+      });
+
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if trying to create Property when Property contract is paused", async function () {
+      await propertyContract.pause({
+        from: _owner
+      });
+
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if the same PropertyId is used twice", async function () {
+      await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if trying to create Property with empty marketplaceId", async function () {
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        "",
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw when marketplace is reject", async function () {
+
+      await marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should emit event on Property creation", async function () {
+      const expectedEvent = 'LogCreatePropertyFromMarketplace';
+      let result = await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property creation!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
     });
   });
 });
