@@ -883,60 +883,10 @@ contract('Marketplace', function (accounts) {
       ));
     });
 
-    it("should throw if the same PropertyId is used twice", async function () {
-      await marketplaceContract.createProperty(
-        _propertyId,
-        _marketplaceId,
-        _workingDayPrice,
-        _nonWorkingDayPrice,
-        _cleaningFee,
-        _refundPercent,
-        _daysBeforeStartForRefund,
-        _isInstantBooking, {
-          from: _propertyHost
-        }
-      );
-
-      await expectThrow(marketplaceContract.createProperty(
-        _propertyId,
-        _marketplaceId,
-        _workingDayPrice,
-        _nonWorkingDayPrice,
-        _cleaningFee,
-        _refundPercent,
-        _daysBeforeStartForRefund,
-        _isInstantBooking, {
-          from: _propertyHost
-        }
-      ));
-    });
-
     it("should throw if trying to create Property with empty marketplaceId", async function () {
       await expectThrow(marketplaceContract.createProperty(
         _propertyId,
         "",
-        _workingDayPrice,
-        _nonWorkingDayPrice,
-        _cleaningFee,
-        _refundPercent,
-        _daysBeforeStartForRefund,
-        _isInstantBooking, {
-          from: _propertyHost
-        }
-      ));
-    });
-
-    it("should throw when marketplace is reject", async function () {
-
-      await marketplaceContract.rejectMarketplace(
-        _marketplaceId, {
-          from: _owner
-        }
-      );
-
-      await expectThrow(marketplaceContract.createProperty(
-        _propertyId,
-        _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
         _cleaningFee,
