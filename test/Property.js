@@ -86,25 +86,6 @@ contract('Property', function (accounts) {
       proxy = await PropertyProxy.new(impl.address);
       PropertyContract = await IProperty.at(proxy.address);
       await PropertyContract.init();
-    });
-
-    it("should throw on create new Property without Marketplace contract", async() => {
-      await expectThrow(PropertyContract.create(
-        _propertyId,
-        _marketplaceId,
-        _owner,
-        _workingDayPrice,
-        _nonWorkingDayPrice,
-        _cleaningFee,
-        _refundPercent,
-        _daysBeforeStartForRefund,
-        _isInstantBooking, {
-          from: _propertyHost
-        }
-      ));
-    });
-
-    it("should throw if trying to create Property when paused", async function () {
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
@@ -126,6 +107,25 @@ contract('Property', function (accounts) {
           from: _owner
         }
       );
+    });
+
+    it("should throw on create new Property without Marketplace contract", async() => {
+      await expectThrow(PropertyContract.create(
+        _propertyId,
+        _marketplaceId,
+        _owner,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if trying to create Property when paused", async function () {
 
       await PropertyContract.pause({
         from: _owner
@@ -146,6 +146,7 @@ contract('Property', function (accounts) {
     });
 
     it("should throw if the same PropertyId is used twice", async function () {
+
       await marketplaceContract.createProperty(
         _propertyId,
         _marketplaceId,
@@ -194,6 +195,5 @@ contract('Property', function (accounts) {
         }
       ));
     });
-
   });
 });
