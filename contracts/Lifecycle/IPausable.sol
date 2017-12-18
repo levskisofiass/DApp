@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17;
 
-import "./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
+import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 
 
 /**

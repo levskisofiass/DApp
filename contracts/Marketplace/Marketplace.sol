@@ -2,9 +2,12 @@ pragma solidity ^0.4.17;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IMarketplace.sol";
-import "./../Pausable.sol";
+import "./../Lifecycle/Pausable.sol";
+import "./../Property/IProperty.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
+    IProperty public PropertyContract;
+
     struct MarketplaceStruct {
         address adminAddress;
         bytes32 url;
@@ -26,8 +29,14 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
+    event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
 
 	uint public rate;
+
+    function init(address propertyContractAddress) public {
+        super.init();
+        PropertyContract = IProperty(propertyContractAddress);
+    }
 
     /**
      * @dev modifier ensuring that the modified method is only called on active marketplaces
@@ -57,6 +66,20 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         require(marketplaceId != "");
         require(marketplaces[marketplaceId].adminAddress == msg.sender);
         _;
+    }
+
+    modifier onlyApproved(bytes32 marketplaceId) {
+        require(marketplaceId != "");
+        require(marketplaces[marketplaceId].isApproved);
+        _;
+    }
+
+    function isMarketplace() public constant returns(bool result) {
+        return true;
+    }
+
+    function isApprovedMarketplace(bytes32 marketplaceId) public constant returns(bool result) {
+        return marketplaces[marketplaceId].isApproved;
     }
 
     function marketplacesCount() public constant returns(uint) {
@@ -175,5 +198,33 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
     function isApprovalPolicyActive() public constant returns(bool) {
         return !approveOnCreation;
+    }
+
+    function createProperty(
+        bytes32 _propertyId,
+		bytes32 _marketplaceId, 
+		uint _workingDayPrice,
+        uint _nonWorkingDayPrice,
+        uint _cleaningFee,
+        uint _refundPercent,
+        uint _daysBeforeStartForRefund,
+        bool _isInstantBooking
+    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+    {
+        PropertyContract.create(
+            _propertyId,
+            _marketplaceId, 
+            msg.sender,
+            _workingDayPrice,
+            _nonWorkingDayPrice,
+            _cleaningFee,
+            _refundPercent,
+            _daysBeforeStartForRefund,
+            _isInstantBooking
+        );
+
+        LogCreatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
+
+        return true;
     }
 }

@@ -1,13 +1,12 @@
 pragma solidity ^0.4.17;
 
-import "./Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
-
+import "./Ownable.sol";
 
 /**
  * @title Pausable
  * @dev Base contract which allows children to implement an emergency stop mechanism.
  */
-contract Pausable is OwnableUpgradeableImplementation {
+contract PausableBasic is Ownable {
   event Pause();
   event Unpause();
 
