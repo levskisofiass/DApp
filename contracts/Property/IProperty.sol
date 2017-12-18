@@ -6,9 +6,10 @@ import "./../Lifecycle/IPausable.sol";
 contract IProperty is IOwnableUpgradeableImplementation, IPausable {
     event LogCreateProperty(bytes32 propertyId, address hostAddress);
 
-    function createProperty(
+    function create(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
+        address _hostAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,

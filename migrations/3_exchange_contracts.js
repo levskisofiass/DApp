@@ -5,8 +5,8 @@ var MintableToken = artifacts.require("./Tokens/MintableToken.sol");
 module.exports = async function(deployer) {
     const initialRate = 5000; 
 
-    let account1 = '0x009001BB05d1042A5dA4ce0479510e629A7b82dd';
-    let account2 = '0xf17f52151EbEF6C7334FAD080c5704D77216b732';
+    let account1 = '0x919df2d59d0667764bfe25ecf2a457bef0156a94';
+    let account2 = '0x7767e15abf2fd17bce0acfc834155182e56bb313';
 
     let ERC20Instance;
     let ExchangeOracleInstance

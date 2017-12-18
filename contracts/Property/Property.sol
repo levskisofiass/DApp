@@ -3,8 +3,12 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IProperty.sol";
 import "./../Lifecycle/Pausable.sol";
+import "./../Marketplace/IMarketplace.sol";
 
 contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
+    
+    IMarketplace public MarketplaceContract; 
+
     struct PropertyStruct {
         address hostAddress;
         bytes32 marketplaceId;
@@ -79,9 +83,10 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         );
     }
 
-    function createProperty(
+    function create(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
+        address _hostAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
@@ -90,10 +95,16 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         bool _isInstantBooking
 		) public onlyInactive(_propertyId) whenNotPaused returns(bool success)
 	{
+        
         require(_marketplaceId != "");
+        require(_hostAddress != address(0));
 
+        MarketplaceContract = IMarketplace(msg.sender);
+        require(MarketplaceContract.isMarketplace());
+        require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
+        
 		properties[_propertyId] = PropertyStruct({
-            hostAddress: msg.sender,
+            hostAddress: _hostAddress,
             marketplaceId: _marketplaceId,
             workingDayPrice: _workingDayPrice,
             nonWorkingDayPrice: _nonWorkingDayPrice,
@@ -106,7 +117,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         });
 
         propertyIds.push(_propertyId);
-        LogCreateProperty(_propertyId, msg.sender);
+        LogCreateProperty(_propertyId, _hostAddress);
         
 		return true;
 	}
