@@ -26,6 +26,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
     mapping (bytes32 => PropertyStruct) public properties;
 
     event LogCreateProperty(bytes32 propertyId, address hostAddress);
+    event LogUpdateProperty(bytes32 _marketplaceId, bytes32 propertyId, address hostAddress);
 
     /**
      * @dev modifier ensuring that the modified method is only called on active properties
@@ -51,9 +52,9 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
      * @dev modifier ensuring that the modified method is only called by the host of current property
      * @param propertyId - the identifier of the property
      */
-    modifier onlyHost(bytes32 propertyId) {
+    modifier onlyHost(bytes32 propertyId, address hostAdress) {
         require(propertyId != "");
-        require(properties[propertyId].hostAddress == msg.sender);
+        require(properties[propertyId].hostAddress == hostAdress);
         _;
     }
 
@@ -121,4 +122,38 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         
 		return true;
 	}
+
+    function update(
+        bytes32 _propertyId,
+		bytes32 _marketplaceId,
+        address _hostAddress,
+		uint _workingDayPrice,
+        uint _nonWorkingDayPrice,
+        uint _cleaningFee,
+        uint _refundPercent,
+        uint _daysBeforeStartForRefund,
+        bool _isInstantBooking
+    ) public onlyActive(_propertyId) onlyHost(_propertyId, _hostAddress) whenNotPaused returns(bool success)
+    {
+        require(_marketplaceId != "");
+        require(_hostAddress != address(0));
+
+        MarketplaceContract = IMarketplace(msg.sender);
+        require(MarketplaceContract.isMarketplace());
+        require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
+
+        PropertyStruct storage property = properties[_propertyId];
+
+        property.hostAddress = _hostAddress;
+        property.workingDayPrice = _workingDayPrice;
+        property.nonWorkingDayPrice = _nonWorkingDayPrice;
+        property.cleaningFee = _cleaningFee;
+        property.refundPercent = _refundPercent;
+        property.daysBeforeStartForRefund = _daysBeforeStartForRefund;
+        property.isInstantBooking = _isInstantBooking;
+
+        LogUpdateProperty(_marketplaceId, _propertyId, _hostAddress);
+
+        return true;
+    }
 }

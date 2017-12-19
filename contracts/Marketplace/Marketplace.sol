@@ -30,6 +30,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
     event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
+    event LogUpdatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
 
 	uint public rate;
 
@@ -225,6 +226,33 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
         LogCreatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
 
+        return true;
+    }
+
+    function updateProperty(
+        bytes32 _propertyId,
+		bytes32 _marketplaceId, 
+		uint _workingDayPrice,
+        uint _nonWorkingDayPrice,
+        uint _cleaningFee,
+        uint _refundPercent,
+        uint _daysBeforeStartForRefund,
+        bool _isInstantBooking
+    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+    {
+        PropertyContract.update(
+            _propertyId,
+            _marketplaceId, 
+            msg.sender,
+            _workingDayPrice,
+            _nonWorkingDayPrice,
+            _cleaningFee,
+            _refundPercent,
+            _daysBeforeStartForRefund,
+            _isInstantBooking
+        );
+
+        LogUpdatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
         return true;
     }
 }

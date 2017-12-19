@@ -196,4 +196,99 @@ contract('Property', function (accounts) {
       ));
     });
   });
+
+  describe("update property", () => {
+    beforeEach(async function () {
+      impl = await Property.new();
+      proxy = await PropertyProxy.new(impl.address);
+      PropertyContract = await IProperty.at(proxy.address);
+      await PropertyContract.init();
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      await marketplaceContract.init(PropertyContract.address);
+
+      await marketplaceContract.createMarketplace(
+        _marketplaceId,
+        _url,
+        _propertyAPI,
+        _disputeAPI,
+        _exchangeContractAddress, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+    });
+
+    it("should throw on update Property without Marketplace contract", async() => {
+      await expectThrow(PropertyContract.update(
+        _propertyId,
+        _marketplaceId,
+        _owner,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if trying to update Property when paused", async function () {
+
+      await PropertyContract.pause({
+        from: _owner
+      });
+
+      await expectThrow(marketplaceContract.updateProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if trying to update Property with inactive propertyId", async function () {
+
+      await expectThrow(marketplaceContract.updateProperty(
+        "0",
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+  });
 });
