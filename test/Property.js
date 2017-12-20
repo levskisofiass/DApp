@@ -63,12 +63,6 @@ contract('Property', function (accounts) {
       proxy = await PropertyProxy.new(impl.address);
       propertyContract = await IProperty.at(proxy.address);
       await propertyContract.init();
-
-      marketplaceImpl = await Marketplace.new();
-      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-      await marketplaceContract.init(propertyContract.address);
-      await propertyContract.setMarketplace(marketplaceContract.address);
     });
 
     it("should upgrade contract from owner", async function () {
