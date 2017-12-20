@@ -28,7 +28,18 @@ contract IProperty is IOwnableUpgradeableImplementation, IPausable {
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
+        bool _isInstantBooking,
+        address _newHost
+    ) public returns(bool success);
+
+    function validateCreate(
+        bytes32 propertyId,
+        bytes32 marketplaceId
+    ) public returns(bool success);
+
+    function validateUpdate(
+        bytes32 propertyId,
+        bytes32 marketplaceId
     ) public returns(bool success);
 
     function setMarketplace(address _marketplaceAddress) public;

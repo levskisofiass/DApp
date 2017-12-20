@@ -34,8 +34,9 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
 	uint public rate;
 
-    function init(address propertyContractAddress) public {
+    function init(address propertyContractAddress) public onlyOwner {
         super.init();
+        require(propertyContractAddress != address(0));
         PropertyContract = IProperty(propertyContractAddress);
     }
 
@@ -233,7 +234,8 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
+        bool _isInstantBooking,
+        address _newHost
     ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
     {
         PropertyContract.update(
@@ -245,7 +247,8 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
             _cleaningFee,
             _refundPercent,
             _daysBeforeStartForRefund,
-            _isInstantBooking
+            _isInstantBooking,
+            _newHost
         );
 
         LogUpdatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);

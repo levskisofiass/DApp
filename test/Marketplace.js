@@ -27,6 +27,7 @@ contract('Marketplace', function (accounts) {
   const _marketplaceAdmin = accounts[2];
   const _newMarketplaceAdmin = accounts[3];
   const _propertyHost = accounts[4];
+  const _propertyHostUpdate = accounts[5];
 
   const _marketplaceId = util.toBytes32("5a9d0e1a87");
   const _marketplaceId2 = util.toBytes32("5a9d0e1a88");
@@ -978,7 +979,8 @@ contract('Marketplace', function (accounts) {
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
-        _isInstantBookingUpdate, {
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       );
@@ -994,12 +996,14 @@ contract('Marketplace', function (accounts) {
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
-        _isInstantBookingUpdate, {
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       );
 
       let result = await propertyContract.getProperty(_propertyId);
+      assert.strictEqual(result[0].toString(), _propertyHostUpdate, "The Host was not update correctly")
       assert.strictEqual(result[2].toString(), _workingDayPriceUpdate, "The workingDayPrice was not update correctly");
       assert.strictEqual(result[3].toString(), _nonWorkingDayPriceUpdate, "The nonWorkingDayPrice was not update correctly");
       assert.strictEqual(result[4].toString(), _cleaningFeeUpdate, "The cleaningFee was not update correctly");
@@ -1016,7 +1020,8 @@ contract('Marketplace', function (accounts) {
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
-        _isInstantBookingUpdate, {
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       ));
@@ -1030,7 +1035,8 @@ contract('Marketplace', function (accounts) {
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
-        _isInstantBookingUpdate, {
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       ));
@@ -1050,7 +1056,8 @@ contract('Marketplace', function (accounts) {
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
-        _isInstantBookingUpdate, {
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       ));
@@ -1068,7 +1075,8 @@ contract('Marketplace', function (accounts) {
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
-        _isInstantBookingUpdate, {
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       ));
@@ -1083,13 +1091,37 @@ contract('Marketplace', function (accounts) {
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
-        _isInstantBookingUpdate, {
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       );
 
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property updation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
+  describe("Init contract", () => {
+    beforeEach(async() => {
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
+      await propertyContract.init();
+    });
+
+    it("should throw when not owner init contract", async() => {
+      await expectThrow(marketplaceContract.init(propertyContract.address, {
+        from: _notOwner
+      }));
+    });
+
+    it("should throw when address is wrong", async() => {
+      await expectThrow(marketplaceContract.init("0x0"));
     });
   });
 });

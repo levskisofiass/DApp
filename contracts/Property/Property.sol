@@ -63,13 +63,52 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
     /**
      * @dev modifier ensuring that the modified method is only called by marketplace contract
      */
-    modifier onlyMarketplace() {
+    modifier onlyMarketplace(bytes32 marketplaceId) {
+        require(marketplaceId != "");
         require(marketplaceAddress == msg.sender);
         _;
     }
 
-    function setMarketplace(address _marketplaceAddress) public {
+    /**
+     * @dev modifier ensuring that the modified method is only called by approved marketplace
+     */
+    modifier onlyApprovedMarketplace(bytes32 marketplaceId) {
+        MarketplaceContract = IMarketplace(msg.sender);
+        require(MarketplaceContract.isApprovedMarketplace(marketplaceId));
+        _;
+    }
+
+    function setMarketplace(address _marketplaceAddress) public onlyOwner {
+        require(_marketplaceAddress != address(0));
         marketplaceAddress = _marketplaceAddress;
+    }
+
+    function validateCreate(
+        bytes32 propertyId,
+        bytes32 marketplaceId
+    ) public 
+        onlyInactive(propertyId)
+        onlyMarketplace(marketplaceId)
+        onlyApprovedMarketplace(marketplaceId)
+        whenNotPaused
+        returns(bool success) 
+    {
+        return true;
+    }
+
+    function validateUpdate(
+        bytes32 propertyId,
+        bytes32 marketplaceId,
+        address hostAddress
+    ) public 
+        onlyActive(propertyId)
+        onlyHost(propertyId, hostAddress)
+        onlyMarketplace(marketplaceId)
+        onlyApprovedMarketplace(marketplaceId)
+        whenNotPaused
+        returns(bool success) 
+    {
+        return true;
     }
 
     function propertiesCount() public constant returns(uint) {
@@ -108,14 +147,11 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-		) public onlyInactive(_propertyId) onlyMarketplace whenNotPaused returns(bool success)
+		) public returns(bool success)
 	{
-        
-        require(_marketplaceId != "");
         require(_hostAddress != address(0));
 
-        MarketplaceContract = IMarketplace(msg.sender);
-        require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
+        validateCreate(_propertyId, _marketplaceId);
         
 		properties[_propertyId] = PropertyStruct({
             hostAddress: _hostAddress,
@@ -145,18 +181,21 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
-    ) public onlyActive(_propertyId) onlyHost(_propertyId, _hostAddress) onlyMarketplace whenNotPaused returns(bool success)
+        bool _isInstantBooking,
+        address _newHost
+    ) public returns(bool success)
     {
-        require(_marketplaceId != "");
         require(_hostAddress != address(0));
+        require(_newHost != address(0));
+
+        validateUpdate(_propertyId, _marketplaceId, _hostAddress);
 
         MarketplaceContract = IMarketplace(msg.sender);
         require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
 
         PropertyStruct storage property = properties[_propertyId];
 
-        property.hostAddress = _hostAddress;
+        property.hostAddress = _newHost;
         property.workingDayPrice = _workingDayPrice;
         property.nonWorkingDayPrice = _nonWorkingDayPrice;
         property.cleaningFee = _cleaningFee;

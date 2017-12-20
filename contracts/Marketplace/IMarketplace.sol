@@ -67,6 +67,7 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
+        bool _isInstantBooking,
+        address _hostNew
     ) public returns(bool success);
 }

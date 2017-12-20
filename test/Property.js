@@ -26,6 +26,7 @@ contract('Property', function (accounts) {
   const _notOwner = accounts[1];
   const _marketplaceAdmin = accounts[2];
   const _propertyHost = accounts[3];
+  const _propertyHostUpdate = accounts[4];
 
   const _propertyId = "testId123";
   const _propertyId2 = "testId223";
@@ -53,6 +54,30 @@ contract('Property', function (accounts) {
     it("should get the owner of the first contract", async function () {
       const owner = await propertyContract.getOwner();
       assert.strictEqual(owner, _owner, "The owner is not set correctly");
+    });
+  });
+
+  describe("working with marketplace", () => {
+    beforeEach(async function () {
+      mpl = await Property.new();
+      proxy = await PropertyProxy.new(impl.address);
+      propertyContract = await IProperty.at(proxy.address);
+      await propertyContract.init();
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      await marketplaceContract.init(propertyContract.address);
+    });
+
+    it("should throw set marketplace address not owner", async() => {
+      await expectThrow(propertyContract.setMarketplace(marketplaceContract.address, {
+        from: _notOwner
+      }));
+    });
+
+    it("should throw marketplace address is wrong", async() => {
+      await expectThrow(propertyContract.setMarketplace("0x0"));
     });
   });
 
@@ -251,7 +276,8 @@ contract('Property', function (accounts) {
         _cleaningFee,
         _refundPercent,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       ));
@@ -271,7 +297,8 @@ contract('Property', function (accounts) {
         _cleaningFee,
         _refundPercent,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       ));
@@ -287,7 +314,8 @@ contract('Property', function (accounts) {
         _cleaningFee,
         _refundPercent,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _propertyHostUpdate, {
           from: _propertyHost
         }
       ));
@@ -303,7 +331,8 @@ contract('Property', function (accounts) {
         _cleaningFee,
         _refundPercent,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _propertyHostUpdate, {
           from: _notOwner
         }
       ));
