@@ -75,10 +75,6 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         _;
     }
 
-    function isMarketplace() public constant returns(bool result) {
-        return true;
-    }
-
     function isApprovedMarketplace(bytes32 marketplaceId) public constant returns(bool result) {
         return marketplaces[marketplaceId].isApproved;
     }

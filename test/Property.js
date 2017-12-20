@@ -63,6 +63,12 @@ contract('Property', function (accounts) {
       proxy = await PropertyProxy.new(impl.address);
       propertyContract = await IProperty.at(proxy.address);
       await propertyContract.init();
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      await marketplaceContract.init(propertyContract.address);
+      await propertyContract.setMarketplace(marketplaceContract.address);
     });
 
     it("should upgrade contract from owner", async function () {
@@ -84,13 +90,14 @@ contract('Property', function (accounts) {
     beforeEach(async function () {
       impl = await Property.new();
       proxy = await PropertyProxy.new(impl.address);
-      PropertyContract = await IProperty.at(proxy.address);
-      await PropertyContract.init();
+      propertyContract = await IProperty.at(proxy.address);
+      await propertyContract.init();
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-      await marketplaceContract.init(PropertyContract.address);
+      await marketplaceContract.init(propertyContract.address);
+      await propertyContract.setMarketplace(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -110,7 +117,7 @@ contract('Property', function (accounts) {
     });
 
     it("should throw on create new Property without Marketplace contract", async() => {
-      await expectThrow(PropertyContract.create(
+      await expectThrow(propertyContract.create(
         _propertyId,
         _marketplaceId,
         _owner,
@@ -127,7 +134,7 @@ contract('Property', function (accounts) {
 
     it("should throw if trying to create Property when paused", async function () {
 
-      await PropertyContract.pause({
+      await propertyContract.pause({
         from: _owner
       });
 
@@ -201,13 +208,14 @@ contract('Property', function (accounts) {
     beforeEach(async function () {
       impl = await Property.new();
       proxy = await PropertyProxy.new(impl.address);
-      PropertyContract = await IProperty.at(proxy.address);
-      await PropertyContract.init();
+      propertyContract = await IProperty.at(proxy.address);
+      await propertyContract.init();
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-      await marketplaceContract.init(PropertyContract.address);
+      await marketplaceContract.init(propertyContract.address);
+      await propertyContract.setMarketplace(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -240,7 +248,7 @@ contract('Property', function (accounts) {
     });
 
     it("should throw on update Property without Marketplace contract", async() => {
-      await expectThrow(PropertyContract.update(
+      await expectThrow(propertyContract.update(
         _propertyId,
         _marketplaceId,
         _owner,
@@ -257,7 +265,7 @@ contract('Property', function (accounts) {
 
     it("should throw if trying to update Property when paused", async function () {
 
-      await PropertyContract.pause({
+      await propertyContract.pause({
         from: _owner
       });
 
@@ -287,6 +295,22 @@ contract('Property', function (accounts) {
         _daysBeforeStartForRefund,
         _isInstantBooking, {
           from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if trying to update Property with another address", async function () {
+
+      await expectThrow(marketplaceContract.updateProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _notOwner
         }
       ));
     });

@@ -749,6 +749,7 @@ contract('Marketplace', function (accounts) {
       await propertyContract.init();
 
       await marketplaceContract.init(propertyContract.address);
+      await propertyContract.setMarketplace(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -936,6 +937,7 @@ contract('Marketplace', function (accounts) {
       await propertyContract.init();
 
       await marketplaceContract.init(propertyContract.address);
+      await propertyContract.setMarketplace(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,

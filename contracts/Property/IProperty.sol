@@ -31,6 +31,8 @@ contract IProperty is IOwnableUpgradeableImplementation, IPausable {
         bool _isInstantBooking
     ) public returns(bool success);
 
+    function setMarketplace(address _marketplaceAddress) public;
+
     function propertiesCount() public constant returns(uint);
     
     function getPropertyId(uint index) public constant returns(bytes32);

@@ -15,8 +15,6 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 
     function init(address propertyContractAddress) public;
 
-    function isMarketplace() public constant returns(bool result);
-
     function isApprovedMarketplace(bytes32 _marketplaceId) public constant returns(bool result);
 
     function createMarketplace(
