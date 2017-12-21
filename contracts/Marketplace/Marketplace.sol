@@ -34,7 +34,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
 	uint public rate;
 
-    function init(address propertyContractAddress) public onlyOwner {
+    function init(address propertyContractAddress) public {
         super.init();
         require(propertyContractAddress != address(0));
         PropertyContract = IProperty(propertyContractAddress);

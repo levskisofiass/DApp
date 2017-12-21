@@ -39,7 +39,8 @@ contract IProperty is IOwnableUpgradeableImplementation, IPausable {
 
     function validateUpdate(
         bytes32 propertyId,
-        bytes32 marketplaceId
+        bytes32 marketplaceId,
+        address hostAddress
     ) public returns(bool success);
 
     function setMarketplace(address _marketplaceAddress) public;

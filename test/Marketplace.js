@@ -1114,12 +1114,6 @@ contract('Marketplace', function (accounts) {
       await propertyContract.init();
     });
 
-    it("should throw when not owner init contract", async() => {
-      await expectThrow(marketplaceContract.init(propertyContract.address, {
-        from: _notOwner
-      }));
-    });
-
     it("should throw when address is wrong", async() => {
       await expectThrow(marketplaceContract.init("0x0"));
     });
