@@ -7,8 +7,8 @@ import "./../Marketplace/IMarketplace.sol";
 
 contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
     
-    IMarketplace public MarketplaceContract;
-    address public marketplaceAddress; 
+    IMarketplace private MarketplaceContract;
+    address private marketplaceAddress; 
 
     struct PropertyStruct {
         address hostAddress;
@@ -189,10 +189,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         require(_newHost != address(0));
 
         validateUpdate(_propertyId, _marketplaceId, _hostAddress);
-
-        MarketplaceContract = IMarketplace(msg.sender);
-        require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
-
+        
         PropertyStruct storage property = properties[_propertyId];
 
         property.hostAddress = _newHost;
