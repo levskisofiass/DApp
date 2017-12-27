@@ -3,10 +3,10 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IMarketplace.sol";
 import "./../Lifecycle/Pausable.sol";
-import "./../Property/IProperty.sol";
+import "./../Property/PropertyFactory/IPropertyFactory.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
-    IProperty public PropertyContract;
+    IPropertyFactory public PropertyFactoryContract;
 
     struct MarketplaceStruct {
         address adminAddress;
@@ -33,9 +33,9 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
 	uint public rate;
 
-    function init(address propertyContractAddress) public {
+    function init(address propertyFactoryContractAddress) public {
         super.init();
-        PropertyContract = IProperty(propertyContractAddress);
+        PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
     }
 
     /**
@@ -211,7 +211,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         bool _isInstantBooking
     ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
     {
-        PropertyContract.create(
+        PropertyFactoryContract.createNewProperty(
             _propertyId,
             _marketplaceId, 
             msg.sender,

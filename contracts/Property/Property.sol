@@ -83,7 +83,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation, Pausable {
         );
     }
 
-    function create(
+    function createProperty(
         bytes32 _propertyId,
 		bytes32 _marketplaceId, 
         address _hostAddress,
