@@ -21,4 +21,5 @@ module.exports = async function (deployer) {
     let MarketplaceContract = await MarketplaceProxy.deployed();
     MarketplaceContract = await IMarketplace.at(MarketplaceContract.address);
     await MarketplaceContract.init(PropertyContract.address);
+    await PropertyContract.setMarketplace(MarketplaceContract.address);
 };

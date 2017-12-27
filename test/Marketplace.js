@@ -27,6 +27,7 @@ contract('Marketplace', function (accounts) {
   const _marketplaceAdmin = accounts[2];
   const _newMarketplaceAdmin = accounts[3];
   const _propertyHost = accounts[4];
+  const _propertyHostUpdate = accounts[5];
 
   const _marketplaceId = util.toBytes32("5a9d0e1a87");
   const _marketplaceId2 = util.toBytes32("5a9d0e1a88");
@@ -42,11 +43,17 @@ contract('Marketplace', function (accounts) {
   const _propertyId = "testId1234";
   const _propertyId2 = "testId223";
   const _workingDayPrice = '1000000000000000000';
+  const _workingDayPriceUpdate = '2000000000000000000';
   const _nonWorkingDayPrice = '2000000000000000000';
+  const _nonWorkingDayPriceUpdate = '1000000000000000000';
   const _cleaningFee = '100000000000000000';
+  const _cleaningFeeUpdate = '200000000000000000';
   const _refundPercent = '80';
+  const _refundPercentUpdate = '90';
   const _daysBeforeStartForRefund = '10';
+  const _daysBeforeStartForRefundUpdate = '20';
   const _isInstantBooking = true;
+  const _isInstantBookingUpdate = false;
 
   describe("creating marketplaceProxy", () => {
     beforeEach(async function () {
@@ -743,6 +750,7 @@ contract('Marketplace', function (accounts) {
       await propertyContract.init();
 
       await marketplaceContract.init(propertyContract.address);
+      await propertyContract.setMarketplace(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -915,6 +923,199 @@ contract('Marketplace', function (accounts) {
 
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property creation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
+  describe("Update property from Marketplace", () => {
+    beforeEach(async function () {
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
+      await propertyContract.init();
+
+      await marketplaceContract.init(propertyContract.address);
+      await propertyContract.setMarketplace(marketplaceContract.address);
+
+      await marketplaceContract.createMarketplace(
+        _marketplaceId,
+        _url,
+        _propertyAPI,
+        _disputeAPI,
+        _exchangeContractAddress, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+    });
+
+    it("should update property", async function () {
+      let result = await marketplaceContract.updateProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPriceUpdate,
+        _nonWorkingDayPriceUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
+          from: _propertyHost
+        }
+      );
+
+      assert.isTrue(Boolean(result.receipt.status), "The Property updating was not successful");
+    });
+    it("should update the values in a Property correctly", async function () {
+      await marketplaceContract.updateProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPriceUpdate,
+        _nonWorkingDayPriceUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
+          from: _propertyHost
+        }
+      );
+
+      let result = await propertyContract.getProperty(_propertyId);
+      assert.strictEqual(result[0].toString(), _propertyHostUpdate, "The Host was not update correctly")
+      assert.strictEqual(result[2].toString(), _workingDayPriceUpdate, "The workingDayPrice was not update correctly");
+      assert.strictEqual(result[3].toString(), _nonWorkingDayPriceUpdate, "The nonWorkingDayPrice was not update correctly");
+      assert.strictEqual(result[4].toString(), _cleaningFeeUpdate, "The cleaningFee was not update correctly");
+      assert.strictEqual(result[5].toString(), _refundPercentUpdate, "The refundPercent was not update correctly");
+      assert.strictEqual(result[6].toString(), _daysBeforeStartForRefundUpdate, "The daysBeforeStartForRefund was not update correctly");
+      assert.isFalse(result[8], "The isInstantBooking was not update correctly");
+    });
+    it("should throw if trying to update property with empty propertyId", async function () {
+      await expectThrow(marketplaceContract.updateProperty(
+        "",
+        _marketplaceId,
+        _workingDayPriceUpdate,
+        _nonWorkingDayPriceUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
+          from: _propertyHost
+        }
+      ));
+    });
+    it("should throw if trying to update property with empty marketplaceId", async function () {
+      await expectThrow(marketplaceContract.updateProperty(
+        _propertyId,
+        "",
+        _workingDayPriceUpdate,
+        _nonWorkingDayPriceUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
+          from: _propertyHost
+        }
+      ));
+    });
+    it("should throw if trying to update property with unapproved marketplace", async function () {
+      await marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      await expectThrow(marketplaceContract.updateProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPriceUpdate,
+        _nonWorkingDayPriceUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
+          from: _propertyHost
+        }
+      ));
+    });
+    it("should throw if trying to update property when paused", async function () {
+      await marketplaceContract.pause({
+        from: _owner
+      });
+
+      await expectThrow(marketplaceContract.updateProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPriceUpdate,
+        _nonWorkingDayPriceUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
+          from: _propertyHost
+        }
+      ));
+    });
+    it("should emit event on Property creation", async function () {
+      const expectedEvent = 'LogUpdatePropertyFromMarketplace';
+      let result = await marketplaceContract.updateProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPriceUpdate,
+        _nonWorkingDayPriceUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _propertyHostUpdate, {
+          from: _propertyHost
+        }
+      );
+
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property updation!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
+  describe("Init contract", () => {
+    beforeEach(async() => {
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
+      await propertyContract.init();
+    });
+
+    it("should throw when address is wrong", async() => {
+      await expectThrow(marketplaceContract.init("0x0"));
     });
   });
 });
