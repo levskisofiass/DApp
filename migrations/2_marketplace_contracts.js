@@ -22,4 +22,5 @@ module.exports = async function (deployer) {
     MarketplaceContract = await IMarketplace.at(MarketplaceContract.address);
     // TODO Add propertyFactory contract and use it on MarketplaceInit
     await MarketplaceContract.init(PropertyContract.address);
+    await PropertyContract.setMarketplace(MarketplaceContract.address);
 };
