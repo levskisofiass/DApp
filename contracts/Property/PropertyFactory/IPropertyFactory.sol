@@ -4,9 +4,12 @@ import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradea
 import "./../../Lifecycle/IPausable.sol";
 
 contract IPropertyFactory is IOwnableUpgradeableImplementation, IPausable {
-    event LogCreateProperty(bytes32 propertyId, address hostAddress);
+    event LogCreatePropertyContract(bytes32 propertyId, address hostAddress, address propertyContract);
 
-    function init(address propertyImplAddress) public;
+    function validateCreate(
+        bytes32 propertyId,
+        bytes32 marketplaceId
+    ) public returns(bool success);
 
     function createNewProperty(
         bytes32 _propertyId,
@@ -23,11 +26,11 @@ contract IPropertyFactory is IOwnableUpgradeableImplementation, IPausable {
     function propertiesCount() public constant returns(uint);
     
     function getPropertyId(uint index) public constant returns(bytes32);
+    function getPropertyContractAddress(bytes32 _propertyId) public constant returns(address propertyContract);
 
-    function setPropertyImpl(address propertyImplAddress) public;
+    function setPropertyImplAddress(address propertyImplAddress) public;
+    function getPropertyImplAddress() public constant returns(address propertyImpl);
 
-    function getPropertyImpl() public constant returns(address propertyImpl);
-
-    function getProperty(bytes32 propertyId) public constant
-        returns(address hostAddress, bytes32 marketplaceId, uint workingDayPrice, uint nonWorkingDayPrice, uint cleaningFee, uint refundPercent, uint daysBeforeStartForRefund, uint propertyArrayIndex, bool isInstantBooking, bool isActive);
+    function setMarketplaceAddress(address propertyImplAddress) public;
+    function getMarketplaceAddress() public constant returns(address marketplaceAddress);
 }

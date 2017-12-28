@@ -8,12 +8,13 @@ import "./../IProperty.sol";
 import "./IPropertyFactory.sol";
 
 contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, Pausable {
+    address private marketplaceContractAddress; 
     IMarketplace private MarketplaceContract; 
     address private propertyImplContract;
     bytes32[] private propertyIds;
     mapping (bytes32 => address) private properties;
 
-    event LogCreateProperty(bytes32 propertyId, address hostAddress);
+    event LogCreatePropertyContract(bytes32 propertyId, address hostAddress, address propertyContract);
 
     /**
      * @dev modifier ensuring that the modified method is only called for not existing properties
@@ -24,9 +25,22 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         _;
     }
 
-    function init(address propertyImplAddress) public {
-        super.init();
-        propertyImplContract = propertyImplAddress;
+    /**
+     * @dev modifier ensuring that the modified method is only called by marketplace contract
+     */
+    modifier onlyMarketplace(bytes32 marketplaceId) {
+        require(marketplaceId != "");
+        require(marketplaceContractAddress == msg.sender);
+        _;
+    }
+
+    /**
+     * @dev modifier ensuring that the modified method is only called by approved marketplace
+     */
+    modifier onlyApprovedMarketplace(bytes32 marketplaceId) {
+        MarketplaceContract = IMarketplace(msg.sender);
+        require(MarketplaceContract.isApprovedMarketplace(marketplaceId));
+        _;
     }
 
     function propertiesCount() public constant returns(uint) {
@@ -37,30 +51,55 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         return propertyIds[index];
     }
 
-    function getProperty(bytes32 propertyId) public constant
-        returns(address hostAddress, bytes32 marketplaceId, uint workingDayPrice, uint nonWorkingDayPrice, uint cleaningFee, uint refundPercent, uint daysBeforeStartForRefund, uint propertyArrayIndex, bool isInstantBooking, bool isActive)
-    {
-        // PropertyStruct storage p = properties[propertyId];
-        // return (
-        //     p.hostAddress,
-        //     p.marketplaceId,
-        //     p.workingDayPrice,
-        //     p.nonWorkingDayPrice,
-        //     p.cleaningFee,
-        //     p.refundPercent,
-        //     p.daysBeforeStartForRefund,
-        //     p.propertyArrayIndex,
-        //     p.isInstantBooking,
-        //     p.isActive
-        // );
+    function getPropertyContractAddress(bytes32 _propertyId) public constant returns(address propertyContract) {
+        return properties[_propertyId];
     }
 
-    function setPropertyImpl(address propertyImplAddress) onlyOwner public {
+    // function getProperty(bytes32 propertyId) public constant
+    //     returns(address hostAddress, bytes32 marketplaceId, uint workingDayPrice, uint nonWorkingDayPrice, uint cleaningFee, uint refundPercent, uint daysBeforeStartForRefund, uint propertyArrayIndex, bool isInstantBooking, bool isActive)
+    // {
+    //     PropertyStruct storage p = properties[propertyId];
+    //     return (
+    //         p.hostAddress,
+    //         p.marketplaceId,
+    //         p.workingDayPrice,
+    //         p.nonWorkingDayPrice,
+    //         p.cleaningFee,
+    //         p.refundPercent,
+    //         p.daysBeforeStartForRefund,
+    //         p.propertyArrayIndex,
+    //         p.isInstantBooking,
+    //         p.isActive
+    //     );
+    // }
+
+    function setPropertyImplAddress(address propertyImplAddress) onlyOwner public {
         propertyImplContract = propertyImplAddress;
     }
 
-    function getPropertyImpl() public constant returns(address propertyImpl) {
+    function getPropertyImplAddress() public constant returns(address propertyImpl) {
         return propertyImplContract;
+    }
+
+    function setMarketplaceAddress(address marketplaceAddress) onlyOwner public {
+        marketplaceContractAddress = marketplaceAddress;
+    }
+
+    function getMarketplaceAddress() public constant returns(address marketplaceAddress) {
+        return marketplaceContractAddress;
+    }
+
+    function validateCreate(
+        bytes32 propertyId,
+        bytes32 marketplaceId
+    ) public 
+        onlyNotExisting(propertyId)
+        onlyMarketplace(marketplaceId)
+        onlyApprovedMarketplace(marketplaceId)
+        whenNotPaused
+        returns(bool success) 
+    {
+        return true;
     }
 
     function createNewProperty(
@@ -73,14 +112,10 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-		) public onlyNotExisting(_propertyId) whenNotPaused returns(bool success)
+		) public whenNotPaused returns(bool success)
 	{
-        require(_marketplaceId != "");
         require(_hostAddress != address(0));
-
-        MarketplaceContract = IMarketplace(msg.sender);
-        require(MarketplaceContract.isMarketplace());
-        require(MarketplaceContract.isApprovedMarketplace(_marketplaceId));
+        validateCreate(_propertyId, _marketplaceId);
 
         PropertyProxy proxy = new PropertyProxy(propertyImplContract);
         IProperty propertyContract = IProperty(proxy);
@@ -94,12 +129,13 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
             _cleaningFee,
             _refundPercent,
             _daysBeforeStartForRefund,
+            propertyIds.length,
             _isInstantBooking
         );
 		properties[_propertyId] = propertyContract;
         propertyIds.push(_propertyId);
 
-        LogCreateProperty(_propertyId, _hostAddress);
+        LogCreatePropertyContract(_propertyId, _hostAddress, propertyContract);
 		return true;
 	}
 }

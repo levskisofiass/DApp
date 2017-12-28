@@ -40,6 +40,18 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
     }
 
+    // TODO Write tests for set and get
+    function setPropertyFactoryContract(address propertyFactoryContractAddress) onlyOwner public returns(bool success) {
+        require(propertyFactoryContractAddress != address(0));
+        PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
+
+        return true;
+    }
+
+    function getPropertyFactoryContract() view public returns(address propertyFactoryAddress) {
+        return PropertyFactoryContract;
+    }
+
     /**
      * @dev modifier ensuring that the modified method is only called on active marketplaces
      * @param marketplaceId - the identifier of the marketplace
@@ -226,32 +238,32 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return true;
     }
 
-    function updateProperty(
-        bytes32 _propertyId,
-		bytes32 _marketplaceId, 
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
-        uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking,
-        address _newHost
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
-    {
-        PropertyContract.update(
-            _propertyId,
-            _marketplaceId, 
-            msg.sender,
-            _workingDayPrice,
-            _nonWorkingDayPrice,
-            _cleaningFee,
-            _refundPercent,
-            _daysBeforeStartForRefund,
-            _isInstantBooking,
-            _newHost
-        );
+    // function updateProperty(
+    //     bytes32 _propertyId,
+	// 	bytes32 _marketplaceId, 
+	// 	uint _workingDayPrice,
+    //     uint _nonWorkingDayPrice,
+    //     uint _cleaningFee,
+    //     uint _refundPercent,
+    //     uint _daysBeforeStartForRefund,
+    //     bool _isInstantBooking,
+    //     address _newHost
+    // ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+    // {
+    //     PropertyFactoryContract.update(
+    //         _propertyId,
+    //         _marketplaceId, 
+    //         msg.sender,
+    //         _workingDayPrice,
+    //         _nonWorkingDayPrice,
+    //         _cleaningFee,
+    //         _refundPercent,
+    //         _daysBeforeStartForRefund,
+    //         _isInstantBooking,
+    //         _newHost
+    //     );
 
-        LogUpdatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
-        return true;
-    }
+    //     LogUpdatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
+    //     return true;
+    // }
 }

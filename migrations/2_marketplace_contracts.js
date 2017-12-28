@@ -6,21 +6,30 @@ let PropertyProxy = artifacts.require("./../Property/PropertyProxy.sol");
 let Property = artifacts.require("./../Property/Property.sol");
 let IProperty = artifacts.require("./../Property/IProperty.sol");
 
-module.exports = async function (deployer) {
+let PropertyFactoryProxy = artifacts.require("./../Property/PropertyFactory/PropertyFactoryProxy.sol");
+let PropertyFactory = artifacts.require("./../Property/PropertyFactory/PropertyFactory.sol");
+let IPropertyFactory = artifacts.require("./../Property/PropertyFactory/IPropertyFactory.sol");
 
+module.exports = async function (deployer) {
     await deployer.deploy(Property);
     let PropertyImpl = await Property.deployed();
-    await deployer.deploy(PropertyProxy, PropertyImpl.address);
-    let PropertyContract = await PropertyProxy.deployed();
-    PropertyContract = await IProperty.at(PropertyContract.address);
-    await PropertyContract.init();
+    await PropertyImpl.init();
+
+    await deployer.deploy(PropertyFactory);
+    let PropertyFactoryImpl = await PropertyFactory.deployed();
+    await deployer.deploy(PropertyFactoryProxy, PropertyFactoryImpl.address);
+    let PropertyFactoryContract = await PropertyFactoryProxy.deployed();
+    PropertyFactoryContract = await IPropertyFactory.at(PropertyFactoryContract.address);
 
     await deployer.deploy(Marketplace);
     let MarketplaceImpl = await Marketplace.deployed();
     await deployer.deploy(MarketplaceProxy, MarketplaceImpl.address);
     let MarketplaceContract = await MarketplaceProxy.deployed();
     MarketplaceContract = await IMarketplace.at(MarketplaceContract.address);
-    // TODO Add propertyFactory contract and use it on MarketplaceInit
-    await MarketplaceContract.init(PropertyContract.address);
-    await PropertyContract.setMarketplace(MarketplaceContract.address);
+
+    await PropertyFactoryContract.init();
+    await MarketplaceContract.init(PropertyFactoryContract.address);
+
+    await PropertyFactoryContract.setPropertyImplAddress(PropertyImpl.address);
+    await PropertyFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
 };

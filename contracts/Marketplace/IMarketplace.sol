@@ -15,6 +15,10 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 
     function init(address propertyContractAddress) public;
 
+    function setPropertyFactoryContract(address propertyFactoryContractAddress) public returns(bool success);
+
+    function getPropertyFactoryContract() view public returns(address propertyFactoryAddress);
+
     function isApprovedMarketplace(bytes32 _marketplaceId) public constant returns(bool result);
 
     function createMarketplace(
@@ -59,15 +63,15 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
         bool _isInstantBooking
     ) public returns(bool success);
 
-    function updateProperty(
-        bytes32 _propertyId,
-		bytes32 _marketplaceId, 
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
-        uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking,
-        address _hostNew
-    ) public returns(bool success);
+    // function updateProperty(
+    //     bytes32 _propertyId,
+	// 	bytes32 _marketplaceId, 
+	// 	uint _workingDayPrice,
+    //     uint _nonWorkingDayPrice,
+    //     uint _cleaningFee,
+    //     uint _refundPercent,
+    //     uint _daysBeforeStartForRefund,
+    //     bool _isInstantBooking,
+    //     address _hostNew
+    // ) public returns(bool success);
 }
