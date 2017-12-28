@@ -117,7 +117,7 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         require(_hostAddress != address(0));
         validateCreate(_propertyId, _marketplaceId);
 
-        PropertyProxy proxy = new PropertyProxy(propertyImplContract);
+        PropertyProxy proxy = new PropertyProxy(this);
         IProperty propertyContract = IProperty(proxy);
 
         propertyContract.createProperty(
