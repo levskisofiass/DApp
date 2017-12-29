@@ -8,19 +8,25 @@ const PropertyProxy = artifacts.require("./Property/PropertyProxy.sol");
 const Property = artifacts.require("./Property/Property.sol");
 const IProperty = artifacts.require("./Property/IProperty.sol");
 
+const PropertyFactoryProxy = artifacts.require('./Property/PropertyFactory/PropertyFactoryProxy.sol')
+const PropertyFactory = artifacts.require('./Property/PropertyFactory/PropertyFactory.sol')
+const IPropertyFactory = artifacts.require('./Property/PropertyFactory/IPropertyFactory.sol')
+
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
 const expectThrow = util.expectThrow;
 
 contract('Marketplace', function (accounts) {
-
   let marketplaceContract;
-  let propertyContract;
   let marketplaceProxy;
-  let propertyProxy;
   let marketplaceImpl;
   let marketplaceImpl2;
+  let propertyContract;
+  let propertyProxy;
   let propertyImpl;
+  let factoryContract;
+  let factoryProxy;
+  let factoryImpl;
 
   const _owner = accounts[0];
   const _notOwner = accounts[1];
@@ -54,6 +60,26 @@ contract('Marketplace', function (accounts) {
   const _daysBeforeStartForRefundUpdate = '20';
   const _isInstantBooking = true;
   const _isInstantBookingUpdate = false;
+  const _propertyFactoryContract = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76a";
+  const _propertyFactoryContract2 = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76b";
+
+  describe("init contract", () => {
+    beforeEach(async() => {
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+    });
+
+    it("should set correct property factory contract", async() => {
+      await marketplaceContract.init(_propertyFactoryContract);
+      let contractAddress = await marketplaceContract.getPropertyFactoryContract();
+      assert.strictEqual(contractAddress.toString(), _propertyFactoryContract, "The property factory contract was not set correctly")
+    });
+
+    it("should throw when address is wrong", async() => {
+      await expectThrow(marketplaceContract.init("0x0"));
+    });
+  });
 
   describe("creating marketplaceProxy", () => {
     beforeEach(async function () {
@@ -71,6 +97,67 @@ contract('Marketplace', function (accounts) {
     it("should get the owner of the first contract", async function () {
       const owner = await marketplaceContract.getOwner();
       assert.strictEqual(owner, _owner, "The owner is not set correctly");
+    });
+  });
+
+  describe("upgrade marketplace contract", () => {
+    beforeEach(async function () {
+      marketplaceImpl = await Marketplace.new();
+      marketplaceImpl2 = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+      propertyImpl = await Property.new();
+      propertyProxy = await PropertyProxy.new(propertyImpl.address);
+      propertyContract = await IProperty.at(propertyProxy.address);
+
+      await marketplaceContract.init(propertyContract.address);
+    });
+
+    it("should upgrade contract from owner", async function () {
+      const upgradeableContract = await IOwnableUpgradeableImplementation.at(marketplaceProxy.address);
+      await upgradeableContract.upgradeImplementation(marketplaceImpl2.address);
+      const newImplAddress = await upgradeableContract.getImplementation();
+      assert.strictEqual(marketplaceImpl2.address, newImplAddress, "The owner is not set correctly");
+    });
+
+    it("should throw on upgrade contract from not owner", async function () {
+      const upgradeableContract = await IOwnableUpgradeableImplementation.at(marketplaceProxy.address);
+      await expectThrow(upgradeableContract.upgradeImplementation(marketplaceImpl2.address, {
+        from: _notOwner
+      }));
+    });
+  });
+
+  describe("change property factory contract", () => {
+    beforeEach(async() => {
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      await marketplaceContract.init(_propertyFactoryContract);
+    });
+
+    it("should get correct property factory contract", async() => {
+      let contractAddress = await marketplaceContract.getPropertyFactoryContract();
+      assert.strictEqual(contractAddress.toString(), _propertyFactoryContract, "The property factory contract was not set correctly")
+    });
+
+    it("should change property factory contract", async() => {
+      await marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract2, {
+        from: _owner
+      });
+      let contractAddress = await marketplaceContract.getPropertyFactoryContract();
+      assert.strictEqual(contractAddress.toString(), _propertyFactoryContract2, "The property factory contract was not set correctly")
+    });
+
+    it("should throw when non-owner is changing address", async() => {
+      await expectThrow(marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract2, {
+        from: _notOwner
+      }));
+    });
+
+    it("should throw when address is wrong", async() => {
+      await expectThrow(marketplaceContract.setPropertyFactoryContract("0x0"));
     });
   });
 
@@ -709,48 +796,23 @@ contract('Marketplace', function (accounts) {
     });
   });
 
-  describe("upgrade marketplace contract", () => {
+  describe("create property from Marketplace", () => {
     beforeEach(async function () {
-      marketplaceImpl = await Marketplace.new();
-      marketplaceImpl2 = await Marketplace.new();
-      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      factoryImpl = await PropertyFactory.new();
+      factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IPropertyFactory.at(factoryProxy.address);
+      await factoryContract.init();
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
-
-      await marketplaceContract.init(propertyContract.address);
-    });
-
-    it("should upgrade contract from owner", async function () {
-      const upgradeableContract = await IOwnableUpgradeableImplementation.at(marketplaceProxy.address);
-      await upgradeableContract.upgradeImplementation(marketplaceImpl2.address);
-      const newImplAddress = await upgradeableContract.getImplementation();
-      assert.strictEqual(marketplaceImpl2.address, newImplAddress, "The owner is not set correctly");
-    });
-
-    it("should throw on upgrade contract from not owner", async function () {
-      const upgradeableContract = await IOwnableUpgradeableImplementation.at(marketplaceProxy.address);
-      await expectThrow(upgradeableContract.upgradeImplementation(marketplaceImpl2.address, {
-        from: _notOwner
-      }));
-    });
-  });
-
-  describe("Create property from Marketplace", () => {
-    beforeEach(async function () {
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
       propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
-      await propertyContract.init();
+      await propertyImpl.init();
 
-      await marketplaceContract.init(propertyContract.address);
-      await propertyContract.setMarketplace(marketplaceContract.address);
+      await marketplaceContract.init(factoryContract.address);
+      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -770,7 +832,6 @@ contract('Marketplace', function (accounts) {
     });
 
     it("should create new property from Marketplace", async function () {
-
       let result = await marketplaceContract.createProperty(
         _propertyId,
         _marketplaceId,
@@ -784,7 +845,7 @@ contract('Marketplace', function (accounts) {
         }
       );
 
-      assert.isTrue(Boolean(result.receipt.status), "The propertiesCount creation was not successful");
+      assert.isTrue(Boolean(result.receipt.status), "The property creation was not successful");
     });
 
     it("should create two new Properties", async() => {
@@ -816,10 +877,10 @@ contract('Marketplace', function (accounts) {
         }
       );
 
-      assert.isTrue(Boolean(result2.receipt.status), "The propertiesCount creation was not successful");
+      assert.isTrue(Boolean(result2.receipt.status), "The property creation was not successful");
 
-      let propertiesCount = await propertyContract.propertiesCount();
-      assert(propertiesCount.eq(2), "The propertiesCount count was not correct");
+      let propertiesCount = await factoryContract.propertiesCount();
+      assert(propertiesCount.eq(2), "The properties count was not correct");
 
     });
 
@@ -837,17 +898,21 @@ contract('Marketplace', function (accounts) {
         }
       );
 
-      let result = await propertyContract.getProperty(_propertyId);
-      assert.strictEqual(result[0], _propertyHost, "The host was not set correctly");
-      assert.strictEqual(result[1], _marketplaceId, "The marketplaceId was not set correctly");
-      assert.strictEqual(result[2].toString(), _workingDayPrice, "The workingDayPrice was not set correctly");
-      assert.strictEqual(result[3].toString(), _nonWorkingDayPrice, "The nonWorkingDayPrice was not set correctly");
-      assert.strictEqual(result[4].toString(), _cleaningFee, "The cleaningFee was not set correctly");
-      assert.strictEqual(result[5].toString(), _refundPercent, "The refundPercent was not set correctly");
-      assert.strictEqual(result[6].toString(), _daysBeforeStartForRefund, "The daysBeforeStartForRefund was not set correctly");
-      assert(result[7].eq(0), "The arrayIndex was not set correctly");
-      assert.isTrue(result[8], "The isInstantBooking was not set correctly");
-      assert.isTrue(result[9], "The Property was not active");
+      let propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
+      let propertyContractLocal = await IProperty.at(propertyContractAddress);
+
+      let result = await propertyContractLocal.getProperty();
+
+      assert.strictEqual(web3.utils.hexToUtf8(result[0]), _propertyId, "The propertyId was not set correctly");
+      assert.strictEqual(result[1], _propertyHost, "The host was not set correctly");
+      assert.strictEqual(result[2], _marketplaceId, "The marketplaceId was not set correctly");
+      assert.strictEqual(result[3].toString(), _workingDayPrice, "The workingDayPrice was not set correctly");
+      assert.strictEqual(result[4].toString(), _nonWorkingDayPrice, "The nonWorkingDayPrice was not set correctly");
+      assert.strictEqual(result[5].toString(), _cleaningFee, "The cleaningFee was not set correctly");
+      assert.strictEqual(result[6].toString(), _refundPercent, "The refundPercent was not set correctly");
+      assert.strictEqual(result[7].toString(), _daysBeforeStartForRefund, "The daysBeforeStartForRefund was not set correctly");
+      assert(result[8].eq(0), "The arrayIndex was not set correctly");
+      assert.isTrue(result[9], "The isInstantBooking was not set correctly");
     });
 
     it("should append to the indexes array and set the last element correctly", async function () {
@@ -864,11 +929,14 @@ contract('Marketplace', function (accounts) {
         }
       );
 
-      let result = await propertyContract.getProperty(_propertyId);
+      let propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
+      let propertyContractLocal = await IProperty.at(propertyContractAddress);
 
-      let result1 = await propertyContract.getPropertyId(0);
+      let result = await propertyContractLocal.getProperty();
+
+      let result1 = await factoryContract.getPropertyId(0);
       assert.strictEqual(web3.utils.hexToUtf8(result1), _propertyId, "The Property id was not set correctly");
-      let result2 = await propertyContract.getPropertyId(result[7].toNumber());
+      let result2 = await factoryContract.getPropertyId(result[8].toNumber());
       assert.strictEqual(web3.utils.hexToUtf8(result2), _propertyId, "The Property index was not set correctly");
     });
 
@@ -906,6 +974,42 @@ contract('Marketplace', function (accounts) {
       ));
     });
 
+    it("should throw if trying to create Property with not existing marketplaceId", async function () {
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId2,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
+    it("should throw if trying to create Property with not approved marketplaceId", async function () {
+      await marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      await expectThrow(marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      ));
+    });
+
     it("should emit event on Property creation", async function () {
       const expectedEvent = 'LogCreatePropertyFromMarketplace';
       let result = await marketplaceContract.createProperty(
@@ -926,7 +1030,7 @@ contract('Marketplace', function (accounts) {
     });
   });
 
-  describe("Update property from Marketplace", () => {
+  xdescribe("[TODO - Refactor after moving update in property factory] update property from Marketplace", () => {
     beforeEach(async function () {
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
@@ -1099,23 +1203,6 @@ contract('Marketplace', function (accounts) {
 
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property updation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
-    });
-  });
-
-  describe("Init contract", () => {
-    beforeEach(async() => {
-      marketplaceImpl = await Marketplace.new();
-      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
-      await propertyContract.init();
-    });
-
-    it("should throw when address is wrong", async() => {
-      await expectThrow(marketplaceContract.init("0x0"));
     });
   });
 });

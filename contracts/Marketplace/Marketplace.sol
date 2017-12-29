@@ -3,10 +3,10 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IMarketplace.sol";
 import "./../Lifecycle/Pausable.sol";
-import "./../Property/IProperty.sol";
+import "./../Property/PropertyFactory/IPropertyFactory.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
-    IProperty public PropertyContract;
+    IPropertyFactory public PropertyFactoryContract;
 
     struct MarketplaceStruct {
         address adminAddress;
@@ -34,10 +34,21 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
 	uint public rate;
 
-    function init(address propertyContractAddress) public {
+    function init(address propertyFactoryContractAddress) public {
         super.init();
-        require(propertyContractAddress != address(0));
-        PropertyContract = IProperty(propertyContractAddress);
+        require(propertyFactoryContractAddress != address(0));
+        PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
+    }
+
+    function setPropertyFactoryContract(address propertyFactoryContractAddress) onlyOwner public returns(bool success) {
+        require(propertyFactoryContractAddress != address(0));
+        PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
+
+        return true;
+    }
+
+    function getPropertyFactoryContract() view public returns(address propertyFactoryAddress) {
+        return PropertyFactoryContract;
     }
 
     /**
@@ -209,7 +220,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         bool _isInstantBooking
     ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
     {
-        PropertyContract.create(
+        PropertyFactoryContract.createNewProperty(
             _propertyId,
             _marketplaceId, 
             msg.sender,
@@ -226,32 +237,32 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return true;
     }
 
-    function updateProperty(
-        bytes32 _propertyId,
-		bytes32 _marketplaceId, 
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
-        uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking,
-        address _newHost
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
-    {
-        PropertyContract.update(
-            _propertyId,
-            _marketplaceId, 
-            msg.sender,
-            _workingDayPrice,
-            _nonWorkingDayPrice,
-            _cleaningFee,
-            _refundPercent,
-            _daysBeforeStartForRefund,
-            _isInstantBooking,
-            _newHost
-        );
+    // function updateProperty(
+    //     bytes32 _propertyId,
+	// 	bytes32 _marketplaceId, 
+	// 	uint _workingDayPrice,
+    //     uint _nonWorkingDayPrice,
+    //     uint _cleaningFee,
+    //     uint _refundPercent,
+    //     uint _daysBeforeStartForRefund,
+    //     bool _isInstantBooking,
+    //     address _newHost
+    // ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+    // {
+    //     PropertyFactoryContract.update(
+    //         _propertyId,
+    //         _marketplaceId, 
+    //         msg.sender,
+    //         _workingDayPrice,
+    //         _nonWorkingDayPrice,
+    //         _cleaningFee,
+    //         _refundPercent,
+    //         _daysBeforeStartForRefund,
+    //         _isInstantBooking,
+    //         _newHost
+    //     );
 
-        LogUpdatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
-        return true;
-    }
+    //     LogUpdatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
+    //     return true;
+    // }
 }
