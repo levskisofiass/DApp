@@ -13,7 +13,7 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
     event LogUpdatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
 
-    function init(address propertyContractAddress) public;
+    function init(address propertyFactoryContractAddress) public;
 
     function setPropertyFactoryContract(address propertyFactoryContractAddress) public returns(bool success);
 

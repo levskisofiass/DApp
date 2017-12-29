@@ -8,11 +8,11 @@ import "./../IProperty.sol";
 import "./IPropertyFactory.sol";
 
 contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, Pausable {
-    address private marketplaceContractAddress; 
-    IMarketplace private MarketplaceContract; 
-    address private propertyImplContract;
-    bytes32[] private propertyIds;
-    mapping (bytes32 => address) private properties;
+    address public marketplaceContractAddress; 
+    IMarketplace public MarketplaceContract; 
+    address public propertyImplContract;
+    bytes32[] public propertyIds;
+    mapping (bytes32 => address) public properties;
 
     event LogCreatePropertyContract(bytes32 propertyId, address hostAddress, address propertyContract);
 

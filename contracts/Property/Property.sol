@@ -2,7 +2,6 @@ pragma solidity ^0.4.17;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IProperty.sol";
-import "./../Lifecycle/Pausable.sol";
 import "./PropertyFactory/IPropertyFactory.sol";
 
 contract Property is IProperty, OwnableUpgradeableImplementation {
@@ -20,19 +19,23 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
     event LogCreateProperty(bytes32 _propertyId, address _hostAddress);
     event LogUpdateProperty(bytes32 _marketplaceId, bytes32 _propertyId, address _hostAddress);
 
-    /**
-     * @dev modifier ensuring that the modified method is only called by the host of current property
-     * @param _propertyId - the identifier of the property
-     * @param _hostAddress - the address of the host
-     */
-    modifier onlyHost(bytes32 _propertyId, address _hostAddress) {
+    // /**
+    //  * @dev modifier ensuring that the modified method is only called by the host of current property
+    //  * @param _propertyId - the identifier of the property
+    //  * @param _hostAddress - the address of the host
+    //  */
+    // modifier onlyHost(bytes32 _propertyId, address _hostAddress) {
+    //     require(_propertyId != "");
+    //     require(hostAddress == _hostAddress);
+    //     _;
+    // }
+
+    modifier onlyValidProperty(bytes32 _propertyId) {
         require(_propertyId != "");
-        require(hostAddress == _hostAddress);
         _;
     }
 
     modifier onlyNewProperty(bytes32 _propertyId) {
-        require(_propertyId != "");
         require(propertyId == "");
         _;
     }
@@ -88,7 +91,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         uint _daysBeforeStartForRefund,
         uint _propertyArrayIndex,
         bool _isInstantBooking
-		) public onlyNewProperty(_propertyId) returns(bool success)
+		) public onlyNewProperty(_propertyId) onlyValidProperty(_propertyId) returns(bool success)
 	{
         propertyId = _propertyId;
         hostAddress = _hostAddress;

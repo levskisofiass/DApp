@@ -40,7 +40,6 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
     }
 
-    // TODO Write tests for set and get
     function setPropertyFactoryContract(address propertyFactoryContractAddress) onlyOwner public returns(bool success) {
         require(propertyFactoryContractAddress != address(0));
         PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);

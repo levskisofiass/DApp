@@ -2,7 +2,6 @@ pragma solidity ^0.4.17;
 
 import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IPropertyUpgrade.sol";
-import "./../../Lifecycle/Pausable.sol";
 import "./../../Property/PropertyFactory/IPropertyFactory.sol";
 
 /**

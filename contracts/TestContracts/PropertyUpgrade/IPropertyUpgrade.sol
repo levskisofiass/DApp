@@ -1,7 +1,6 @@
 pragma solidity ^0.4.17;
 
 import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
-import "./../../Lifecycle/IPausable.sol";
 
 contract IPropertyUpgrade is IOwnableUpgradeableImplementation {
     event LogCreateProperty(bytes32 propertyId, address hostAddress);
