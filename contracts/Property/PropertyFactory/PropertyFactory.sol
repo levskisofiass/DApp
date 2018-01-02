@@ -112,7 +112,7 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-		) public whenNotPaused returns(bool success)
+		) public returns(bool success)
 	{
         require(_hostAddress != address(0));
         validateCreate(_propertyId, _marketplaceId);
