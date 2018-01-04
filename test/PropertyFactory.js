@@ -416,4 +416,37 @@ contract('Property factory', function (accounts) {
             );
         });
     });
+
+    describe("Booking Days Interval", () => {
+        let maxIntervalDays = 30 * 24 * 60 * 1000;
+        beforeEach(async function () {
+            factoryImpl = await PropertyFactory.new();
+            factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
+            factoryContract = await IPropertyFactory.at(factoryProxy.address);
+            await factoryContract.init();
+
+            marketplaceImpl = await Marketplace.new();
+            marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+            marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+            propertyImpl = await Property.new();
+            await propertyImpl.init();
+
+            await marketplaceContract.init(factoryContract.address);
+            await factoryContract.setPropertyImplAddress(propertyImpl.address);
+            await factoryContract.setMarketplaceAddress(marketplaceContract.address);
+        });
+
+        it("set max booking days interval", async() => {
+            await factoryContract.setMaxBookingDaysInterval(maxIntervalDays);
+            let interval = await factoryContract.getMaxBookingDaysInterval();
+            assert(interval.eq(maxIntervalDays), "interval was not correct set");
+        });
+
+        it("should throw when max booking days interval = 0", async() => {
+            await expectThrow(
+                factoryContract.setMaxBookingDaysInterval(0)
+            );
+        });
+    });
 });

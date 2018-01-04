@@ -5,6 +5,7 @@ import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeable
 contract IProperty is IOwnableUpgradeableImplementation {
     event LogCreateProperty(bytes32 propertyId, address hostAddress);
     event LogUpdateProperty(bytes32 _marketplaceId, bytes32 propertyId, address hostAddress);
+    event LogSetPriceProperty(bytes32 propertyId, uint256 timestamp, uint256 price);
 
     function createProperty(
         bytes32 _propertyId,
@@ -16,7 +17,8 @@ contract IProperty is IOwnableUpgradeableImplementation {
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         uint _propertyArrayIndex,
-        bool _isInstantBooking
+        bool _isInstantBooking,
+        address _propertyFactoryContractAddress
 		) public returns(bool success);
 
     // function update(
@@ -50,4 +52,8 @@ contract IProperty is IOwnableUpgradeableImplementation {
             uint _daysBeforeStartForRefund, 
             uint _propertyArrayIndex,
             bool _isInstantBooking);
+
+    function setPrice(uint256 _timestampStart, uint256 _timestampEnd, uint256 _price) public returns(bool success);
+
+    function getPrice(uint256 _timestamp) public constant returns(uint price);
 }

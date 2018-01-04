@@ -12,9 +12,11 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
     IMarketplace public MarketplaceContract; 
     address public propertyImplContract;
     bytes32[] public propertyIds;
+    uint256 public maxBookingDaysInterval;
     mapping (bytes32 => address) public properties;
 
     event LogCreatePropertyContract(bytes32 propertyId, address hostAddress, address propertyContract);
+    event LogSetMaxBookingDaysInterval(uint256 interval, address hostAddress);
 
     /**
      * @dev modifier ensuring that the modified method is only called for not existing properties
@@ -130,7 +132,8 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
             _refundPercent,
             _daysBeforeStartForRefund,
             propertyIds.length,
-            _isInstantBooking
+            _isInstantBooking,
+            this
         );
 		properties[_propertyId] = propertyContract;
         propertyIds.push(_propertyId);
@@ -138,4 +141,16 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         LogCreatePropertyContract(_propertyId, _hostAddress, propertyContract);
 		return true;
 	}
+
+    function setMaxBookingDaysInterval(uint256 _maxBookingDaysInterval) public onlyOwner whenNotPaused returns(bool success) {
+        require(_maxBookingDaysInterval > 0);
+
+        maxBookingDaysInterval = _maxBookingDaysInterval;
+        LogSetMaxBookingDaysInterval(_maxBookingDaysInterval, msg.sender);
+        return true;
+    }
+
+    function getMaxBookingDaysInterval() public constant returns(uint256 _maxBookingDaysInterval) {
+        return maxBookingDaysInterval;
+    }
 }

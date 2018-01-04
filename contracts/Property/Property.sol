@@ -15,9 +15,16 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
     uint daysBeforeStartForRefund;
     uint propertyArrayIndex;
     bool isInstantBooking;
+    address propertyFactoryContractAddress;
 
     event LogCreateProperty(bytes32 _propertyId, address _hostAddress);
     event LogUpdateProperty(bytes32 _marketplaceId, bytes32 _propertyId, address _hostAddress);
+    event LogSetPriceProperty(uint256 timestamp, uint256 price);
+
+    /**
+     * @dev Mapping for save different price for different days
+     */
+    mapping (uint256 => uint256) public timestampPrices;
 
     // /**
     //  * @dev modifier ensuring that the modified method is only called by the host of current property
@@ -55,7 +62,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
 
     function getProperty() public constant
         returns(
-            bytes32 _propertyId,
+            bytes32 _propertyId, 
             address _hostAddress, 
             bytes32 _marketplaceId, 
             uint _workingDayPrice, 
@@ -90,7 +97,8 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         uint _propertyArrayIndex,
-        bool _isInstantBooking
+        bool _isInstantBooking,
+        address _propertyFactoryContractAddress
 		) public onlyNewProperty(_propertyId) onlyValidProperty(_propertyId) returns(bool success)
 	{
         propertyId = _propertyId;
@@ -103,6 +111,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         daysBeforeStartForRefund = _daysBeforeStartForRefund;
         propertyArrayIndex = _propertyArrayIndex;
         isInstantBooking = _isInstantBooking;
+        propertyFactoryContractAddress = _propertyFactoryContractAddress;
 
         LogCreateProperty(_propertyId, _hostAddress);
         
@@ -141,4 +150,47 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
 
     //     return true;
     // }
+
+    /**
+     * @dev function use to set price for property in different days
+     * @param _timestampStart - the UNIX timestamp of start point
+     * @param _timestampEnd - the UNIX timestamp of end point
+     * @param _price - price of property 
+     */
+    function setPrice(
+        uint256 _timestampStart,
+        uint256 _timestampEnd,
+        uint256 _price
+    ) public returns(bool success) 
+    {
+        //TODO: add onlyHost
+        require(_timestampEnd >= _timestampStart);
+        require(_timestampStart >= now);
+        require(_timestampEnd >= now);
+        require(_price > 0);
+
+        IPropertyFactory propertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
+        uint256 intervalPricing = (_timestampEnd - _timestampStart);
+        require(intervalPricing <= propertyFactoryContract.getMaxBookingDaysInterval());
+
+        for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
+            timestampPrices[day] = _price;
+            LogSetPriceProperty(day, _price);
+        }
+
+        return true;
+    }
+
+    /**
+     * @dev function use to get price for property in different day
+     * @param _timestamp - the UNIX timestamp
+     */
+    function getPrice(uint256 _timestamp) public constant returns(uint256 price) {
+        require(_timestamp > 0);
+
+        if (timestampPrices[_timestamp] > 0) 
+            return timestampPrices[_timestamp];
+        else
+            return workingDayPrice;
+    }
 }
