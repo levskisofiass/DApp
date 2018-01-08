@@ -151,9 +151,8 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         uint256 _timestampStart,
         uint256 _timestampEnd,
         uint256 _price
-    ) public returns(bool success) 
+    ) public onlyHost returns(bool success) 
     {
-        //TODO: add onlyHost
         require(_timestampEnd >= _timestampStart);
         require(_timestampStart >= now);
         require(_price > 0);
