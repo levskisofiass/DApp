@@ -22,7 +22,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
     event LogSetPriceProperty(uint256 timestamp, uint256 price);
 
     /**
-     * @dev Mapping for save different price for different days
+     * @dev Mapping to save different prices for different days
      */
     mapping (uint256 => uint256) public timestampPrices;
 
@@ -166,12 +166,10 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         //TODO: add onlyHost
         require(_timestampEnd >= _timestampStart);
         require(_timestampStart >= now);
-        require(_timestampEnd >= now);
         require(_price > 0);
 
         IPropertyFactory propertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
-        uint256 intervalPricing = (_timestampEnd - _timestampStart);
-        require(intervalPricing <= propertyFactoryContract.getMaxBookingDaysInterval());
+        require((_timestampEnd - _timestampStart) <= propertyFactoryContract.getMaxBookingPeriod());
 
         for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
             timestampPrices[day] = _price;

@@ -417,8 +417,8 @@ contract('Property factory', function (accounts) {
         });
     });
 
-    describe("Booking Days Interval", () => {
-        let maxIntervalDays = 30 * 24 * 60 * 1000;
+    describe("Booking Days Period", () => {
+        let maxPeriodDays = 30 * 24 * 60 * 1000;
         beforeEach(async function () {
             factoryImpl = await PropertyFactory.new();
             factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
@@ -437,21 +437,21 @@ contract('Property factory', function (accounts) {
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
         });
 
-        it("should set max booking days interval", async() => {
-            await factoryContract.setMaxBookingDaysInterval(maxIntervalDays);
-            let interval = await factoryContract.getMaxBookingDaysInterval();
-            assert(interval.eq(maxIntervalDays), "interval was not correct set");
+        it("should set max booking days period", async() => {
+            await factoryContract.setMaxBookingPeriod(maxPeriodDays);
+            let period = await factoryContract.getMaxBookingPeriod();
+            assert(period.eq(maxPeriodDays), "period was not correct set");
         });
 
-        it("should throw on max booking days interval = 0", async() => {
+        it("should throw on max booking days period = 0", async() => {
             await expectThrow(
-                factoryContract.setMaxBookingDaysInterval(0)
+                factoryContract.setMaxBookingPeriod(0)
             );
         });
 
-        it("should throw on set max booking days interval from non-owner", async() => {
+        it("should throw on set max booking days period from non-owner", async() => {
             await expectThrow(
-                factoryContract.setMaxBookingDaysInterval(maxIntervalDays, {
+                factoryContract.setMaxBookingPeriod(maxPeriodDays, {
                     from: _notOwner
                 })
             );

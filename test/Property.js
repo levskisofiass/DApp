@@ -392,7 +392,7 @@ contract('Property', function (accounts) {
   describe("set different price to property", () => {
     let anotherDayinSecunds = 1 * 24 * 60 * 1000;
     let randomDay = 2 * 24 * 60;
-    let maxIntervalDays = 30 * 24 * 60;
+    let maxPeriodDays = 30 * 24 * 60;
     let closeOfMaxBookingDays = 60 * 24 * 60;
     let price = 2000000000000000000;
     let timestampStart;
@@ -446,9 +446,9 @@ contract('Property', function (accounts) {
         }
       );
 
-      await factoryContract.setMaxBookingDaysInterval(maxIntervalDays * 1000);
+      await factoryContract.setMaxBookingPeriod(maxPeriodDays * 1000);
       timestampStart = await getFutureTimestamp(randomDay);
-      timestampEnd = await getFutureTimestamp(maxIntervalDays);
+      timestampEnd = await getFutureTimestamp(maxPeriodDays);
       propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
       propertyContract = await IProperty.at(propertyContractAddress);
     });
