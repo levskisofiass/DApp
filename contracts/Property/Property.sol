@@ -22,7 +22,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
     event LogSetPriceProperty(uint256 timestamp, uint256 price);
 
     /**
-     * @dev Mapping for save different price for different days
+     * @dev Mapping to save different prices for different days
      */
     mapping (uint256 => uint256) public timestampPrices;
 
