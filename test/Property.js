@@ -18,6 +18,7 @@ const IPropertyFactory = artifacts.require('./Property/PropertyFactory/IProperty
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
 const expectThrow = util.expectThrow;
+const getFutureTimestamp = util.getFutureTimestamp;
 
 contract('Property', function (accounts) {
   let propertyContract;
@@ -142,7 +143,8 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _arrayIndex,
-        _isInstantBooking, {
+        _isInstantBooking,
+        factoryContract.address, {
           from: _propertyHost
         }
       ));
@@ -338,6 +340,219 @@ contract('Property', function (accounts) {
 
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property updation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
+  describe("set different price for specific date for property", () => {
+    let anotherDayinSecunds = 1 * 24 * 60 * 1000;
+    let randomDay = 2 * 24 * 60;
+    let maxPeriodDays = 30 * 24 * 60;
+    let closeOfMaxBookingDays = 60 * 24 * 60;
+    let price = 2000000000000000000;
+    let timestampStart;
+    let timestampEnd;
+    let propertyContractAddress;
+    let propertyContract;
+
+    beforeEach(async function () {
+      factoryImpl = await PropertyFactory.new();
+      factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IPropertyFactory.at(factoryProxy.address);
+      await factoryContract.init();
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+      propertyImpl = await Property.new();
+      await propertyImpl.init();
+
+      await marketplaceContract.init(factoryContract.address);
+      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await factoryContract.setMarketplaceAddress(marketplaceContract.address);
+
+      await marketplaceContract.createMarketplace(
+        _marketplaceId,
+        _url,
+        _propertyAPI,
+        _disputeAPI,
+        _exchangeContractAddress, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      await marketplaceContract.createProperty(
+        _propertyId,
+        _marketplaceId,
+        _workingDayPrice,
+        _nonWorkingDayPrice,
+        _cleaningFee,
+        _refundPercent,
+        _daysBeforeStartForRefund,
+        _isInstantBooking, {
+          from: _propertyHost
+        }
+      );
+
+      await factoryContract.setMaxBookingPeriod(maxPeriodDays * 1000);
+      timestampStart = await getFutureTimestamp(randomDay);
+      timestampEnd = await getFutureTimestamp(maxPeriodDays);
+      propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
+      propertyContract = await IProperty.at(propertyContractAddress);
+    });
+
+    it("should set different price property for some days", async() => {
+      await propertyContract.setPrice(
+        timestampStart,
+        timestampEnd,
+        price, {
+          from: _propertyHost
+        }
+      );
+
+      for (let day = timestampStart; day <= timestampEnd;
+        (day += 86400)) {
+        amount = await propertyContract.getPrice(day);
+        assert(amount.eq(price), "The price was not correct set in " + day + " day");
+      }
+    });
+
+    it("should set different price property for one day", async() => {
+      await propertyContract.setPrice(
+        timestampStart,
+        timestampStart,
+        price, {
+          from: _propertyHost
+        }
+      );
+
+      amount = await propertyContract.getPrice(timestampStart);
+      assert(amount.eq(price), "The price was not correct set in " + timestampStart + " day");
+    });
+
+
+    it("should set different price property for two days", async() => {
+      await propertyContract.setPrice(
+        timestampStart,
+        timestampStart,
+        price, {
+          from: _propertyHost
+        }
+      );
+
+      await propertyContract.setPrice(
+        timestampEnd,
+        timestampEnd,
+        price, {
+          from: _propertyHost
+        }
+      );
+
+      amount = await propertyContract.getPrice(timestampStart);
+      assert(amount.eq(price), "The price was not correct set in startday");
+
+      amount = await propertyContract.getPrice(timestampEnd);
+      assert(amount.eq(price), "The price was not correct set in endday");
+    });
+
+    it("should set different price property for one day and for another day should be the default price", async() => {
+      await propertyContract.setPrice(
+        timestampStart,
+        timestampStart,
+        price, {
+          from: _propertyHost
+        }
+      );
+
+      amount = await propertyContract.getPrice(timestampStart);
+      assert(amount.eq(price), "The price was not correct set in startday");
+
+      amount = await propertyContract.getPrice(timestampEnd);
+      assert(amount.eq(_workingDayPrice), "The price was not correct in endday");
+    });
+
+    it("should throw when non-host trying to set price", async() => {
+      await expectThrow(
+        propertyContract.setPrice(
+          timestampEnd,
+          timestampStart,
+          price, {
+            from: _propertyHostUpdate
+          }
+        )
+      );
+    });
+
+    it("should throw on endDay < startDay", async() => {
+      await expectThrow(
+        propertyContract.setPrice(
+          timestampEnd,
+          timestampStart,
+          price, {
+            from: _propertyHost
+          }
+        )
+      );
+    });
+
+    it("should throw on startDay < now", async() => {
+      await expectThrow(
+        propertyContract.setPrice(
+          timestampStart - (86400 * 4),
+          timestampEnd,
+          price, {
+            from: _propertyHost
+          }
+        )
+      );
+    });
+
+    it("should throw on endDay < now", async() => {
+      await expectThrow(
+        propertyContract.setPrice(
+          timestampStart,
+          timestampStart - (86400 * 4),
+          price, {
+            from: _propertyHost
+          }
+        )
+      );
+    });
+
+    it("should throw on price < 0", async() => {
+      await expectThrow(
+        propertyContract.setPrice(
+          timestampStart,
+          timestampEnd,
+          0, {
+            from: _propertyHost
+          }
+        )
+      );
+    });
+
+    it("should throw on interval pricing > max booking days interval", async() => {
+      await expectThrow(
+        propertyContract.setPrice(
+          timestampStart,
+          closeOfMaxBookingDays,
+          price, {
+            from: _propertyHost
+          }
+        )
+      );
+    });
+
+    it("should throw on get price with timestamp = 0", async() => {
+      await expectThrow(
+        propertyContract.getPrice(0)
+      );
     });
   });
 

@@ -34,10 +34,10 @@ const util = {
         })
     },
 
-    getTransactionReceiptMined: async (txnHash, interval) => {
+    getTransactionReceiptMined: async(txnHash, interval) => {
         var transactionReceiptAsync;
         interval = interval ? interval : 500;
-        transactionReceiptAsync = function(txnHash, resolve, reject) {
+        transactionReceiptAsync = function (txnHash, resolve, reject) {
             try {
                 var receipt = web3.eth.getTransactionReceipt(txnHash);
                 if (receipt == null) {
@@ -47,11 +47,11 @@ const util = {
                 } else {
                     resolve(receipt);
                 }
-            } catch(e) {
+            } catch (e) {
                 reject(e);
             }
         };
-    
+
         if (Array.isArray(txnHash)) {
             var promises = [];
             txnHash.forEach(function (oneTxHash) {
@@ -60,9 +60,17 @@ const util = {
             return Promise.all(promises);
         } else {
             return new Promise(function (resolve, reject) {
-                    transactionReceiptAsync(txnHash, resolve, reject);
-                });
+                transactionReceiptAsync(txnHash, resolve, reject);
+            });
         }
+    },
+
+    getFutureTimestamp: async(minutes) => {
+        let date = new Date();
+        date.setMinutes(date.getMinutes() + minutes)
+        let timestamp = +date;
+        timestamp = Math.ceil(timestamp / 1000);
+        return timestamp;
     }
 }
 

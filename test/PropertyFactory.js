@@ -472,4 +472,45 @@ contract('Property factory', function (accounts) {
             assert.strictEqual(web3.utils.hexToUtf8(result[0]), _propertyId, "The propertyId in this contract is incorrect");
         });
     });
+
+    describe("Booking Days Period", () => {
+        let maxPeriodDays = 30 * 24 * 60 * 1000;
+        beforeEach(async function () {
+            factoryImpl = await PropertyFactory.new();
+            factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
+            factoryContract = await IPropertyFactory.at(factoryProxy.address);
+            await factoryContract.init();
+
+            marketplaceImpl = await Marketplace.new();
+            marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+            marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+            propertyImpl = await Property.new();
+            await propertyImpl.init();
+
+            await marketplaceContract.init(factoryContract.address);
+            await factoryContract.setPropertyImplAddress(propertyImpl.address);
+            await factoryContract.setMarketplaceAddress(marketplaceContract.address);
+        });
+
+        it("should set max booking days period", async() => {
+            await factoryContract.setMaxBookingPeriod(maxPeriodDays);
+            let period = await factoryContract.getMaxBookingPeriod();
+            assert(period.eq(maxPeriodDays), "period was not correct set");
+        });
+
+        it("should throw on max booking days period = 0", async() => {
+            await expectThrow(
+                factoryContract.setMaxBookingPeriod(0)
+            );
+        });
+
+        it("should throw on set max booking days period from non-owner", async() => {
+            await expectThrow(
+                factoryContract.setMaxBookingPeriod(maxPeriodDays, {
+                    from: _notOwner
+                })
+            );
+        });
+    });
 });
