@@ -437,15 +437,23 @@ contract('Property factory', function (accounts) {
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
         });
 
-        it("set max booking days interval", async() => {
+        it("should set max booking days interval", async() => {
             await factoryContract.setMaxBookingDaysInterval(maxIntervalDays);
             let interval = await factoryContract.getMaxBookingDaysInterval();
             assert(interval.eq(maxIntervalDays), "interval was not correct set");
         });
 
-        it("should throw when max booking days interval = 0", async() => {
+        it("should throw on max booking days interval = 0", async() => {
             await expectThrow(
                 factoryContract.setMaxBookingDaysInterval(0)
+            );
+        });
+
+        it("should throw on set max booking days interval from non-owner", async() => {
+            await expectThrow(
+                factoryContract.setMaxBookingDaysInterval(maxIntervalDays, {
+                    from: _notOwner
+                })
             );
         });
     });

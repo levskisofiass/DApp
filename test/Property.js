@@ -500,7 +500,7 @@ contract('Property', function (accounts) {
       assert(amount.eq(price), "The price was not correct set in endday");
     });
 
-    it("should set a different price property for one day and for another day should be the standard price", async() => {
+    it("should set different price property for one day and for another day should be the default price", async() => {
       await propertyContract.setPrice(
         timestampStart,
         timestampStart,
@@ -514,7 +514,7 @@ contract('Property', function (accounts) {
       assert(amount.eq(_workingDayPrice), "The price was not correct in endday");
     });
 
-    it("should throw when endDay < startDay", async() => {
+    it("should throw on endDay < startDay", async() => {
       await expectThrow(
         propertyContract.setPrice(
           timestampEnd,
@@ -524,7 +524,7 @@ contract('Property', function (accounts) {
       );
     });
 
-    it("should throw when startDay < now", async() => {
+    it("should throw on startDay < now", async() => {
       await expectThrow(
         propertyContract.setPrice(
           timestampStart - (86400 * 4),
@@ -534,7 +534,7 @@ contract('Property', function (accounts) {
       );
     });
 
-    it("should throw when endDay < now", async() => {
+    it("should throw on endDay < now", async() => {
       await expectThrow(
         propertyContract.setPrice(
           timestampStart,
@@ -544,7 +544,7 @@ contract('Property', function (accounts) {
       );
     });
 
-    it("should throw when price < 0", async() => {
+    it("should throw on price < 0", async() => {
       await expectThrow(
         propertyContract.setPrice(
           timestampStart,
@@ -554,7 +554,7 @@ contract('Property', function (accounts) {
       );
     });
 
-    it("should throw when interval pricing > max booking days interval", async() => {
+    it("should throw on interval pricing > max booking days interval", async() => {
       await expectThrow(
         propertyContract.setPrice(
           timestampStart,
@@ -564,7 +564,7 @@ contract('Property', function (accounts) {
       );
     });
 
-    it("should throw when get price with timestamp = 0", async() => {
+    it("should throw on get price with timestamp = 0", async() => {
       await expectThrow(
         propertyContract.getPrice(0)
       );
