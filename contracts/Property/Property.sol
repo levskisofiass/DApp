@@ -6,8 +6,8 @@ import "./PropertyFactory/IPropertyFactory.sol";
 
 contract Property is IProperty, OwnableUpgradeableImplementation {
     bytes32 propertyId;
-    address hostAddress;
     bytes32 marketplaceId;
+    address hostAddress;
     uint workingDayPrice;
     uint nonWorkingDayPrice;
     uint cleaningFee;
@@ -17,8 +17,8 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
     bool isInstantBooking;
     address propertyFactoryContractAddress;
 
-    event LogCreateProperty(bytes32 _propertyId, address _hostAddress);
-    event LogUpdateProperty(bytes32 _marketplaceId, bytes32 _propertyId, address _hostAddress);
+    event LogCreateProperty(bytes32 _propertyId, address _hostAddress);    
+    event LogUpdateProperty(bytes32 _marketplaceId, bytes32 _propertyId, address _newHostAddress);
     event LogSetPriceProperty(uint256 timestamp, uint256 price);
 
     /**
@@ -26,39 +26,23 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
      */
     mapping (uint256 => uint256) public timestampPrices;
 
-    // /**
-    //  * @dev modifier ensuring that the modified method is only called by the host of current property
-    //  * @param _propertyId - the identifier of the property
-    //  * @param _hostAddress - the address of the host
-    //  */
-    // modifier onlyHost(bytes32 _propertyId, address _hostAddress) {
-    //     require(_propertyId != "");
-    //     require(hostAddress == _hostAddress);
-    //     _;
-    // }
+    /**
+     * @dev modifier ensuring that the modified method is only called by the host of current property
+     */
+    modifier onlyHost() {
+        require(msg.sender == hostAddress);
+        _;
+    }
 
     modifier onlyValidProperty(bytes32 _propertyId) {
         require(_propertyId != "");
         _;
     }
 
-    modifier onlyNewProperty(bytes32 _propertyId) {
+    modifier onlyNewProperty() {
         require(propertyId == "");
         _;
     }
-    // function validateUpdate(
-    //     bytes32 _propertyId,
-    //     bytes32 _marketplaceId,
-    //     address _hostAddress
-    // ) public 
-    //     onlyPropertyFactory()
-    //     whenNotPaused
-    //     returns(bool success) 
-    // {
-    //     require(propertyId == _propertyId);
-    //     require(hostAddress == _hostAddress);
-    //     return true;
-    // }
 
     function getProperty() public constant
         returns(
@@ -99,7 +83,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         uint _propertyArrayIndex,
         bool _isInstantBooking,
         address _propertyFactoryContractAddress
-		) public onlyNewProperty(_propertyId) onlyValidProperty(_propertyId) returns(bool success)
+		) public onlyNewProperty onlyValidProperty(_propertyId) returns(bool success)
 	{
         propertyId = _propertyId;
         hostAddress = _hostAddress;
@@ -118,38 +102,44 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
 		return true;
 	}
 
-    // function update(
-    //     bytes32 _propertyId,
-	// 	bytes32 _marketplaceId,
-    //     address _hostAddress,
-	// 	uint _workingDayPrice,
-    //     uint _nonWorkingDayPrice,
-    //     uint _cleaningFee,
-    //     uint _refundPercent,
-    //     uint _daysBeforeStartForRefund,
-    //     bool _isInstantBooking,
-    //     address _newHost
-    // ) public returns(bool success)
-    // {
-    //     require(_hostAddress != address(0));
-    //     require(_newHost != address(0));
+    function validateUpdate(
+        bytes32 _propertyId,
+        address _newHostAddress
+    ) public view onlyHost
+        returns(bool success) 
+    {
+        require(_newHostAddress != address(0));
+        require(propertyId == _propertyId);
+        return true;
+    }
 
-    //     validateUpdate(_propertyId, _marketplaceId, _hostAddress);
-        
-    //     PropertyStruct storage property = properties[_propertyId];
+    function updateProperty(
+        bytes32 _propertyId,
+		bytes32 _marketplaceId,
+		uint _workingDayPrice,
+        uint _nonWorkingDayPrice,
+        uint _cleaningFee,
+        uint _refundPercent,
+        uint _daysBeforeStartForRefund,
+        bool _isInstantBooking,
+        address _newHostAddress
+    ) public returns(bool success)
+    {
+        validateUpdate(_propertyId, _newHostAddress);
+     
+        marketplaceId = _marketplaceId;
+        hostAddress = _newHostAddress;
+        workingDayPrice = _workingDayPrice;
+        nonWorkingDayPrice = _nonWorkingDayPrice;
+        cleaningFee = _cleaningFee;
+        refundPercent = _refundPercent;
+        daysBeforeStartForRefund = _daysBeforeStartForRefund;
+        isInstantBooking = _isInstantBooking;
 
-    //     property.hostAddress = _newHost;
-    //     property.workingDayPrice = _workingDayPrice;
-    //     property.nonWorkingDayPrice = _nonWorkingDayPrice;
-    //     property.cleaningFee = _cleaningFee;
-    //     property.refundPercent = _refundPercent;
-    //     property.daysBeforeStartForRefund = _daysBeforeStartForRefund;
-    //     property.isInstantBooking = _isInstantBooking;
+        LogUpdateProperty(_marketplaceId, _propertyId, _newHostAddress);
 
-    //     LogUpdateProperty(_marketplaceId, _propertyId, _hostAddress);
-
-    //     return true;
-    // }
+        return true;
+    }
 
     /**
      * @dev function use to set price for property in different days
