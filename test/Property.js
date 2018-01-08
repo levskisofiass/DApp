@@ -64,7 +64,7 @@ contract('Property', function (accounts) {
   const _disputeAPI = "https://lockchain.co/DisuputeAPI";
   const _exchangeContractAddress = "0x2988ae7f92f5c8cad1997ae5208aeaa68878f76d";
 
-  xdescribe("create new property", () => {
+  describe("create new property", () => {
     beforeEach(async function () {
       factoryImpl = await PropertyFactory.new();
       factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
@@ -166,7 +166,7 @@ contract('Property', function (accounts) {
     });
   });
 
-  xdescribe("update property", () => {
+  describe("update property", () => {
     beforeEach(async function () {
       factoryImpl = await PropertyFactory.new();
       factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
@@ -556,7 +556,7 @@ contract('Property', function (accounts) {
     });
   });
 
-  xdescribe("upgrade property contract", () => {
+  describe("upgrade property contract", () => {
     beforeEach(async function () {
       factoryImpl = await PropertyFactory.new();
       factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
