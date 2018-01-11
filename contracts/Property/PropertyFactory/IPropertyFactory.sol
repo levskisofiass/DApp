@@ -5,6 +5,7 @@ import "./../../Lifecycle/IPausable.sol";
 
 contract IPropertyFactory is IOwnableUpgradeableImplementation, IPausable {
     event LogCreatePropertyContract(bytes32 propertyId, address hostAddress, address propertyContract);
+    event LogSetMaxBookingPeriod(uint256 period, address hostAddress);
 
     function validateCreate(
         bytes32 propertyId,
@@ -33,4 +34,7 @@ contract IPropertyFactory is IOwnableUpgradeableImplementation, IPausable {
 
     function setMarketplaceAddress(address propertyImplAddress) public;
     function getMarketplaceAddress() public constant returns(address marketplaceAddress);
+
+    function setMaxBookingPeriod(uint256 _maxDaysInterval) public returns(bool success);
+    function getMaxBookingPeriod() public constant returns(uint256 _maxBookingPeriod);
 }

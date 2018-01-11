@@ -12,9 +12,11 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
     IMarketplace public MarketplaceContract; 
     address public propertyImplContract;
     bytes32[] public propertyIds;
+    uint256 public maxBookingPeriod;
     mapping (bytes32 => address) public properties;
 
     event LogCreatePropertyContract(bytes32 propertyId, address hostAddress, address propertyContract);
+    event LogSetMaxBookingPeriod(uint256 period, address hostAddress);
 
     /**
      * @dev modifier ensuring that the modified method is only called for not existing properties
@@ -55,24 +57,6 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         return properties[_propertyId];
     }
 
-    // function getProperty(bytes32 propertyId) public constant
-    //     returns(address hostAddress, bytes32 marketplaceId, uint workingDayPrice, uint nonWorkingDayPrice, uint cleaningFee, uint refundPercent, uint daysBeforeStartForRefund, uint propertyArrayIndex, bool isInstantBooking, bool isActive)
-    // {
-    //     PropertyStruct storage p = properties[propertyId];
-    //     return (
-    //         p.hostAddress,
-    //         p.marketplaceId,
-    //         p.workingDayPrice,
-    //         p.nonWorkingDayPrice,
-    //         p.cleaningFee,
-    //         p.refundPercent,
-    //         p.daysBeforeStartForRefund,
-    //         p.propertyArrayIndex,
-    //         p.isInstantBooking,
-    //         p.isActive
-    //     );
-    // }
-
     function setPropertyImplAddress(address propertyImplAddress) onlyOwner public {
         propertyImplContract = propertyImplAddress;
     }
@@ -112,7 +96,7 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
-		) public whenNotPaused returns(bool success)
+		) public returns(bool success)
 	{
         require(_hostAddress != address(0));
         validateCreate(_propertyId, _marketplaceId);
@@ -130,7 +114,8 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
             _refundPercent,
             _daysBeforeStartForRefund,
             propertyIds.length,
-            _isInstantBooking
+            _isInstantBooking,
+            this
         );
 		properties[_propertyId] = propertyContract;
         propertyIds.push(_propertyId);
@@ -138,4 +123,16 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         LogCreatePropertyContract(_propertyId, _hostAddress, propertyContract);
 		return true;
 	}
+
+    function setMaxBookingPeriod(uint256 _maxBookingPeriod) public onlyOwner whenNotPaused returns(bool success) {
+        require(_maxBookingPeriod > 0);
+
+        maxBookingPeriod = _maxBookingPeriod;
+        LogSetMaxBookingPeriod(_maxBookingPeriod, msg.sender);
+        return true;
+    }
+
+    function getMaxBookingPeriod() public constant returns(uint256 _maxBookingPeriod) {
+        return maxBookingPeriod;
+    }
 }
