@@ -40,16 +40,16 @@ contract IProperty is IOwnableUpgradeableImplementation {
 
     function getProperty() public constant
         returns(
-            bytes32 _propertyId,
-            address _hostAddress, 
-            bytes32 _marketplaceId, 
-            uint _workingDayPrice, 
-            uint _nonWorkingDayPrice,
-            uint _cleaningFee, 
-            uint _refundPercent, 
-            uint _daysBeforeStartForRefund, 
-            uint _propertyArrayIndex,
-            bool _isInstantBooking);
+            bytes32 propertyId,
+            address hostAddress, 
+            bytes32 marketplaceId, 
+            uint workingDayPrice, 
+            uint nonWorkingDayPrice,
+            uint cleaningFee, 
+            uint refundPercent, 
+            uint daysBeforeStartForRefund, 
+            uint propertyArrayIndex,
+            bool isInstantBooking);
 
     function setPrice(uint256 _timestampStart, uint256 _timestampEnd, uint256 _price) public returns(bool success);
 
