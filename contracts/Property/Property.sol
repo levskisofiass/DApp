@@ -158,7 +158,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         require(_price > 0);
 
         IPropertyFactory propertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
-        require((_timestampEnd - _timestampStart) <= propertyFactoryContract.getMaxBookingPeriod());
+        require((_timestampEnd - _timestampStart) <= propertyFactoryContract.getMaxBookingPeriod() * 1 days);
 
         for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
             timestampPrices[day] = _price;

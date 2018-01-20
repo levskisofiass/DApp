@@ -32,4 +32,5 @@ module.exports = async function (deployer) {
 
     await PropertyFactoryContract.setPropertyImplAddress(PropertyImpl.address);
     await PropertyFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
+    await PropertyFactoryContract.setMaxBookingPeriod(30);
 };

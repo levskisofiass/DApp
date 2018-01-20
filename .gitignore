@@ -7,3 +7,4 @@ liferay-theme.json
 .DS_Store
 .idea
 config.json
+.vscode
