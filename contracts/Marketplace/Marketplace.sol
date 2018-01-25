@@ -4,9 +4,11 @@ import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableI
 import "./IMarketplace.sol";
 import "./../Lifecycle/Pausable.sol";
 import "./../Property/PropertyFactory/IPropertyFactory.sol";
+import "./../Hotel/HotelFactory/IHotelFactory.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
     IPropertyFactory public PropertyFactoryContract;
+    IHotelFactory public HotelFactoryContract;
 
     struct MarketplaceStruct {
         address adminAddress;
@@ -30,18 +32,20 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
     event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
+    event LogCreateHotelFromMarketplace(bytes32 hotelId, address hostAddress, bytes32 marketplaceId);
 
 	uint public rate;
-
-    function init(address propertyFactoryContractAddress) public {
-        super.init();
-        require(propertyFactoryContractAddress != address(0));
-        PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
-    }
-
+// TODO Write tests for this setters and getters 
     function setPropertyFactoryContract(address propertyFactoryContractAddress) onlyOwner public returns(bool success) {
         require(propertyFactoryContractAddress != address(0));
         PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
+
+        return true;
+    }
+
+    function setHotelFactoryContract(address hotelFactoryContractAddress) onlyOwner public returns(bool success) {
+        require(hotelFactoryContractAddress != address(0));
+        HotelFactoryContract = IHotelFactory(hotelFactoryContractAddress);
 
         return true;
     }
@@ -50,6 +54,10 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return PropertyFactoryContract;
     }
 
+    function getHotelFactoryContract() view public returns(address hotelFactoryContractAddress) {
+        return HotelFactoryContract;
+    }
+// To here
     /**
      * @dev modifier ensuring that the modified method is only called on active marketplaces
      * @param marketplaceId - the identifier of the marketplace
@@ -232,6 +240,28 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         );
 
         LogCreatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
+
+        return true;
+    }
+
+    function createHotelRooms(
+        bytes32 _hotelId,
+		bytes32 _marketplaceId, 
+        uint _roomsCount,
+        bytes32 _roomsType,
+        uint _workingDayPrice
+    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns (bool success)
+    {
+        HotelFactoryContract.createHotelRooms(
+            _hotelId,
+            _marketplaceId, 
+            msg.sender,
+            _roomsCount,
+            _roomsType,
+            _workingDayPrice
+        );
+
+        LogCreateHotelFromMarketplace(_hotelId, msg.sender, _marketplaceId);
 
         return true;
     }
