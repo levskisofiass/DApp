@@ -231,7 +231,7 @@ contract('hotel factory', function (accounts) {
                 }
             );
 
-            let hotelsCount = await factoryContract.hotelRoomsPairsCount();
+            let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotels count was not correct");
         });
 
@@ -246,8 +246,8 @@ contract('hotel factory', function (accounts) {
                 }
             );
 
-            let createdHotelId = await factoryContract.getHotelRoomsId(0);
-            let hotelRoomsHash = await factoryContract.hashHotelRoom(_hotelId, _roomsType);
+            let createdHotelId = await factoryContract.getHotelRoomTypePairId(0);
+            let hotelRoomsHash = await factoryContract.hashHotelRoomTypePair(_hotelId, _roomsType);
 
             assert.strictEqual(createdHotelId, hotelRoomsHash, "The hotelId was not correct");
         });
@@ -412,7 +412,7 @@ contract('hotel factory', function (accounts) {
         });
 
         it("should get correct hotel count", async() => {
-            let hotelRoomsPairsCount = await factoryContract.hotelRoomsPairsCount();
+            let hotelRoomsPairsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelRoomsPairsCount.eq(1), "The hotels count was not correct");
 
             await marketplaceContract.createHotelRooms(
@@ -425,13 +425,13 @@ contract('hotel factory', function (accounts) {
                 }
             );
 
-            hotelRoomsPairsCount = await factoryContract.hotelRoomsPairsCount();
+            hotelRoomsPairsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelRoomsPairsCount.eq(2), "The hotels count was not correct");
         });
 
         it("should get correct hotelId by array index", async function () {
-            const resultHotelId = await factoryContract.getHotelRoomsId(0);
-            let hotelRoomsHash = await factoryContract.hashHotelRoom(_hotelId, _roomsType);
+            const resultHotelId = await factoryContract.getHotelRoomTypePairId(0);
+            let hotelRoomsHash = await factoryContract.hashHotelRoomTypePair(_hotelId, _roomsType);
 
             assert.strictEqual(resultHotelId, hotelRoomsHash, "The hotelRoomsId for this index is incorrect");
         });

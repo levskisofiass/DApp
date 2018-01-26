@@ -11,19 +11,19 @@ contract HotelFactory is IHotelFactory, OwnableUpgradeableImplementation, Pausab
     IMarketplace public MarketplaceContract; 
     address public marketplaceContractAddress; 
     address public hotelRoomsImplContract;
-    bytes32[] public hotelRoomsIds;
+    bytes32[] public hotelRoomTypePairsIds;
     uint256 public maxBookingPeriod;
-    mapping (bytes32 => address) public hotelRooms;
+    mapping (bytes32 => address) public hotelRoomTypePairs;
 
     event LogCreateHotelContract(bytes32 hotelid, address hostAddress, address hotelContract);
     event LogSetMaxBookingPeriod(uint256 period, address hostAddress);
 
     /**
-     * @dev modifier ensuring that the modified method is only called for not existing hotelRooms
-     * @param _hotelRoomsId - the identifier of the hotel
+     * @dev modifier ensuring that the modified method is only called for not existing hotelRoomTypePairs
+     * @param _hotelRoomTypePairId - the identifier of the hotel
      */
-    modifier onlyNotExisting(bytes32 _hotelRoomsId) {
-        require(hotelRooms[_hotelRoomsId] == address(0));
+    modifier onlyNotExisting(bytes32 _hotelRoomTypePairId) {
+        require(hotelRoomTypePairs[_hotelRoomTypePairId] == address(0));
         _;
     }
 
@@ -45,16 +45,16 @@ contract HotelFactory is IHotelFactory, OwnableUpgradeableImplementation, Pausab
         _;
     }
 
-    function hashHotelRoom(bytes32 _hotelId, bytes32 _roomsType) public pure returns(bytes32) {
+    function hashHotelRoomTypePair(bytes32 _hotelId, bytes32 _roomsType) public pure returns(bytes32) {
         return keccak256(_hotelId, _roomsType);
     }
 
-    function hotelRoomsPairsCount() public constant returns(uint) {
-        return hotelRoomsIds.length;
+    function hotelRoomTypePairsCount() public constant returns(uint) {
+        return hotelRoomTypePairsIds.length;
     }
 
-    function getHotelRoomsId(uint index) public constant returns(bytes32) {
-        return hotelRoomsIds[index];
+    function getHotelRoomTypePairId(uint index) public constant returns(bytes32) {
+        return hotelRoomTypePairsIds[index];
     }
 
     function setHotelRoomsImplAddress(address hotelRoomsImplAddress) onlyOwner public {
@@ -86,8 +86,8 @@ contract HotelFactory is IHotelFactory, OwnableUpgradeableImplementation, Pausab
     }
 
     function getHotelRoomsContractAddress(bytes32 _hotelId, bytes32 _roomsType) public constant returns(address hotelContract) {
-        bytes32 hotelRoomId = keccak256(_hotelId, _roomsType);
-        return hotelRooms[hotelRoomId];
+        bytes32 hotelRoomTypePairId = keccak256(_hotelId, _roomsType);
+        return hotelRoomTypePairs[hotelRoomTypePairId];
     }
 
     function validateCreate(
@@ -126,12 +126,12 @@ contract HotelFactory is IHotelFactory, OwnableUpgradeableImplementation, Pausab
             _roomsCount,
             _roomsType,
             _workingDayPrice,
-            hotelRoomsIds.length,
+            hotelRoomTypePairsIds.length,
             this
         );
 
-		hotelRooms[hotelRoomId] = hotelRoomsContract;
-        hotelRoomsIds.push(hotelRoomId);
+		hotelRoomTypePairs[hotelRoomId] = hotelRoomsContract;
+        hotelRoomTypePairsIds.push(hotelRoomId);
 
         LogCreateHotelContract(_hotelId, _hostAddress, hotelRoomsContract);
 		return true;
