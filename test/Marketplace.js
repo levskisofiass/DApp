@@ -1106,7 +1106,7 @@ contract('Marketplace', function (accounts) {
         }
       );
 
-      let hotelsCount = await factoryContract.hotelRoomsPairsCount();
+      let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
       assert(hotelsCount.eq(1), "The hotels count was not correct");
 
       assert.isTrue(Boolean(result.receipt.status), "The hotel creation was not successful");
@@ -1137,7 +1137,7 @@ contract('Marketplace', function (accounts) {
 
       assert.isTrue(Boolean(result2.receipt.status), "The hotel creation was not successful");
 
-      let hotelsCount = await factoryContract.hotelRoomsPairsCount();
+      let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
       assert(hotelsCount.eq(2), "The hotels count was not correct");
 
     });
@@ -1181,8 +1181,8 @@ contract('Marketplace', function (accounts) {
       let hotelContractLocal = await IHotel.at(hotelContractAddress);
       let result = await hotelContractLocal.getHotelRoom();
 
-      let result1 = await factoryContract.getHotelRoomsId(0);
-      let hotelRoomsHash = await factoryContract.hashHotelRoom(_hotelId, _roomsType);
+      let result1 = await factoryContract.getHotelRoomTypePairId(0);
+      let hotelRoomsHash = await factoryContract.hashHotelRoomTypePair(_hotelId, _roomsType);
       assert.strictEqual(result1, hotelRoomsHash, "The HotelRooms id was not set correctly");
     });
 

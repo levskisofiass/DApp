@@ -104,7 +104,7 @@ contract('HotelRooms', function (accounts) {
                 }
             );
 
-            let hotelsCount = await factoryContract.hotelRoomsPairsCount();
+            let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotels count was not correct");
         });
 
@@ -196,7 +196,7 @@ contract('HotelRooms', function (accounts) {
                 }
             );
 
-            let hotelsCount = await factoryContract.hotelRoomsPairsCount();
+            let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotel rooms count was not correct");
 
             hotelImpl = await HotelRooms.new();
@@ -204,7 +204,7 @@ contract('HotelRooms', function (accounts) {
 
             await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
 
-            hotelsCount = await factoryContract.hotelRoomsPairsCount();
+            hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotels count was not correct");
         });
 
@@ -219,7 +219,7 @@ contract('HotelRooms', function (accounts) {
                 }
             );
 
-            let hotelsCount = await factoryContract.hotelRoomsPairsCount();
+            let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotels count was not correct");
 
             hotelImpl2 = await HotelRoomsUpgrade.new();
@@ -233,7 +233,7 @@ contract('HotelRooms', function (accounts) {
             let result = await hotelContract.getHotelRoom();
             assert.strictEqual(result[5].toString(), _workingDayPriceUpdate, "The cleaningFee was not set correctly");
 
-            hotelsCount = await factoryContract.hotelRoomsPairsCount();
+            hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotels count was not correct");
         });
 
@@ -247,7 +247,7 @@ contract('HotelRooms', function (accounts) {
                     from: _hotelHost
                 }
             );
-            let hotelsCount = await factoryContract.hotelRoomsPairsCount();
+            let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotels count was not correct");
 
             let hotelContractAddress = await factoryContract.getHotelRoomsContractAddress(_hotelId, _roomsType);

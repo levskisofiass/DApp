@@ -17,11 +17,11 @@ contract IHotelFactory is IOwnableUpgradeableImplementation, IPausable {
         bytes32 _marketplaceId
     ) public returns(bool success);
     
-    function hashHotelRoom(bytes32 _hotelId, bytes32 _roomsType) public pure returns(bytes32);
+    function hashHotelRoomTypePair(bytes32 _hotelId, bytes32 _roomsType) public pure returns(bytes32);
 
-    function hotelRoomsPairsCount() public constant returns(uint);
+    function hotelRoomTypePairsCount() public constant returns(uint);
 
-    function getHotelRoomsId(uint index) public constant returns(bytes32);
+    function getHotelRoomTypePairId(uint index) public constant returns(bytes32);
 
     function setHotelRoomsImplAddress(address hotelImplAddress) public;
 
