@@ -144,7 +144,8 @@ contract('Property factory', function (accounts) {
             marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
             marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-            await marketplaceContract.init(factoryContract.address);
+            await marketplaceContract.init();
+            await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
         });
 
         it("should set correct marketplace address", async function () {
@@ -159,7 +160,8 @@ contract('Property factory', function (accounts) {
             marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
             marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-            await marketplaceContract.init(factoryContract.address);
+            await marketplaceContract.init();
+            await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
             const marketplaceAddress = await factoryContract.getMarketplaceAddress();
@@ -172,7 +174,8 @@ contract('Property factory', function (accounts) {
             marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
             marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-            await marketplaceContract.init(factoryContract.address);
+            await marketplaceContract.init();
+            await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
             await expectThrow(
                 factoryContract.setMarketplaceAddress(marketplaceContract.address, {
                     from: _notOwner
@@ -195,7 +198,8 @@ contract('Property factory', function (accounts) {
             propertyImpl = await Property.new();
             await propertyImpl.init();
 
-            await marketplaceContract.init(factoryContract.address);
+            await marketplaceContract.init();
+            await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
             await factoryContract.setPropertyImplAddress(propertyImpl.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
@@ -325,7 +329,7 @@ contract('Property factory', function (accounts) {
         });
 
         it("should throw if trying to create property with already existing propertyId", async function () {
-            marketplaceContract.createProperty(
+            await marketplaceContract.createProperty(
                 _propertyId,
                 _marketplaceId,
                 _workingDayPrice,
@@ -404,7 +408,8 @@ contract('Property factory', function (accounts) {
             propertyImpl = await Property.new();
             await propertyImpl.init();
 
-            await marketplaceContract.init(factoryContract.address);
+            await marketplaceContract.init();
+            await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
             await factoryContract.setPropertyImplAddress(propertyImpl.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
@@ -488,7 +493,8 @@ contract('Property factory', function (accounts) {
             propertyImpl = await Property.new();
             await propertyImpl.init();
 
-            await marketplaceContract.init(factoryContract.address);
+            await marketplaceContract.init();
+            await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
             await factoryContract.setPropertyImplAddress(propertyImpl.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
         });

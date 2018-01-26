@@ -73,6 +73,18 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         return marketplaceContractAddress;
     }
 
+    function setMaxBookingPeriod(uint256 _maxBookingPeriod) public onlyOwner whenNotPaused returns(bool success) {
+        require(_maxBookingPeriod > 0);
+
+        maxBookingPeriod = _maxBookingPeriod;
+        LogSetMaxBookingPeriod(_maxBookingPeriod, msg.sender);
+        return true;
+    }
+
+    function getMaxBookingPeriod() public constant returns(uint256 _maxBookingPeriod) {
+        return maxBookingPeriod;
+    }
+    
     function validateCreate(
         bytes32 propertyId,
         bytes32 marketplaceId
@@ -123,16 +135,4 @@ contract PropertyFactory is IPropertyFactory, OwnableUpgradeableImplementation, 
         LogCreatePropertyContract(_propertyId, _hostAddress, propertyContract);
 		return true;
 	}
-
-    function setMaxBookingPeriod(uint256 _maxBookingPeriod) public onlyOwner whenNotPaused returns(bool success) {
-        require(_maxBookingPeriod > 0);
-
-        maxBookingPeriod = _maxBookingPeriod;
-        LogSetMaxBookingPeriod(_maxBookingPeriod, msg.sender);
-        return true;
-    }
-
-    function getMaxBookingPeriod() public constant returns(uint256 _maxBookingPeriod) {
-        return maxBookingPeriod;
-    }
 }
