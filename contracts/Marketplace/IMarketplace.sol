@@ -11,10 +11,11 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
     event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
-
-    function init(address propertyFactoryContractAddress) public;
+    event LogCreateHotelFromMarketplace(bytes32 hotelId, address hostAddress, bytes32 marketplaceId);
 
     function setPropertyFactoryContract(address propertyFactoryContractAddress) public returns(bool success);
+
+    function setHotelFactoryContract(address hotelFactoryContractAddress) public returns(bool success);
 
     function getPropertyFactoryContract() view public returns(address propertyFactoryAddress);
 
@@ -61,4 +62,12 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
         uint _daysBeforeStartForRefund,
         bool _isInstantBooking
     ) public returns(bool success);
+
+    function createHotelRooms(
+        bytes32 _hotelId,
+		bytes32 _marketplaceId, 
+        uint _roomsCount,
+        bytes32 _roomsType,
+        uint _workingDayPrice
+    ) public returns (bool success);
 }

@@ -16,15 +16,11 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
     uint propertyArrayIndex;
     bool isInstantBooking;
     address propertyFactoryContractAddress;
+    mapping (uint256 => uint256) public timestampPrices;
 
     event LogCreateProperty(bytes32 _propertyId, address _hostAddress);    
     event LogUpdateProperty(bytes32 _marketplaceId, bytes32 _propertyId, address _newHostAddress);
     event LogSetPriceProperty(uint256 timestamp, uint256 price);
-
-    /**
-     * @dev Mapping to save different prices for different days
-     */
-    mapping (uint256 => uint256) public timestampPrices;
 
     /**
      * @dev modifier ensuring that the modified method is only called by the host of current property
@@ -158,7 +154,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         require(_price > 0);
 
         IPropertyFactory propertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
-        require((_timestampEnd - _timestampStart) <= propertyFactoryContract.getMaxBookingPeriod());
+        require((_timestampEnd - _timestampStart) <= propertyFactoryContract.getMaxBookingPeriod() * 1 days);
 
         for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
             timestampPrices[day] = _price;

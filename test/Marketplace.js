@@ -12,6 +12,14 @@ const PropertyFactoryProxy = artifacts.require('./Property/PropertyFactory/Prope
 const PropertyFactory = artifacts.require('./Property/PropertyFactory/PropertyFactory.sol')
 const IPropertyFactory = artifacts.require('./Property/PropertyFactory/IPropertyFactory.sol')
 
+const HotelProxy = artifacts.require('./Hotel/HotelRoomsProxy.sol')
+const Hotel = artifacts.require('./Hotel/HotelRooms.sol')
+const IHotel = artifacts.require('./Hotel/IHotelRooms.sol')
+
+const HotelFactoryProxy = artifacts.require('./Hotel/HotelFactory/HotelFactoryProxy.sol')
+const HotelFactory = artifacts.require('./Hotel/HotelFactory/HotelFactory.sol')
+const IHotelFactory = artifacts.require('./Hotel/HotelFactory/IHotelFactory.sol')
+
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
 const expectThrow = util.expectThrow;
@@ -27,6 +35,10 @@ contract('Marketplace', function (accounts) {
   let factoryContract;
   let factoryProxy;
   let factoryImpl;
+  let hotelContract;
+  let hotelProxy;
+  let hotelImpl;
+  let hotelImpl2;
 
   const _owner = accounts[0];
   const _notOwner = accounts[1];
@@ -63,21 +75,30 @@ contract('Marketplace', function (accounts) {
   const _propertyFactoryContract = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76a";
   const _propertyFactoryContract2 = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76b";
 
+  const _hotelId = "testId123";
+  const _hotelId2 = "testId223";
+  const _roomsCount = "100";
+  const _roomsCountUpdate = "300";
+  const _roomsType = "single";
+  const _roomsTypeUpdate = "double";
+  const _hotelHost = accounts[5];
+
   describe("init contract", () => {
     beforeEach(async() => {
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+      marketplaceContract.init();
     });
 
     it("should set correct property factory contract", async() => {
-      await marketplaceContract.init(_propertyFactoryContract);
+      await marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract);
       let contractAddress = await marketplaceContract.getPropertyFactoryContract();
       assert.strictEqual(contractAddress.toString(), _propertyFactoryContract, "The property factory contract was not set correctly")
     });
 
     it("should throw when address is wrong", async() => {
-      await expectThrow(marketplaceContract.init("0x0"));
+      await expectThrow(marketplaceContract.setHotelFactoryContract("0x0"));
     });
   });
 
@@ -91,7 +112,7 @@ contract('Marketplace', function (accounts) {
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
 
-      await marketplaceContract.init(propertyContract.address);
+      await marketplaceContract.init();
     });
 
     it("should get the owner of the first contract", async function () {
@@ -111,7 +132,8 @@ contract('Marketplace', function (accounts) {
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
 
-      await marketplaceContract.init(propertyContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
     });
 
     it("should upgrade contract from owner", async function () {
@@ -134,7 +156,8 @@ contract('Marketplace', function (accounts) {
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-      await marketplaceContract.init(_propertyFactoryContract);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract);
     });
 
     it("should get correct property factory contract", async() => {
@@ -171,7 +194,8 @@ contract('Marketplace', function (accounts) {
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
 
-      await marketplaceContract.init(propertyContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
     });
 
     it("should create new marketplace", async() => {
@@ -376,7 +400,8 @@ contract('Marketplace', function (accounts) {
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
 
-      await marketplaceContract.init(propertyContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -551,7 +576,8 @@ contract('Marketplace', function (accounts) {
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
 
-      await marketplaceContract.init(propertyContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -617,7 +643,8 @@ contract('Marketplace', function (accounts) {
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
 
-      await marketplaceContract.init(propertyContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
@@ -688,7 +715,8 @@ contract('Marketplace', function (accounts) {
       propertyProxy = await PropertyProxy.new(propertyImpl.address);
       propertyContract = await IProperty.at(propertyProxy.address);
 
-      await marketplaceContract.init(propertyContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
     });
 
     it("should switch off the approval policy", async() => {
@@ -810,7 +838,8 @@ contract('Marketplace', function (accounts) {
       propertyImpl = await Property.new();
       await propertyImpl.init();
 
-      await marketplaceContract.init(factoryContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
       await factoryContract.setPropertyImplAddress(propertyImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
@@ -1026,6 +1055,207 @@ contract('Marketplace', function (accounts) {
       );
 
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property creation!");
+      assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+    });
+  });
+
+  describe("create hotel from Marketplace", () => {
+    beforeEach(async function () {
+      factoryImpl = await HotelFactory.new();
+      factoryProxy = await HotelFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IHotelFactory.at(factoryProxy.address);
+      await factoryContract.init();
+
+      marketplaceImpl = await Marketplace.new();
+      marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
+      marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
+
+      hotelImpl = await Hotel.new();
+      await hotelImpl.init();
+
+      await marketplaceContract.init();
+      await marketplaceContract.setHotelFactoryContract(factoryContract.address);
+      await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+      await factoryContract.setMarketplaceAddress(marketplaceContract.address);
+
+      await marketplaceContract.createMarketplace(
+        _marketplaceId,
+        _url,
+        _propertyAPI,
+        _disputeAPI,
+        _exchangeContractAddress, {
+          from: _marketplaceAdmin
+        }
+      );
+
+      await marketplaceContract.approveMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+    });
+
+    it("should create new hotel from Marketplace", async function () {
+      let result = await marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      );
+
+      let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
+      assert(hotelsCount.eq(1), "The hotels count was not correct");
+
+      assert.isTrue(Boolean(result.receipt.status), "The hotel creation was not successful");
+    });
+
+    it("should create two new Hotels", async() => {
+      let result = await marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      );
+
+      assert.isTrue(Boolean(result.receipt.status), "The hotel creation was not successful");
+
+      let result2 = await marketplaceContract.createHotelRooms(
+        _hotelId2,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      );
+
+      assert.isTrue(Boolean(result2.receipt.status), "The hotel creation was not successful");
+
+      let hotelsCount = await factoryContract.hotelRoomTypePairsCount();
+      assert(hotelsCount.eq(2), "The hotels count was not correct");
+
+    });
+
+    it("should set the values in a Hotel correctly", async function () {
+      await marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      );
+
+      let hotelContractAddress = await factoryContract.getHotelRoomsContractAddress(_hotelId, _roomsType);
+      let hotelContractLocal = await IHotel.at(hotelContractAddress);
+
+      let result = await hotelContractLocal.getHotelRoom();
+      assert.strictEqual(web3.utils.hexToUtf8(result[0]), _hotelId, "The hotelId was not set correctly");
+      assert.strictEqual(result[1], _marketplaceId, "The marketplaceId was not set correctly");
+      assert.strictEqual(result[2], _hotelHost, "The host was not set correctly");
+      assert.strictEqual(result[3].toString(), _roomsCount, "The roomsCount was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[4]), _roomsType, "The roomsType was not set correctly");
+      assert.strictEqual(result[5].toString(), _workingDayPrice, "The workingDayPrice was not set correctly");
+      assert(result[6].eq(0), "The arrayIndex was not set correctly");
+    });
+
+    it("should append to the indexes array and set the last element correctly", async function () {
+      await marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      );
+
+      let hotelContractAddress = await factoryContract.getHotelRoomsContractAddress(_hotelId, _roomsType);
+      let hotelContractLocal = await IHotel.at(hotelContractAddress);
+      let result = await hotelContractLocal.getHotelRoom();
+
+      let result1 = await factoryContract.getHotelRoomTypePairId(0);
+      let hotelRoomsHash = await factoryContract.hashHotelRoomTypePair(_hotelId, _roomsType);
+      assert.strictEqual(result1, hotelRoomsHash, "The HotelRooms id was not set correctly");
+    });
+
+    it("should throw if trying to create Hotel when paused", async function () {
+      await marketplaceContract.pause({
+        from: _owner
+      });
+
+      await expectThrow(marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      ));
+    });
+
+    it("should throw if trying to create Hotel with empty marketplaceId", async function () {
+      await expectThrow(marketplaceContract.createHotelRooms(
+        _hotelId,
+        "",
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      ));
+    });
+
+    it("should throw if trying to create Hotel with not existing marketplaceId", async function () {
+      await expectThrow(marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId2,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      ));
+    });
+
+    it("should throw if trying to create Hotel with not approved marketplaceId", async function () {
+      await marketplaceContract.rejectMarketplace(
+        _marketplaceId, {
+          from: _owner
+        }
+      );
+
+      await expectThrow(marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      ));
+    });
+
+    it("should emit event on Hotel creation", async function () {
+      const expectedEvent = 'LogCreateHotelFromMarketplace';
+      let result = await marketplaceContract.createHotelRooms(
+        _hotelId,
+        _marketplaceId,
+        _roomsCount,
+        _roomsType,
+        _workingDayPrice, {
+          from: _hotelHost
+        }
+      );
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Hotel creation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
     });
   });

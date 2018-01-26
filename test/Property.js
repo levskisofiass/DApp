@@ -78,7 +78,8 @@ contract('Property', function (accounts) {
       propertyImpl = await Property.new();
       await propertyImpl.init();
 
-      await marketplaceContract.init(factoryContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
       await factoryContract.setPropertyImplAddress(propertyImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
@@ -180,7 +181,8 @@ contract('Property', function (accounts) {
       propertyImpl = await Property.new();
       await propertyImpl.init();
 
-      await marketplaceContract.init(factoryContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
       await factoryContract.setPropertyImplAddress(propertyImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
@@ -367,7 +369,8 @@ contract('Property', function (accounts) {
       propertyImpl = await Property.new();
       await propertyImpl.init();
 
-      await marketplaceContract.init(factoryContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
       await factoryContract.setPropertyImplAddress(propertyImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
@@ -570,7 +573,8 @@ contract('Property', function (accounts) {
       propertyImpl = await Property.new();
       await propertyImpl.init();
 
-      await marketplaceContract.init(factoryContract.address);
+      await marketplaceContract.init();
+      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
       await factoryContract.setPropertyImplAddress(propertyImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
