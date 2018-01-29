@@ -2,7 +2,7 @@ pragma solidity ^0.4.17;
 
 import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IHotelRoomsUpgrade.sol";
-import "./../../Hotel/HotelFactory/IHotelFactory.sol";
+import "./../../Property/Hotel/HotelFactory/IHotelFactory.sol";
 
 /**
 * @dev This contract is only used to test the upgreadability - DO NOT DEPLOY TO PRODUCTION
@@ -14,7 +14,7 @@ contract HotelRoomsUpgrade is IHotelRoomsUpgrade, OwnableUpgradeableImplementati
     uint roomsCount;
     bytes32 roomsType;
     uint workingDayPrice;
-    uint propertyArrayIndex;
+    uint rentalArrayIndex;
     address hotelFactoryContractAddress;
     mapping (uint256 => uint256) public timestampPrices;
 
@@ -37,7 +37,7 @@ contract HotelRoomsUpgrade is IHotelRoomsUpgrade, OwnableUpgradeableImplementati
             uint _roomsCount,
             bytes32 _roomsType,
             uint _workingDayPrice,
-            uint _propertyArrayIndex,
+            uint _rentalArrayIndex,
             address _hotelFactoryContractAddress)
     {
         return (
@@ -47,7 +47,7 @@ contract HotelRoomsUpgrade is IHotelRoomsUpgrade, OwnableUpgradeableImplementati
             roomsCount,
             roomsType,
             workingDayPrice,
-            propertyArrayIndex,
+            rentalArrayIndex,
             hotelFactoryContractAddress
         );
     }
@@ -58,7 +58,7 @@ contract HotelRoomsUpgrade is IHotelRoomsUpgrade, OwnableUpgradeableImplementati
         uint _roomsCount,
         bytes32 _roomsType,
         uint _workingDayPrice,
-        uint _propertyArrayIndex,
+        uint _rentalArrayIndex,
         address _hotelFactoryContractAddress
 		) public onlyNewHotelRooms onlyValidHotel(_hotelId) returns(bool success)
 	{
@@ -68,7 +68,7 @@ contract HotelRoomsUpgrade is IHotelRoomsUpgrade, OwnableUpgradeableImplementati
         roomsCount = _roomsCount;
         roomsType = _roomsType;
         workingDayPrice = _workingDayPrice;
-        propertyArrayIndex = _propertyArrayIndex;
+        rentalArrayIndex = _rentalArrayIndex;
         hotelFactoryContractAddress = _hotelFactoryContractAddress;
         LogCreateHotel(_hotelId, _hostAddress);
         

@@ -1,18 +1,13 @@
 pragma solidity ^0.4.17;
 
-import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
-import "./../../Lifecycle/Pausable.sol";
-import "./../../Marketplace/IMarketplace.sol";
 import "./../HotelRoomsProxy.sol";
 import "./../IHotelRooms.sol";
 import "./IHotelFactory.sol";
+import "./../../PropertyFactory/PropertyFactory.sol";
 
-contract HotelFactory is IHotelFactory, OwnableUpgradeableImplementation, Pausable {
-    IMarketplace public MarketplaceContract; 
-    address public marketplaceContractAddress; 
-    address public hotelRoomsImplContract;
+
+contract HotelFactory is IHotelFactory, PropertyFactory {
     bytes32[] public hotelRoomTypePairsIds;
-    uint256 public maxBookingPeriod;
     mapping (bytes32 => address) public hotelRoomTypePairs;
 
     event LogCreateHotelContract(bytes32 hotelid, address hostAddress, address hotelContract);
@@ -27,24 +22,6 @@ contract HotelFactory is IHotelFactory, OwnableUpgradeableImplementation, Pausab
         _;
     }
 
-    /**
-     * @dev modifier ensuring that the modified method is only called by marketplace contract
-     */
-    modifier onlyMarketplace(bytes32 marketplaceId) {
-        require(marketplaceId != "");
-        require(marketplaceContractAddress == msg.sender);
-        _;
-    }
-
-    /**
-     * @dev modifier ensuring that the modified method is only called by approved marketplace
-     */
-    modifier onlyApprovedMarketplace(bytes32 marketplaceId) {
-        MarketplaceContract = IMarketplace(msg.sender);
-        require(MarketplaceContract.isApprovedMarketplace(marketplaceId));
-        _;
-    }
-
     function hashHotelRoomTypePair(bytes32 _hotelId, bytes32 _roomsType) public pure returns(bytes32) {
         return keccak256(_hotelId, _roomsType);
     }
@@ -55,34 +32,6 @@ contract HotelFactory is IHotelFactory, OwnableUpgradeableImplementation, Pausab
 
     function getHotelRoomTypePairId(uint index) public constant returns(bytes32) {
         return hotelRoomTypePairsIds[index];
-    }
-
-    function setHotelRoomsImplAddress(address hotelRoomsImplAddress) onlyOwner public {
-        hotelRoomsImplContract = hotelRoomsImplAddress;
-    }
-
-    function getHotelRoomsImplAddress() public constant returns(address hotelImpl) {
-        return hotelRoomsImplContract;
-    }
-
-    function setMarketplaceAddress(address marketplaceAddress) onlyOwner public {
-        marketplaceContractAddress = marketplaceAddress;
-    }
-
-    function getMarketplaceAddress() public constant returns(address marketplaceAddress) {
-        return marketplaceContractAddress;
-    }
-
-    function setMaxBookingPeriod(uint256 _maxBookingPeriod) public onlyOwner whenNotPaused returns(bool success) {
-        require(_maxBookingPeriod > 0);
-
-        maxBookingPeriod = _maxBookingPeriod;
-        LogSetMaxBookingPeriod(_maxBookingPeriod, msg.sender);
-        return true;
-    }
-
-    function getMaxBookingPeriod() public constant returns(uint256 _maxBookingPeriod) {
-        return maxBookingPeriod;
     }
 
     function getHotelRoomsContractAddress(bytes32 _hotelId, bytes32 _roomsType) public constant returns(address hotelContract) {

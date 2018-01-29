@@ -2,12 +2,12 @@ pragma solidity ^0.4.17;
 
 import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 
-contract IPropertyUpgrade is IOwnableUpgradeableImplementation {
-    event LogCreateProperty(bytes32 propertyId, address hostAddress);
-    event LogUpdateProperty(bytes32 _marketplaceId, bytes32 propertyId, address hostAddress);
+contract IRentalUpgrade is IOwnableUpgradeableImplementation {
+    event LogCreateRental(bytes32 rentalId, address hostAddress);
+    event LogUpdateRental(bytes32 _marketplaceId, bytes32 rentalId, address hostAddress);
 
-    function createProperty(
-        bytes32 _propertyId,
+    function createRental(
+        bytes32 _rentalId,
 		bytes32 _marketplaceId, 
         address _hostAddress,
 		uint _workingDayPrice,
@@ -15,13 +15,13 @@ contract IPropertyUpgrade is IOwnableUpgradeableImplementation {
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
-        uint _propertyArrayIndex,
+        uint _rentalArrayIndex,
         bool _isInstantBooking
 		) public returns(bool success);
 
-    function getProperty() public constant
+    function getRental() public constant
         returns(
-            bytes32 _propertyId,
+            bytes32 _rentalId,
             address _hostAddress, 
             bytes32 _marketplaceId, 
             uint _workingDayPrice, 
@@ -29,7 +29,7 @@ contract IPropertyUpgrade is IOwnableUpgradeableImplementation {
             uint _cleaningFee, 
             uint _refundPercent, 
             uint _daysBeforeStartForRefund, 
-            uint _propertyArrayIndex,
+            uint _rentalArrayIndex,
             bool _isInstantBooking);
 
     function updateCleaningFee(uint _cleaningFee) public returns(bool success);

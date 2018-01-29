@@ -4,13 +4,13 @@ const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol")
 const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
 const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
 
-const HotelProxy = artifacts.require('./Hotel/HotelRoomsProxy.sol')
-const Hotel = artifacts.require('./Hotel/HotelRooms.sol')
-const IHotel = artifacts.require('./Hotel/IHotelRooms.sol')
+const HotelProxy = artifacts.require('./Property/Hotel/HotelRoomsProxy.sol');
+const Hotel = artifacts.require('./Property/Hotel/HotelRooms.sol');
+const IHotel = artifacts.require('./Property/Hotel/IHotelRooms.sol');
 
-const HotelFactoryProxy = artifacts.require('./Hotel/HotelFactory/HotelFactoryProxy.sol')
-const HotelFactory = artifacts.require('./Hotel/HotelFactory/HotelFactory.sol')
-const IHotelFactory = artifacts.require('./Hotel/HotelFactory/IHotelFactory.sol')
+const HotelFactoryProxy = artifacts.require('./Property/Hotel/HotelFactory/HotelFactoryProxy.sol');
+const HotelFactory = artifacts.require('./Property/Hotel/HotelFactory/HotelFactory.sol');
+const IHotelFactory = artifacts.require('./Property/Hotel/HotelFactory/IHotelFactory.sol');
 
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
@@ -56,7 +56,7 @@ contract('hotel factory', function (accounts) {
             factoryProxy = await HotelFactoryProxy.new(factoryImpl.address);
             factoryContract = await IHotelFactory.at(factoryProxy.address);
             await factoryContract.init();
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+            await factoryContract.setImplAddress(hotelImpl.address);
         });
 
         it("should get the owner of the first contract", async function () {
@@ -75,7 +75,7 @@ contract('hotel factory', function (accounts) {
             factoryProxy = await HotelFactoryProxy.new(factoryImpl.address);
             factoryContract = await IHotelFactory.at(factoryProxy.address);
             await factoryContract.init();
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+            await factoryContract.setImplAddress(hotelImpl.address);
         });
 
         it("should upgrade contract from owner", async function () {
@@ -88,99 +88,6 @@ contract('hotel factory', function (accounts) {
             await expectThrow(factoryContract.upgradeImplementation(factoryImpl2.address, {
                 from: _notOwner
             }));
-        });
-    });
-
-    describe("change hotel implementation", () => {
-        beforeEach(async function () {
-            hotelImpl = await Hotel.new();
-            await hotelImpl.init();
-
-            factoryImpl = await HotelFactory.new();
-            factoryImpl2 = await HotelFactory.new();
-            factoryProxy = await HotelFactoryProxy.new(factoryImpl.address);
-            factoryContract = await IHotelFactory.at(factoryProxy.address);
-            await factoryContract.init();
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
-        });
-
-        it("should set correct hotel implementation", async function () {
-            const hotelImplAddress = await factoryContract.getHotelRoomsImplAddress();
-            assert.strictEqual(hotelImplAddress, hotelImpl.address, "The hotel implementation is not set correctly");
-        });
-
-        it("should change hotel implementation", async function () {
-            hotelImpl2 = await Hotel.new();
-            await hotelImpl2.init();
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl2.address);
-            const hotelImplAddress = await factoryContract.getHotelRoomsImplAddress();
-
-            assert.strictEqual(hotelImpl2.address, hotelImplAddress, "The hotel implementation is not set correctly");
-        });
-
-        it("should throw on change hotel implementation address from non-owner", async() => {
-            hotelImpl2 = await Hotel.new();
-            await hotelImpl2.init();
-            await expectThrow(
-                factoryContract.setHotelRoomsImplAddress(hotelImpl2.address, {
-                    from: _notOwner
-                })
-            );
-        });
-    });
-
-    describe("change marketplace contract address", () => {
-        beforeEach(async function () {
-            hotelImpl = await Hotel.new();
-            await hotelImpl.init();
-
-            factoryImpl = await HotelFactory.new();
-            factoryProxy = await HotelFactoryProxy.new(factoryImpl.address);
-            factoryContract = await IHotelFactory.at(factoryProxy.address);
-            await factoryContract.init()
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
-
-            marketplaceImpl = await Marketplace.new();
-            marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-            marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-
-            await marketplaceContract.init();
-            await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-        });
-
-        it("should set correct marketplace address", async function () {
-            await factoryContract.setMarketplaceAddress(marketplaceContract.address);
-
-            const marketplaceAddress = await factoryContract.getMarketplaceAddress();
-            assert.strictEqual(marketplaceAddress, marketplaceContract.address, "The marketplace address is not set correctly");
-        });
-
-        it("should change marketplace address", async function () {
-            marketplaceImpl = await Marketplace.new();
-            marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-            marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-
-            await marketplaceContract.init();
-            await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-            await factoryContract.setMarketplaceAddress(marketplaceContract.address);
-
-            const marketplaceAddress = await factoryContract.getMarketplaceAddress();
-
-            assert.strictEqual(marketplaceContract.address, marketplaceAddress, "The marketplace address is not set correctly");
-        });
-
-        it("should throw on change marketplace address from non-owner", async() => {
-            marketplaceImpl = await Marketplace.new();
-            marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-            marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-
-            await marketplaceContract.init();
-            await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-            await expectThrow(
-                factoryContract.setMarketplaceAddress(marketplaceContract.address, {
-                    from: _notOwner
-                })
-            );
         });
     });
 
@@ -200,7 +107,7 @@ contract('hotel factory', function (accounts) {
 
             await marketplaceContract.init();
             await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+            await factoryContract.setImplAddress(hotelImpl.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
             await marketplaceContract.createMarketplace(
@@ -381,7 +288,7 @@ contract('hotel factory', function (accounts) {
 
             await marketplaceContract.init();
             await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+            await factoryContract.setImplAddress(hotelImpl.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
             await marketplaceContract.createMarketplace(
@@ -442,48 +349,6 @@ contract('hotel factory', function (accounts) {
             let hotelContract = await IHotel.at(hotelContractAddress);
             let result = await hotelContract.getHotelRoom();
             assert.strictEqual(web3.utils.hexToUtf8(result[0]), _hotelId, "The hotelId in this contract is incorrect");
-        });
-    });
-
-    describe("Booking Days Period", () => {
-        let maxPeriodDays = 30 * 24 * 60 * 1000;
-        beforeEach(async function () {
-            factoryImpl = await HotelFactory.new();
-            factoryProxy = await HotelFactoryProxy.new(factoryImpl.address);
-            factoryContract = await IHotelFactory.at(factoryProxy.address);
-            await factoryContract.init();
-
-            marketplaceImpl = await Marketplace.new();
-            marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
-            marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
-
-            hotelImpl = await Hotel.new();
-            await hotelImpl.init();
-
-            await marketplaceContract.init();
-            await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
-            await factoryContract.setMarketplaceAddress(marketplaceContract.address);
-        });
-
-        it("should set max booking days period", async() => {
-            await factoryContract.setMaxBookingPeriod(maxPeriodDays);
-            let period = await factoryContract.getMaxBookingPeriod();
-            assert(period.eq(maxPeriodDays), "period was not correct set");
-        });
-
-        it("should throw on max booking days period = 0", async() => {
-            await expectThrow(
-                factoryContract.setMaxBookingPeriod(0)
-            );
-        });
-
-        it("should throw on set max booking days period from non-owner", async() => {
-            await expectThrow(
-                factoryContract.setMaxBookingPeriod(maxPeriodDays, {
-                    from: _notOwner
-                })
-            );
         });
     });
 });

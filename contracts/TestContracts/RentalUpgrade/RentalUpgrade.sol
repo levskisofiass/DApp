@@ -1,14 +1,14 @@
 pragma solidity ^0.4.17;
 
 import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
-import "./IPropertyUpgrade.sol";
-import "./../../Property/PropertyFactory/IPropertyFactory.sol";
+import "./IRentalUpgrade.sol";
+import "./../../Property/Rental/RentalFactory/IRentalFactory.sol";
 
 /**
 * @dev This contract is only used to test the upgreadability - DO NOT DEPLOY TO PRODUCTION
 */
-contract PropertyUpgrade is IPropertyUpgrade, OwnableUpgradeableImplementation {
-    bytes32 propertyId;
+contract RentalUpgrade is IRentalUpgrade, OwnableUpgradeableImplementation {
+    bytes32 rentalId;
     address hostAddress;
     bytes32 marketplaceId;
     uint workingDayPrice;
@@ -16,32 +16,32 @@ contract PropertyUpgrade is IPropertyUpgrade, OwnableUpgradeableImplementation {
     uint cleaningFee;
     uint refundPercent;
     uint daysBeforeStartForRefund;
-    uint propertyArrayIndex;
+    uint rentalArrayIndex;
     bool isInstantBooking;
 
-    event LogCreateProperty(bytes32 _propertyId, address _hostAddress);
-    event LogUpdateProperty(bytes32 _marketplaceId, bytes32 _propertyId, address _hostAddress);
+    event LogCreateRental(bytes32 _rentalId, address _hostAddress);
+    event LogUpdateRental(bytes32 _marketplaceId, bytes32 _rentalId, address _hostAddress);
 
     /**
-     * @dev modifier ensuring that the modified method is only called by the host of current property
-     * @param _propertyId - the identifier of the property
+     * @dev modifier ensuring that the modified method is only called by the host of current rental
+     * @param _rentalId - the identifier of the rental
      * @param _hostAddress - the address of the host
      */
-    modifier onlyHost(bytes32 _propertyId, address _hostAddress) {
-        require(_propertyId != "");
+    modifier onlyHost(bytes32 _rentalId, address _hostAddress) {
+        require(_rentalId != "");
         require(hostAddress == _hostAddress);
         _;
     }
 
-    modifier onlyNewProperty(bytes32 _propertyId) {
-        require(_propertyId != "");
-        require(propertyId == "");
+    modifier onlyNewRental(bytes32 _rentalId) {
+        require(_rentalId != "");
+        require(rentalId == "");
         _;
     }
 
-    function getProperty() public constant
+    function getRental() public constant
         returns(
-            bytes32 _propertyId,
+            bytes32 _rentalId,
             address _hostAddress, 
             bytes32 _marketplaceId, 
             uint _workingDayPrice, 
@@ -49,11 +49,11 @@ contract PropertyUpgrade is IPropertyUpgrade, OwnableUpgradeableImplementation {
             uint _cleaningFee, 
             uint _refundPercent, 
             uint _daysBeforeStartForRefund, 
-            uint _propertyArrayIndex,
+            uint _rentalArrayIndex,
             bool _isInstantBooking)
     {
         return (
-            propertyId,
+            rentalId,
             hostAddress,
             marketplaceId,
             workingDayPrice,
@@ -61,13 +61,13 @@ contract PropertyUpgrade is IPropertyUpgrade, OwnableUpgradeableImplementation {
             cleaningFee,
             refundPercent,
             daysBeforeStartForRefund,
-            propertyArrayIndex,
+            rentalArrayIndex,
             isInstantBooking
         );
     }
 
-    function createProperty(
-        bytes32 _propertyId,
+    function createRental(
+        bytes32 _rentalId,
 		bytes32 _marketplaceId, 
         address _hostAddress,
 		uint _workingDayPrice,
@@ -75,11 +75,11 @@ contract PropertyUpgrade is IPropertyUpgrade, OwnableUpgradeableImplementation {
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
-        uint _propertyArrayIndex,
+        uint _rentalArrayIndex,
         bool _isInstantBooking
-		) public onlyNewProperty(_propertyId) returns(bool success)
+		) public onlyNewRental(_rentalId) returns(bool success)
 	{
-        propertyId = _propertyId;
+        rentalId = _rentalId;
         hostAddress = _hostAddress;
         marketplaceId = _marketplaceId;
         workingDayPrice = _workingDayPrice;
@@ -87,10 +87,10 @@ contract PropertyUpgrade is IPropertyUpgrade, OwnableUpgradeableImplementation {
         cleaningFee = _cleaningFee;
         refundPercent = _refundPercent;
         daysBeforeStartForRefund = _daysBeforeStartForRefund;
-        propertyArrayIndex = _propertyArrayIndex;
+        rentalArrayIndex = _rentalArrayIndex;
         isInstantBooking = _isInstantBooking;
 
-        LogCreateProperty(_propertyId, _hostAddress);
+        LogCreateRental(_rentalId, _hostAddress);
         
 		return true;
 	}

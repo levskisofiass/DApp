@@ -1,7 +1,7 @@
 pragma solidity ^0.4.17;
 
 import "./../Lifecycle/Ownable.sol";
-import './../Lifecycle/PausableBasic.sol';
+import "./../Lifecycle/PausableBasic.sol";
 
 /**
  * @title ExchangeOracle

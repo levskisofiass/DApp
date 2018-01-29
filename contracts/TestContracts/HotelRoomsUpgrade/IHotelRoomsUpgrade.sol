@@ -10,7 +10,7 @@ contract IHotelRoomsUpgrade is IOwnableUpgradeableImplementation {
         uint _roomsCount,
         bytes32 _roomsType,
         uint _workingDayPrice,
-        uint _propertyArrayIndex,
+        uint _rentalArrayIndex,
         address _hotelFactoryContractAddress
     ) public returns(bool success);
 
@@ -24,7 +24,7 @@ contract IHotelRoomsUpgrade is IOwnableUpgradeableImplementation {
             uint _roomsCount,
             bytes32 _roomsType,
             uint _workingDayPrice,
-            uint _propertyArrayIndex,
+            uint _rentalArrayIndex,
             address _hotelFactoryContractAddress
         );
 }

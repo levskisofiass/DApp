@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17;
 
-import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
+import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 
 contract IHotelRooms is IOwnableUpgradeableImplementation {
     function createHotelRooms(
@@ -10,7 +10,7 @@ contract IHotelRooms is IOwnableUpgradeableImplementation {
         uint _roomsCount,
         bytes32 _roomsType,
         uint _workingDayPrice,
-        uint _propertyArrayIndex,
+        uint _rentalArrayIndex,
         address _hotelFactoryContractAddress
     ) public returns(bool success);
 
@@ -22,6 +22,6 @@ contract IHotelRooms is IOwnableUpgradeableImplementation {
             uint _roomsCount,
             bytes32 _roomsType,
             uint _workingDayPrice,
-            uint _propertyArrayIndex
+            uint _rentalArrayIndex
         );
 }

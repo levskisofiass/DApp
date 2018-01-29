@@ -10,21 +10,21 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
-    event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
+    event LogCreateRentalFromMarketplace(bytes32 rentalId, address hostAddress, bytes32 marketplaceId);
     event LogCreateHotelFromMarketplace(bytes32 hotelId, address hostAddress, bytes32 marketplaceId);
 
-    function setPropertyFactoryContract(address propertyFactoryContractAddress) public returns(bool success);
+    function setRentalFactoryContract(address rentalFactoryContractAddress) public returns(bool success);
+    function getRentalFactoryContract() public view returns(address rentalFactoryAddress);
 
     function setHotelFactoryContract(address hotelFactoryContractAddress) public returns(bool success);
-
-    function getPropertyFactoryContract() view public returns(address propertyFactoryAddress);
+    function getHotelFactoryContract() public view returns(address hotelFactoryContractAddress);
 
     function isApprovedMarketplace(bytes32 _marketplaceId) public constant returns(bool result);
 
     function createMarketplace(
 		bytes32 _marketplaceId,
 		bytes32 _url,
-		bytes32 _propertyAPI,
+		bytes32 _rentalAPI,
 		bytes32 _disputeAPI,
 		address _exchangeContractAddress
 	) public returns(bool success);
@@ -32,7 +32,7 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     function updateMarketplace(
 		bytes32 _marketplaceId,
 		bytes32 _url,
-		bytes32 _propertyAPI,
+		bytes32 _rentalAPI,
 		bytes32 _disputeAPI,
 		address _exchangeContractAddress,
         address _newAdmin
@@ -48,12 +48,12 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     function marketplacesCount() public constant returns(uint);
 
     function getMarketplace(bytes32 marketplaceId) public constant
-        returns(address adminAddress, bytes32 url, bytes32 propertyAPI, bytes32 disputeAPI, address exchangeContractAddress, uint marketplaceArrayIndex, bool isApproved, bool isActive);
+        returns(address adminAddress, bytes32 url, bytes32 rentalAPI, bytes32 disputeAPI, address exchangeContractAddress, uint marketplaceArrayIndex, bool isApproved, bool isActive);
 
     function getMarketplaceId(uint index) public constant returns(bytes32);
 
-    function createProperty(
-        bytes32 _propertyId,
+    function createRental(
+        bytes32 _rentalId,
 		bytes32 _marketplaceId, 
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,

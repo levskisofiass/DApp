@@ -4,16 +4,16 @@ const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol")
 const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
 const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
 
-const HotelRoomsProxy = artifacts.require('./Hotel/HotelRoomsProxy.sol')
-const HotelRooms = artifacts.require('./Hotel/HotelRooms.sol')
-const IHotelRooms = artifacts.require('./Hotel/IHotelRooms.sol')
+const HotelRoomsProxy = artifacts.require('./Property/Hotel/HotelRoomsProxy.sol');
+const HotelRooms = artifacts.require('./Property/Hotel/HotelRooms.sol');
+const IHotelRooms = artifacts.require('./Property/Hotel/IHotelRooms.sol');
 
-const HotelRoomsUpgrade = artifacts.require('./TestContracts/HotelRoomsUpgrade/HotelRoomsUpgrade.sol')
-const IHotelRoomsUpgrade = artifacts.require('./TestContracts/HotelRoomsUpgrade/IHotelRoomsUpgrade.sol')
+const HotelRoomsUpgrade = artifacts.require('./TestContracts/HotelRoomsUpgrade/HotelRoomsUpgrade.sol');
+const IHotelRoomsUpgrade = artifacts.require('./TestContracts/HotelRoomsUpgrade/IHotelRoomsUpgrade.sol');
 
-const HotelFactoryProxy = artifacts.require('./Hotel/HotelFactory/HotelFactoryProxy.sol')
-const HotelFactory = artifacts.require('./Hotel/HotelFactory/HotelFactory.sol')
-const IHotelFactory = artifacts.require('./Hotel/HotelFactory/IHotelFactory.sol')
+const HotelFactoryProxy = artifacts.require('./Property/Hotel/HotelFactory/HotelFactoryProxy.sol');
+const HotelFactory = artifacts.require('./Property/Hotel/HotelFactory/HotelFactory.sol');
+const IHotelFactory = artifacts.require('./Property/Hotel/HotelFactory/IHotelFactory.sol');
 
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
@@ -73,7 +73,7 @@ contract('HotelRooms', function (accounts) {
             await marketplaceContract.init();
 
             await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+            await factoryContract.setImplAddress(hotelImpl.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
             await marketplaceContract.createMarketplace(
@@ -165,7 +165,7 @@ contract('HotelRooms', function (accounts) {
             await marketplaceContract.init();
 
             await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+            await factoryContract.setImplAddress(hotelImpl.address);
             await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
             await marketplaceContract.createMarketplace(
@@ -202,7 +202,7 @@ contract('HotelRooms', function (accounts) {
             hotelImpl = await HotelRooms.new();
             await hotelImpl.init();
 
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+            await factoryContract.setImplAddress(hotelImpl.address);
 
             hotelsCount = await factoryContract.hotelRoomTypePairsCount();
             assert(hotelsCount.eq(1), "The hotels count was not correct");
@@ -225,7 +225,7 @@ contract('HotelRooms', function (accounts) {
             hotelImpl2 = await HotelRoomsUpgrade.new();
             await hotelImpl2.init();
 
-            await factoryContract.setHotelRoomsImplAddress(hotelImpl2.address);
+            await factoryContract.setImplAddress(hotelImpl2.address);
             let hotelContractAddress = await factoryContract.getHotelRoomsContractAddress(_hotelId, _roomsType);
             let hotelContract = IHotelRoomsUpgrade.at(hotelContractAddress);
 
