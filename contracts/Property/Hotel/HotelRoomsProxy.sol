@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17;
 
-import "./../Upgradeability/Forwardable.sol";
+import "./../../Upgradeability/Forwardable.sol";
 import "./HotelFactory/IHotelFactory.sol";
 
 contract HotelRoomsProxy is Forwardable {
@@ -17,7 +17,7 @@ contract HotelRoomsProxy is Forwardable {
     * @return Any bytes32 value the implementation returns
     */
     function () payable public {
-		address hotelRoomsImplAddress = hotelFactoryContract.getHotelRoomsImplAddress();
+		address hotelRoomsImplAddress = hotelFactoryContract.getImplAddress();
         delegatedFwd(hotelRoomsImplAddress, msg.data);
     }
 }

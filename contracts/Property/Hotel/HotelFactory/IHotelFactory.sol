@@ -1,9 +1,11 @@
 pragma solidity ^0.4.17;
 
-import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
-import "./../../Lifecycle/IPausable.sol";
+import "./../../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
+import "./../../../Lifecycle/IPausable.sol";
+import "./../../PropertyFactory/IPropertyFactory.sol";
 
-contract IHotelFactory is IOwnableUpgradeableImplementation, IPausable {
+
+contract IHotelFactory is IOwnableUpgradeableImplementation, IPropertyFactory {
     function createHotelRooms(
         bytes32 _hotelId,
 		bytes32 _marketplaceId, 
@@ -23,17 +25,5 @@ contract IHotelFactory is IOwnableUpgradeableImplementation, IPausable {
 
     function getHotelRoomTypePairId(uint index) public constant returns(bytes32);
 
-    function setHotelRoomsImplAddress(address hotelImplAddress) public;
-
-    function getHotelRoomsImplAddress() public constant returns(address hotelImpl);
-
     function getHotelRoomsContractAddress(bytes32 _hotelId, bytes32 _roomsType) public constant returns(address hotelContract);
-
-    function setMarketplaceAddress(address marketplaceAddress)  public;
-
-    function getMarketplaceAddress() public constant returns(address marketplaceAddress);
-
-    function setMaxBookingPeriod(uint256 _maxBookingPeriod) public returns(bool success);
-
-    function getMaxBookingPeriod() public constant returns(uint256 _maxBookingPeriod);
 }

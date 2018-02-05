@@ -1,11 +1,11 @@
 pragma solidity ^0.4.17;
 
-import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
-import "./IProperty.sol";
-import "./PropertyFactory/IPropertyFactory.sol";
+import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
+import "./IRental.sol";
+import "./RentalFactory/IRentalFactory.sol";
 
-contract Property is IProperty, OwnableUpgradeableImplementation {
-    bytes32 propertyId;
+contract Rental is IRental, OwnableUpgradeableImplementation {
+    bytes32 rentalId;
     bytes32 marketplaceId;
     address hostAddress;
     uint workingDayPrice;
@@ -13,36 +13,36 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
     uint cleaningFee;
     uint refundPercent;
     uint daysBeforeStartForRefund;
-    uint propertyArrayIndex;
+    uint rentalArrayIndex;
     bool isInstantBooking;
-    address propertyFactoryContractAddress;
+    address rentalFactoryContractAddress;
     mapping (uint256 => uint256) public timestampPrices;
 
-    event LogCreateProperty(bytes32 _propertyId, address _hostAddress);    
-    event LogUpdateProperty(bytes32 _marketplaceId, bytes32 _propertyId, address _newHostAddress);
-    event LogSetPriceProperty(uint256 timestamp, uint256 price);
+    event LogCreateRental(bytes32 _rentalId, address _hostAddress);
+    event LogUpdateRental(bytes32 _marketplaceId, bytes32 _rentalId, address _newHostAddress);
+    event LogSetPriceRental(uint256 timestamp, uint256 price);
 
     /**
-     * @dev modifier ensuring that the modified method is only called by the host of current property
+     * @dev modifier ensuring that the modified method is only called by the host of current rental
      */
     modifier onlyHost() {
         require(msg.sender == hostAddress);
         _;
     }
 
-    modifier onlyValidProperty(bytes32 _propertyId) {
-        require(_propertyId != "");
+    modifier onlyValidRental(bytes32 _rentalId) {
+        require(_rentalId != "");
         _;
     }
 
-    modifier onlyNewProperty() {
-        require(propertyId == "");
+    modifier onlyNewRental() {
+        require(rentalId == "");
         _;
     }
 
-    function getProperty() public constant
+    function getRental() public constant
         returns(
-            bytes32 _propertyId, 
+            bytes32 _rentalId,
             address _hostAddress, 
             bytes32 _marketplaceId, 
             uint _workingDayPrice, 
@@ -50,11 +50,11 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
             uint _cleaningFee, 
             uint _refundPercent, 
             uint _daysBeforeStartForRefund, 
-            uint _propertyArrayIndex,
+            uint _rentalArrayIndex,
             bool _isInstantBooking)
     {
         return (
-            propertyId,
+            rentalId,
             hostAddress,
             marketplaceId,
             workingDayPrice,
@@ -62,13 +62,13 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
             cleaningFee,
             refundPercent,
             daysBeforeStartForRefund,
-            propertyArrayIndex,
+            rentalArrayIndex,
             isInstantBooking
         );
     }
 
-    function createProperty(
-        bytes32 _propertyId,
+    function createRental(
+        bytes32 _rentalId,
 		bytes32 _marketplaceId, 
         address _hostAddress,
 		uint _workingDayPrice,
@@ -76,12 +76,12 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         uint _cleaningFee,
         uint _refundPercent,
         uint _daysBeforeStartForRefund,
-        uint _propertyArrayIndex,
+        uint _rentalArrayIndex,
         bool _isInstantBooking,
-        address _propertyFactoryContractAddress
-		) public onlyNewProperty onlyValidProperty(_propertyId) returns(bool success)
+        address _rentalFactoryContractAddress
+		) public onlyNewRental onlyValidRental(_rentalId) returns(bool success)
 	{
-        propertyId = _propertyId;
+        rentalId = _rentalId;
         hostAddress = _hostAddress;
         marketplaceId = _marketplaceId;
         workingDayPrice = _workingDayPrice;
@@ -89,28 +89,28 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         cleaningFee = _cleaningFee;
         refundPercent = _refundPercent;
         daysBeforeStartForRefund = _daysBeforeStartForRefund;
-        propertyArrayIndex = _propertyArrayIndex;
+        rentalArrayIndex = _rentalArrayIndex;
         isInstantBooking = _isInstantBooking;
-        propertyFactoryContractAddress = _propertyFactoryContractAddress;
+        rentalFactoryContractAddress = _rentalFactoryContractAddress;
 
-        LogCreateProperty(_propertyId, _hostAddress);
+        LogCreateRental(_rentalId, _hostAddress);
         
 		return true;
 	}
 
     function validateUpdate(
-        bytes32 _propertyId,
+        bytes32 _rentalId,
         address _newHostAddress
     ) public view onlyHost
         returns(bool success) 
     {
         require(_newHostAddress != address(0));
-        require(propertyId == _propertyId);
+        require(rentalId == _rentalId);
         return true;
     }
 
-    function updateProperty(
-        bytes32 _propertyId,
+    function updateRental(
+        bytes32 _rentalId,
 		bytes32 _marketplaceId,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
@@ -121,7 +121,7 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         address _newHostAddress
     ) public returns(bool success)
     {
-        validateUpdate(_propertyId, _newHostAddress);
+        validateUpdate(_rentalId, _newHostAddress);
      
         marketplaceId = _marketplaceId;
         hostAddress = _newHostAddress;
@@ -132,16 +132,16 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         daysBeforeStartForRefund = _daysBeforeStartForRefund;
         isInstantBooking = _isInstantBooking;
 
-        LogUpdateProperty(_marketplaceId, _propertyId, _newHostAddress);
+        LogUpdateRental(_marketplaceId, _rentalId, _newHostAddress);
 
         return true;
     }
 
     /**
-     * @dev function use to set price for property in different days
+     * @dev function use to set price for rental in different days
      * @param _timestampStart - the UNIX timestamp of start point
      * @param _timestampEnd - the UNIX timestamp of end point
-     * @param _price - price of property 
+     * @param _price - price of rental
      */
     function setPrice(
         uint256 _timestampStart,
@@ -153,19 +153,19 @@ contract Property is IProperty, OwnableUpgradeableImplementation {
         require(_timestampStart >= now);
         require(_price > 0);
 
-        IPropertyFactory propertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
-        require((_timestampEnd - _timestampStart) <= propertyFactoryContract.getMaxBookingPeriod() * 1 days);
+        IRentalFactory rentalFactoryContract = IRentalFactory(rentalFactoryContractAddress);
+        require((_timestampEnd - _timestampStart) <= rentalFactoryContract.getMaxBookingPeriod() * 1 days);
 
         for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
             timestampPrices[day] = _price;
-            LogSetPriceProperty(day, _price);
+            LogSetPriceRental(day, _price);
         }
 
         return true;
     }
 
     /**
-     * @dev function use to get price for property in different day
+     * @dev function use to get price for rental in different day
      * @param _timestamp - the UNIX timestamp
      */
     function getPrice(uint256 _timestamp) public constant returns(uint256 price) {

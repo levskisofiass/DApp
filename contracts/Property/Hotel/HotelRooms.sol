@@ -1,8 +1,9 @@
 pragma solidity ^0.4.17;
 
-import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
+import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IHotelRooms.sol";
 import "./HotelFactory/IHotelFactory.sol";
+
 
 contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
     bytes32 hotelId;
@@ -11,7 +12,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
     uint roomsCount;
     bytes32 roomsType;
     uint workingDayPrice;
-    uint propertyArrayIndex;
+    uint rentalArrayIndex;
     address hotelFactoryContractAddress;
     mapping (uint256 => uint256) public timestampPrices;
 
@@ -35,7 +36,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
             uint _roomsCount,
             bytes32 _roomsType,
             uint _workingDayPrice,
-            uint _propertyArrayIndex)
+            uint _rentalArrayIndex)
     {
         return (
             hotelId,
@@ -44,7 +45,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
             roomsCount,
             roomsType,
             workingDayPrice,
-            propertyArrayIndex
+            rentalArrayIndex
         );
     }
 
@@ -55,7 +56,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
         uint _roomsCount,
         bytes32 _roomsType,
         uint _workingDayPrice,
-        uint _propertyArrayIndex,
+        uint _rentalArrayIndex,
         address _hotelFactoryContractAddress
 		) public onlyNewHotelRooms onlyValidHotel(_hotelId) returns(bool success)
 	{
@@ -65,7 +66,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
         roomsCount = _roomsCount;
         roomsType = _roomsType;
         workingDayPrice = _workingDayPrice;
-        propertyArrayIndex = _propertyArrayIndex;
+        rentalArrayIndex = _rentalArrayIndex;
         hotelFactoryContractAddress = _hotelFactoryContractAddress;
         LogCreateHotel(_hotelId, _hostAddress);
         

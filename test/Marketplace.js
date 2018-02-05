@@ -4,21 +4,21 @@ const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol")
 const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
 const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
 
-const PropertyProxy = artifacts.require("./Property/PropertyProxy.sol");
-const Property = artifacts.require("./Property/Property.sol");
-const IProperty = artifacts.require("./Property/IProperty.sol");
+const RentalProxy = artifacts.require("./Property/Rental/RentalProxy.sol");
+const Rental = artifacts.require("./Property/Rental/Rental.sol");
+const IRental = artifacts.require("./Property/Rental/IRental.sol");
 
-const PropertyFactoryProxy = artifacts.require('./Property/PropertyFactory/PropertyFactoryProxy.sol')
-const PropertyFactory = artifacts.require('./Property/PropertyFactory/PropertyFactory.sol')
-const IPropertyFactory = artifacts.require('./Property/PropertyFactory/IPropertyFactory.sol')
+const RentalFactoryProxy = artifacts.require('./Property/Rental/RentalFactory/RentalFactoryProxy.sol');
+const RentalFactory = artifacts.require('./Property/Rental/RentalFactory/RentalFactory.sol');
+const IRentalFactory = artifacts.require('./Property/Rental/RentalFactory/IRentalFactory.sol');
 
-const HotelProxy = artifacts.require('./Hotel/HotelRoomsProxy.sol')
-const Hotel = artifacts.require('./Hotel/HotelRooms.sol')
-const IHotel = artifacts.require('./Hotel/IHotelRooms.sol')
+const HotelProxy = artifacts.require('./Property/Hotel/HotelRoomsProxy.sol');
+const Hotel = artifacts.require('./Property/Hotel/HotelRooms.sol');
+const IHotel = artifacts.require('./Property/Hotel/IHotelRooms.sol');
 
-const HotelFactoryProxy = artifacts.require('./Hotel/HotelFactory/HotelFactoryProxy.sol')
-const HotelFactory = artifacts.require('./Hotel/HotelFactory/HotelFactory.sol')
-const IHotelFactory = artifacts.require('./Hotel/HotelFactory/IHotelFactory.sol')
+const HotelFactoryProxy = artifacts.require('./Property/Hotel/HotelFactory/HotelFactoryProxy.sol');
+const HotelFactory = artifacts.require('./Property/Hotel/HotelFactory/HotelFactory.sol');
+const IHotelFactory = artifacts.require('./Property/Hotel/HotelFactory/IHotelFactory.sol');
 
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
@@ -29,9 +29,9 @@ contract('Marketplace', function (accounts) {
   let marketplaceProxy;
   let marketplaceImpl;
   let marketplaceImpl2;
-  let propertyContract;
-  let propertyProxy;
-  let propertyImpl;
+  let rentalContract;
+  let rentalProxy;
+  let rentalImpl;
   let factoryContract;
   let factoryProxy;
   let factoryImpl;
@@ -44,22 +44,22 @@ contract('Marketplace', function (accounts) {
   const _notOwner = accounts[1];
   const _marketplaceAdmin = accounts[2];
   const _newMarketplaceAdmin = accounts[3];
-  const _propertyHost = accounts[4];
-  const _propertyHostUpdate = accounts[5];
+  const _rentalHost = accounts[4];
+  const _rentalHostUpdate = accounts[5];
 
   const _marketplaceId = util.toBytes32("5a9d0e1a87");
   const _marketplaceId2 = util.toBytes32("5a9d0e1a88");
   const _url = "https://lockchain.co/marketplace";
   const _url2 = "https://lockchain.co/mp";
-  const _propertyAPI = "https://lockchain.co/PropertyAPI";
-  const _propertyAPI2 = "https://lockchain.co/propAPI";
+  const _rentalAPI = "https://lockchain.co/RentalAPI";
+  const _rentalAPI2 = "https://lockchain.co/propAPI";
   const _disputeAPI = "https://lockchain.co/DisuputeAPI";
   const _disputeAPI2 = "https://lockchain.co/disAPI";
   const _exchangeContractAddress = "0x2988ae7f92f5c8cad1997ae5208aeaa68878f76d";
   const _exchangeContractAddress2 = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76d";
 
-  const _propertyId = "testId1234";
-  const _propertyId2 = "testId223";
+  const _rentalId = "testId1234";
+  const _rentalId2 = "testId223";
   const _workingDayPrice = '1000000000000000000';
   const _workingDayPriceUpdate = '2000000000000000000';
   const _nonWorkingDayPrice = '2000000000000000000';
@@ -72,8 +72,8 @@ contract('Marketplace', function (accounts) {
   const _daysBeforeStartForRefundUpdate = '20';
   const _isInstantBooking = true;
   const _isInstantBookingUpdate = false;
-  const _propertyFactoryContract = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76a";
-  const _propertyFactoryContract2 = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76b";
+  const _rentalFactoryContract = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76a";
+  const _rentalFactoryContract2 = "0x2988ae7f92f5c8cad1997ae5208aeaa68878a76b";
 
   const _hotelId = "testId123";
   const _hotelId2 = "testId223";
@@ -91,10 +91,16 @@ contract('Marketplace', function (accounts) {
       marketplaceContract.init();
     });
 
-    it("should set correct property factory contract", async() => {
-      await marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract);
-      let contractAddress = await marketplaceContract.getPropertyFactoryContract();
-      assert.strictEqual(contractAddress.toString(), _propertyFactoryContract, "The property factory contract was not set correctly")
+    it("should set correct rental factory contract", async() => {
+      await marketplaceContract.setRentalFactoryContract(_rentalFactoryContract);
+      let contractAddress = await marketplaceContract.getRentalFactoryContract();
+      assert.strictEqual(contractAddress.toString(), _rentalFactoryContract, "The rental factory contract was not set correctly")
+    });
+
+    it("should set correct hotel factory contract", async() => {
+        await marketplaceContract.setHotelFactoryContract(_rentalFactoryContract);
+        let contractAddress = await marketplaceContract.getHotelFactoryContract();
+        assert.strictEqual(contractAddress.toString(), _rentalFactoryContract, "The hotel factory contract was not set correctly")
     });
 
     it("should throw when address is wrong", async() => {
@@ -108,9 +114,9 @@ contract('Marketplace', function (accounts) {
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
+      rentalImpl = await Rental.new();
+      rentalProxy = await RentalProxy.new(rentalImpl.address);
+      rentalContract = await IRental.at(rentalProxy.address);
 
       await marketplaceContract.init();
     });
@@ -128,12 +134,12 @@ contract('Marketplace', function (accounts) {
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
+      rentalImpl = await Rental.new();
+      rentalProxy = await RentalProxy.new(rentalImpl.address);
+      rentalContract = await IRental.at(rentalProxy.address);
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
+      await marketplaceContract.setRentalFactoryContract(rentalContract.address);
     });
 
     it("should upgrade contract from owner", async function () {
@@ -151,36 +157,36 @@ contract('Marketplace', function (accounts) {
     });
   });
 
-  describe("change property factory contract", () => {
+  describe("change rental factory contract", () => {
     beforeEach(async() => {
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract);
+      await marketplaceContract.setRentalFactoryContract(_rentalFactoryContract);
     });
 
-    it("should get correct property factory contract", async() => {
-      let contractAddress = await marketplaceContract.getPropertyFactoryContract();
-      assert.strictEqual(contractAddress.toString(), _propertyFactoryContract, "The property factory contract was not set correctly")
+    it("should get correct rental factory contract", async() => {
+      let contractAddress = await marketplaceContract.getRentalFactoryContract();
+      assert.strictEqual(contractAddress.toString(), _rentalFactoryContract, "The rental factory contract was not set correctly")
     });
 
-    it("should change property factory contract", async() => {
-      await marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract2, {
+    it("should change rental factory contract", async() => {
+      await marketplaceContract.setRentalFactoryContract(_rentalFactoryContract2, {
         from: _owner
       });
-      let contractAddress = await marketplaceContract.getPropertyFactoryContract();
-      assert.strictEqual(contractAddress.toString(), _propertyFactoryContract2, "The property factory contract was not set correctly")
+      let contractAddress = await marketplaceContract.getRentalFactoryContract();
+      assert.strictEqual(contractAddress.toString(), _rentalFactoryContract2, "The rental factory contract was not set correctly")
     });
 
     it("should throw when non-owner is changing address", async() => {
-      await expectThrow(marketplaceContract.setPropertyFactoryContract(_propertyFactoryContract2, {
+      await expectThrow(marketplaceContract.setRentalFactoryContract(_rentalFactoryContract2, {
         from: _notOwner
       }));
     });
 
     it("should throw when address is wrong", async() => {
-      await expectThrow(marketplaceContract.setPropertyFactoryContract("0x0"));
+      await expectThrow(marketplaceContract.setRentalFactoryContract("0x0"));
     });
   });
 
@@ -190,19 +196,19 @@ contract('Marketplace', function (accounts) {
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
+      rentalImpl = await Rental.new();
+      rentalProxy = await RentalProxy.new(rentalImpl.address);
+      rentalContract = await IRental.at(rentalProxy.address);
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
+      await marketplaceContract.setRentalFactoryContract(rentalContract.address);
     });
 
     it("should create new marketplace", async() => {
       let result = await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -220,7 +226,7 @@ contract('Marketplace', function (accounts) {
       let result = await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -232,7 +238,7 @@ contract('Marketplace', function (accounts) {
       let result2 = await marketplaceContract.createMarketplace(
         _marketplaceId2,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -250,7 +256,7 @@ contract('Marketplace', function (accounts) {
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -259,9 +265,9 @@ contract('Marketplace', function (accounts) {
 
       let result = await marketplaceContract.getMarketplace(_marketplaceId);
       assert.strictEqual(result[0], _marketplaceAdmin, "The admin was not set correctly");
-      assert.strictEqual(web3.utils.hexToAscii(result[1]), _url, "The url was not set correctly");
-      assert.strictEqual(web3.utils.hexToAscii(result[2]), _propertyAPI, "The propertyAPI was not set correctly");
-      assert.strictEqual(web3.utils.hexToAscii(result[3]), _disputeAPI, "The disputeAPI was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[1]), _url, "The url was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[2]), _rentalAPI, "The rentalAPI was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[3]), _disputeAPI, "The disputeAPI was not set correctly");
       assert.strictEqual(result[4], _exchangeContractAddress, "The exchange contract address was not set correctly");
       assert(result[5].eq(0), "The index array was not set correctly");
       assert.isTrue(!result[6], "The marketplace was approved");
@@ -272,7 +278,7 @@ contract('Marketplace', function (accounts) {
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -295,7 +301,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -307,7 +313,7 @@ contract('Marketplace', function (accounts) {
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -317,7 +323,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -329,7 +335,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.createMarketplace(
         _marketplaceId,
         "",
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -337,7 +343,7 @@ contract('Marketplace', function (accounts) {
       ));
     });
 
-    it("should throw if trying to create marketplace with empty propertyAPI", async function () {
+    it("should throw if trying to create marketplace with empty rentalAPI", async function () {
       await expectThrow(marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
@@ -353,7 +359,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         "",
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -365,7 +371,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         0x0, {
           from: _marketplaceAdmin
@@ -378,7 +384,7 @@ contract('Marketplace', function (accounts) {
       let result = await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -396,17 +402,17 @@ contract('Marketplace', function (accounts) {
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
+      rentalImpl = await Rental.new();
+      rentalProxy = await RentalProxy.new(rentalImpl.address);
+      rentalContract = await IRental.at(rentalProxy.address);
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
+      await marketplaceContract.setRentalFactoryContract(rentalContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -418,7 +424,7 @@ contract('Marketplace', function (accounts) {
       let result = await marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         _exchangeContractAddress2,
         _newMarketplaceAdmin, {
@@ -433,7 +439,7 @@ contract('Marketplace', function (accounts) {
       await marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         _exchangeContractAddress2,
         _newMarketplaceAdmin, {
@@ -444,7 +450,7 @@ contract('Marketplace', function (accounts) {
       let result = await marketplaceContract.getMarketplace(_marketplaceId);
       assert.strictEqual(result[0], _newMarketplaceAdmin, "The admin was not set correctly");
       assert.strictEqual(web3.utils.hexToUtf8(result[1]), _url2, "The url was not set correctly");
-      assert.strictEqual(web3.utils.hexToUtf8(result[2]), _propertyAPI2, "The propertyAPI was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[2]), _rentalAPI2, "The rentalAPI was not set correctly");
       assert.strictEqual(web3.utils.hexToUtf8(result[3]), _disputeAPI2, "The disputeAPI was not set correctly");
       assert.strictEqual(result[4], _exchangeContractAddress2, "The exchange contract address was not set correctly");
       assert(result[5].eq(0), "The index array was not set correctly");
@@ -456,7 +462,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         _exchangeContractAddress2,
         _newMarketplaceAdmin, {
@@ -473,7 +479,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         _exchangeContractAddress2,
         _newMarketplaceAdmin, {
@@ -486,7 +492,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.updateMarketplace(
         _marketplaceId,
         "",
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         _exchangeContractAddress2,
         _newMarketplaceAdmin, {
@@ -495,7 +501,7 @@ contract('Marketplace', function (accounts) {
       ));
     });
 
-    it("should throw if trying to update marketplace with empty propertyAPI", async function () {
+    it("should throw if trying to update marketplace with empty rentalAPI", async function () {
       await expectThrow(marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
@@ -512,7 +518,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         "",
         _exchangeContractAddress2,
         _newMarketplaceAdmin, {
@@ -525,7 +531,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         0x0,
         _newMarketplaceAdmin, {
@@ -538,7 +544,7 @@ contract('Marketplace', function (accounts) {
       await expectThrow(marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         _exchangeContractAddress2,
         0x0, {
@@ -552,7 +558,7 @@ contract('Marketplace', function (accounts) {
       let result = await marketplaceContract.updateMarketplace(
         _marketplaceId,
         _url2,
-        _propertyAPI2,
+        _rentalAPI2,
         _disputeAPI2,
         _exchangeContractAddress2,
         _newMarketplaceAdmin, {
@@ -572,17 +578,17 @@ contract('Marketplace', function (accounts) {
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
+      rentalImpl = await Rental.new();
+      rentalProxy = await RentalProxy.new(rentalImpl.address);
+      rentalContract = await IRental.at(rentalProxy.address);
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
+      await marketplaceContract.setRentalFactoryContract(rentalContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -639,17 +645,17 @@ contract('Marketplace', function (accounts) {
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
+      rentalImpl = await Rental.new();
+      rentalProxy = await RentalProxy.new(rentalImpl.address);
+      rentalContract = await IRental.at(rentalProxy.address);
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
+      await marketplaceContract.setRentalFactoryContract(rentalContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -711,12 +717,12 @@ contract('Marketplace', function (accounts) {
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      propertyProxy = await PropertyProxy.new(propertyImpl.address);
-      propertyContract = await IProperty.at(propertyProxy.address);
+      rentalImpl = await Rental.new();
+      rentalProxy = await RentalProxy.new(rentalImpl.address);
+      rentalContract = await IRental.at(rentalProxy.address);
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(propertyContract.address);
+      await marketplaceContract.setRentalFactoryContract(rentalContract.address);
     });
 
     it("should switch off the approval policy", async() => {
@@ -736,7 +742,7 @@ contract('Marketplace', function (accounts) {
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -754,7 +760,7 @@ contract('Marketplace', function (accounts) {
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -770,7 +776,7 @@ contract('Marketplace', function (accounts) {
       await marketplaceContract.createMarketplace(
         _marketplaceId2,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -824,29 +830,29 @@ contract('Marketplace', function (accounts) {
     });
   });
 
-  describe("create property from Marketplace", () => {
+  describe("create rental from Marketplace", () => {
     beforeEach(async function () {
-      factoryImpl = await PropertyFactory.new();
-      factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
-      factoryContract = await IPropertyFactory.at(factoryProxy.address);
+      factoryImpl = await RentalFactory.new();
+      factoryProxy = await RentalFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IRentalFactory.at(factoryProxy.address);
       await factoryContract.init();
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      await propertyImpl.init();
+      rentalImpl = await Rental.new();
+      await rentalImpl.init();
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
-      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await marketplaceContract.setRentalFactoryContract(factoryContract.address);
+      await factoryContract.setImplAddress(rentalImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -860,9 +866,9 @@ contract('Marketplace', function (accounts) {
       );
     });
 
-    it("should create new property from Marketplace", async function () {
-      let result = await marketplaceContract.createProperty(
-        _propertyId,
+    it("should create new rental from Marketplace", async function () {
+      let result = await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -870,16 +876,16 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      assert.isTrue(Boolean(result.receipt.status), "The property creation was not successful");
+      assert.isTrue(Boolean(result.receipt.status), "The rental creation was not successful");
     });
 
-    it("should create two new Properties", async() => {
-      let result = await marketplaceContract.createProperty(
-        _propertyId,
+    it("should create two new Rentals", async() => {
+      let result = await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -887,14 +893,14 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      assert.isTrue(Boolean(result.receipt.status), "The Property creation was not successful");
+      assert.isTrue(Boolean(result.receipt.status), "The Rental creation was not successful");
 
-      let result2 = await marketplaceContract.createProperty(
-        _propertyId2,
+      let result2 = await marketplaceContract.createRental(
+        _rentalId2,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -902,20 +908,20 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      assert.isTrue(Boolean(result2.receipt.status), "The property creation was not successful");
+      assert.isTrue(Boolean(result2.receipt.status), "The rental creation was not successful");
 
-      let propertiesCount = await factoryContract.propertiesCount();
-      assert(propertiesCount.eq(2), "The properties count was not correct");
+      let rentalsCount = await factoryContract.rentalsCount();
+      assert(rentalsCount.eq(2), "The rentals count was not correct");
 
     });
 
-    it("should set the values in a Property correctly", async function () {
-      await marketplaceContract.createProperty(
-        _propertyId,
+    it("should set the values in a Rental correctly", async function () {
+      await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -923,17 +929,17 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      let propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
-      let propertyContractLocal = await IProperty.at(propertyContractAddress);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      let rentalContractLocal = await IRental.at(rentalContractAddress);
 
-      let result = await propertyContractLocal.getProperty();
+      let result = await rentalContractLocal.getRental();
 
-      assert.strictEqual(web3.utils.hexToUtf8(result[0]), _propertyId, "The propertyId was not set correctly");
-      assert.strictEqual(result[1], _propertyHost, "The host was not set correctly");
+      assert.strictEqual(web3.utils.hexToUtf8(result[0]), _rentalId, "The rentalId was not set correctly");
+      assert.strictEqual(result[1], _rentalHost, "The host was not set correctly");
       assert.strictEqual(result[2], _marketplaceId, "The marketplaceId was not set correctly");
       assert.strictEqual(result[3].toString(), _workingDayPrice, "The workingDayPrice was not set correctly");
       assert.strictEqual(result[4].toString(), _nonWorkingDayPrice, "The nonWorkingDayPrice was not set correctly");
@@ -945,8 +951,8 @@ contract('Marketplace', function (accounts) {
     });
 
     it("should append to the indexes array and set the last element correctly", async function () {
-      await marketplaceContract.createProperty(
-        _propertyId,
+      await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -954,28 +960,28 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      let propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
-      let propertyContractLocal = await IProperty.at(propertyContractAddress);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      let rentalContractLocal = await IRental.at(rentalContractAddress);
 
-      let result = await propertyContractLocal.getProperty();
+      let result = await rentalContractLocal.getRental();
 
-      let result1 = await factoryContract.getPropertyId(0);
-      assert.strictEqual(web3.utils.hexToUtf8(result1), _propertyId, "The Property id was not set correctly");
-      let result2 = await factoryContract.getPropertyId(result[8].toNumber());
-      assert.strictEqual(web3.utils.hexToUtf8(result2), _propertyId, "The Property index was not set correctly");
+      let result1 = await factoryContract.getRentalId(0);
+      assert.strictEqual(web3.utils.hexToUtf8(result1), _rentalId, "The Rental id was not set correctly");
+      let result2 = await factoryContract.getRentalId(result[8].toNumber());
+      assert.strictEqual(web3.utils.hexToUtf8(result2), _rentalId, "The Rental index was not set correctly");
     });
 
-    it("should throw if trying to create Property when paused", async function () {
+    it("should throw if trying to create Rental when paused", async function () {
       await marketplaceContract.pause({
         from: _owner
       });
 
-      await expectThrow(marketplaceContract.createProperty(
-        _propertyId,
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -983,14 +989,14 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       ));
     });
 
-    it("should throw if trying to create Property with empty marketplaceId", async function () {
-      await expectThrow(marketplaceContract.createProperty(
-        _propertyId,
+    it("should throw if trying to create Rental with empty marketplaceId", async function () {
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
         "",
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -998,14 +1004,14 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       ));
     });
 
-    it("should throw if trying to create Property with not existing marketplaceId", async function () {
-      await expectThrow(marketplaceContract.createProperty(
-        _propertyId,
+    it("should throw if trying to create Rental with not existing marketplaceId", async function () {
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId2,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -1013,20 +1019,20 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       ));
     });
 
-    it("should throw if trying to create Property with not approved marketplaceId", async function () {
+    it("should throw if trying to create Rental with not approved marketplaceId", async function () {
       await marketplaceContract.rejectMarketplace(
         _marketplaceId, {
           from: _owner
         }
       );
 
-      await expectThrow(marketplaceContract.createProperty(
-        _propertyId,
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -1034,15 +1040,15 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       ));
     });
 
-    it("should emit event on Property creation", async function () {
-      const expectedEvent = 'LogCreatePropertyFromMarketplace';
-      let result = await marketplaceContract.createProperty(
-        _propertyId,
+    it("should emit event on Rental creation", async function () {
+      const expectedEvent = 'LogCreateRentalFromMarketplace';
+      let result = await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -1050,11 +1056,11 @@ contract('Marketplace', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property creation!");
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Rental creation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
     });
   });
@@ -1075,13 +1081,13 @@ contract('Marketplace', function (accounts) {
 
       await marketplaceContract.init();
       await marketplaceContract.setHotelFactoryContract(factoryContract.address);
-      await factoryContract.setHotelRoomsImplAddress(hotelImpl.address);
+      await factoryContract.setImplAddress(hotelImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
