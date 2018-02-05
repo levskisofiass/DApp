@@ -20,7 +20,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
 
     event LogCreateRental(bytes32 _rentalId, address _hostAddress);
     event LogUpdateRental(bytes32 _marketplaceId, bytes32 _rentalId, address _newHostAddress);
-    event LogSetPriceRental(uint256 timestamp, uint256 price);
+    event LogSetPriceRental(bytes32 rentalId, uint256 timestamp, uint256 price);
 
     /**
      * @dev modifier ensuring that the modified method is only called by the host of current rental
@@ -158,7 +158,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
 
         for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
             timestampPrices[day] = _price;
-            LogSetPriceRental(day, _price);
+            LogSetPriceRental(rentalId, day, _price);
         }
 
         return true;
