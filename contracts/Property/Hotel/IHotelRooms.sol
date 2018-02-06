@@ -14,7 +14,7 @@ contract IHotelRooms is IOwnableUpgradeableImplementation {
         uint _roomsCount,
         bytes32 _roomsType,
         uint _workingDayPrice,
-        uint _rentalArrayIndex,
+        uint _hotelArrayIndex,
         address _hotelFactoryContractAddress
     ) public returns(bool success);
 
@@ -26,7 +26,7 @@ contract IHotelRooms is IOwnableUpgradeableImplementation {
             uint _roomsCount,
             bytes32 _roomsType,
             uint _workingDayPrice,
-            uint _rentalArrayIndex
+            uint _hotelArrayIndex
         );
 
     function setPrice(uint256 _timestampStart, uint256 _timestampEnd, uint256 _price) public returns(bool success);

@@ -12,7 +12,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
     uint roomsCount;
     bytes32 roomsType;
     uint workingDayPrice;
-    uint rentalArrayIndex;
+    uint hotelArrayIndex;
     address hotelFactoryContractAddress;
     mapping (uint256 => uint256) public timestampPrices;
 
@@ -42,7 +42,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
             uint _roomsCount,
             bytes32 _roomsType,
             uint _workingDayPrice,
-            uint _rentalArrayIndex)
+            uint _hotelArrayIndex)
     {
         return (
             hotelId,
@@ -51,7 +51,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
             roomsCount,
             roomsType,
             workingDayPrice,
-            rentalArrayIndex
+            hotelArrayIndex
         );
     }
 
@@ -62,7 +62,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
         uint _roomsCount,
         bytes32 _roomsType,
         uint _workingDayPrice,
-        uint _rentalArrayIndex,
+        uint _hotelArrayIndex,
         address _hotelFactoryContractAddress
 		) public onlyNewHotelRooms onlyValidHotel(_hotelId) returns(bool success)
 	{
@@ -72,7 +72,7 @@ contract HotelRooms is IHotelRooms, OwnableUpgradeableImplementation {
         roomsCount = _roomsCount;
         roomsType = _roomsType;
         workingDayPrice = _workingDayPrice;
-        rentalArrayIndex = _rentalArrayIndex;
+        hotelArrayIndex = _hotelArrayIndex;
         hotelFactoryContractAddress = _hotelFactoryContractAddress;
         LogCreateHotel(_hotelId, _hostAddress);
         
