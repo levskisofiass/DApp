@@ -1,40 +1,17 @@
 pragma solidity ^0.4.17;
 
-import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 import "./../../Lifecycle/IPausable.sol";
 
-contract IPropertyFactory is IOwnableUpgradeableImplementation, IPausable {
-    event LogCreatePropertyContract(bytes32 propertyId, address hostAddress, address propertyContract);
+
+contract IPropertyFactory is IPausable {
     event LogSetMaxBookingPeriod(uint256 period, address hostAddress);
 
-    function validateCreate(
-        bytes32 propertyId,
-        bytes32 marketplaceId
-    ) public returns(bool success);
+    function setImplAddress(address implAddress) public;
+    function getImplAddress() public constant returns(address implAddress);
 
-    function createNewProperty(
-        bytes32 _propertyId,
-		bytes32 _marketplaceId, 
-        address _hostAddress,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
-        uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
-		) public returns(bool success);
-
-    function propertiesCount() public constant returns(uint);
-    
-    function getPropertyId(uint index) public constant returns(bytes32);
-    function getPropertyContractAddress(bytes32 _propertyId) public constant returns(address propertyContract);
-
-    function setPropertyImplAddress(address propertyImplAddress) public;
-    function getPropertyImplAddress() public constant returns(address propertyImpl);
-
-    function setMarketplaceAddress(address propertyImplAddress) public;
+    function setMarketplaceAddress(address marketplaceAddress)  public;
     function getMarketplaceAddress() public constant returns(address marketplaceAddress);
 
-    function setMaxBookingPeriod(uint256 _maxDaysInterval) public returns(bool success);
+    function setMaxBookingPeriod(uint256 _maxBookingPeriod) public returns(bool success);
     function getMaxBookingPeriod() public constant returns(uint256 _maxBookingPeriod);
 }

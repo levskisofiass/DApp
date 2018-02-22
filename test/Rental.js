@@ -4,27 +4,26 @@ const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol")
 const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
 const IMarketplace = artifacts.require("./Marketplace/IMarketplace.sol");
 
-const PropertyProxy = artifacts.require('./Property/PropertyProxy.sol')
-const Property = artifacts.require('./Property/Property.sol')
-const IProperty = artifacts.require('./Property/IProperty.sol')
+const RentalProxy = artifacts.require('./Property/Rental/RentalProxy.sol');
+const Rental = artifacts.require('./Property/Rental/Rental.sol');
+const IRental = artifacts.require('./Property/Rental/IRental.sol');
 
-const PropertyUpgrade = artifacts.require('./TestContracts/PropertyUpgrade/PropertyUpgrade.sol')
-const IPropertyUpgrade = artifacts.require('./TestContracts/PropertyUpgrade/IPropertyUpgrade.sol')
+const RentalUpgrade = artifacts.require('./TestContracts/RentalUpgrade/RentalUpgrade.sol');
+const IRentalUpgrade = artifacts.require('./TestContracts/RentalUpgrade/IRentalUpgrade.sol');
 
-const PropertyFactoryProxy = artifacts.require('./Property/PropertyFactory/PropertyFactoryProxy.sol')
-const PropertyFactory = artifacts.require('./Property/PropertyFactory/PropertyFactory.sol')
-const IPropertyFactory = artifacts.require('./Property/PropertyFactory/IPropertyFactory.sol')
+const RentalFactoryProxy = artifacts.require('./Property/Rental/RentalFactory/RentalFactoryProxy.sol');
+const RentalFactory = artifacts.require('./Property/Rental/RentalFactory/RentalFactory.sol');
+const IRentalFactory = artifacts.require('./Property/Rental/RentalFactory/IRentalFactory.sol');
 
 const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol");
 const util = require('./util');
 const expectThrow = util.expectThrow;
 const getFutureTimestamp = util.getFutureTimestamp;
 
-contract('Property', function (accounts) {
-  let propertyContract;
-  let propertyProxy;
-  let propertyImpl;
-  let propertyImpl2;
+contract('Rental', function (accounts) {
+  let rentalContract;
+  let rentalImpl;
+  let rentalImpl2;
 
   let marketplaceProxy;
   let marketplaceImpl;
@@ -37,11 +36,11 @@ contract('Property', function (accounts) {
   const _owner = accounts[0];
   const _notOwner = accounts[1];
   const _marketplaceAdmin = accounts[2];
-  const _propertyHost = accounts[3];
-  const _propertyHostUpdate = accounts[4];
+  const _rentalHost = accounts[3];
+  const _rentalHostUpdate = accounts[4];
 
-  const _propertyId = "testId123";
-  const _propertyId2 = "testId223";
+  const _rentalId = "testId123";
+  const _rentalId2 = "testId223";
   const _marketplaceId = "ID123";
   const _marketplaceIdUpdate = "ID1234";
   const _workingDayPrice = '1000000000000000000';
@@ -60,33 +59,33 @@ contract('Property', function (accounts) {
   const _isInstantBookingUpdate = false;
 
   const _url = "https://lockchain.co/marketplace";
-  const _propertyAPI = "https://lockchain.co/PropertyAPI";
+  const _rentalAPI = "https://lockchain.co/RentalAPI";
   const _disputeAPI = "https://lockchain.co/DisuputeAPI";
   const _exchangeContractAddress = "0x2988ae7f92f5c8cad1997ae5208aeaa68878f76d";
 
-  describe("create new property", () => {
+  describe("create new rental", () => {
     beforeEach(async function () {
-      factoryImpl = await PropertyFactory.new();
-      factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
-      factoryContract = await IPropertyFactory.at(factoryProxy.address);
+      factoryImpl = await RentalFactory.new();
+      factoryProxy = await RentalFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IRentalFactory.at(factoryProxy.address);
       await factoryContract.init();
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      await propertyImpl.init();
+      rentalImpl = await Rental.new();
+      await rentalImpl.init();
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
-      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await marketplaceContract.setRentalFactoryContract(factoryContract.address);
+      await factoryContract.setImplAddress(rentalImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -100,9 +99,9 @@ contract('Property', function (accounts) {
       );
     });
 
-    it("should create new Property from Marketplace contract and Property factory contract", async() => {
-      let result = await marketplaceContract.createProperty(
-        _propertyId,
+    it("should create new Rental from Marketplace contract and Rental factory contract", async() => {
+      let result = await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -110,16 +109,16 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
-      let propertiesCount = await factoryContract.propertiesCount();
-      assert(propertiesCount.eq(1), "The properties count was not correct");
+      let rentalsCount = await factoryContract.rentalsCount();
+      assert(rentalsCount.eq(1), "The rentals count was not correct");
     });
 
-    it("should throw on creating second property in same contract", async() => {
-      let result = await marketplaceContract.createProperty(
-        _propertyId,
+    it("should throw on creating second rental in same contract", async() => {
+      let result = await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -127,17 +126,17 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      const propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
+      const rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
 
-      let propertyContract = await IProperty.at(propertyContractAddress);
-      await expectThrow(propertyContract.createProperty(
-        _propertyId2,
+      let rentalContract = await IRental.at(rentalContractAddress);
+      await expectThrow(rentalContract.createRental(
+        _rentalId2,
         _marketplaceId,
-        _propertyHost,
+        _rentalHost,
         _workingDayPrice,
         _nonWorkingDayPrice,
         _cleaningFee,
@@ -146,13 +145,13 @@ contract('Property', function (accounts) {
         _arrayIndex,
         _isInstantBooking,
         factoryContract.address, {
-          from: _propertyHost
+          from: _rentalHost
         }
       ));
     });
 
-    it("should throw on creating property with empty propertyId", async() => {
-      await expectThrow(marketplaceContract.createProperty(
+    it("should throw on creating rental with empty rentalId", async() => {
+      await expectThrow(marketplaceContract.createRental(
         "",
         _marketplaceId,
         _workingDayPrice,
@@ -161,35 +160,35 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       ));
     });
   });
 
-  describe("update property", () => {
+  describe("update rental", () => {
     beforeEach(async function () {
-      factoryImpl = await PropertyFactory.new();
-      factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
-      factoryContract = await IPropertyFactory.at(factoryProxy.address);
+      factoryImpl = await RentalFactory.new();
+      factoryProxy = await RentalFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IRentalFactory.at(factoryProxy.address);
       await factoryContract.init();
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      await propertyImpl.init();
+      rentalImpl = await Rental.new();
+      await rentalImpl.init();
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
-      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await marketplaceContract.setRentalFactoryContract(factoryContract.address);
+      await factoryContract.setImplAddress(rentalImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -202,8 +201,8 @@ contract('Property', function (accounts) {
         }
       );
 
-      await marketplaceContract.createProperty(
-        _propertyId,
+      await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -211,18 +210,18 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      let propertyAddress = await factoryContract.getPropertyContractAddress(_propertyId);
-      propertyContract = await IProperty.at(propertyAddress);
+      let rentalAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      rentalContract = await IRental.at(rentalAddress);
 
     });
 
-    it("should update property", async function () {
-      let result = await propertyContract.updateProperty(
-        _propertyId,
+    it("should update rental", async function () {
+      let result = await rentalContract.updateRental(
+        _rentalId,
         _marketplaceIdUpdate,
         _workingDayPriceUpdate,
         _nonWorkingDayPriceUpdate,
@@ -230,17 +229,17 @@ contract('Property', function (accounts) {
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _propertyHostUpdate, {
-          from: _propertyHost
+        _rentalHostUpdate, {
+          from: _rentalHost
         }
       );
 
-      assert.isTrue(Boolean(result.receipt.status), "The Property updating was not successful");
+      assert.isTrue(Boolean(result.receipt.status), "The Rental updating was not successful");
     });
 
-    it("should update the values in a property correctly", async function () {
-      await propertyContract.updateProperty(
-        _propertyId,
+    it("should update the values in a rental correctly", async function () {
+      await rentalContract.updateRental(
+        _rentalId,
         _marketplaceIdUpdate,
         _workingDayPriceUpdate,
         _nonWorkingDayPriceUpdate,
@@ -248,13 +247,13 @@ contract('Property', function (accounts) {
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _propertyHostUpdate, {
-          from: _propertyHost
+        _rentalHostUpdate, {
+          from: _rentalHost
         }
       );
 
-      let result = await propertyContract.getProperty();
-      assert.strictEqual(result[1].toString(), _propertyHostUpdate, "The Host was not update correctly")
+      let result = await rentalContract.getRental();
+      assert.strictEqual(result[1].toString(), _rentalHostUpdate, "The Host was not update correctly")
       assert.strictEqual(web3.utils.hexToUtf8(result[2]), _marketplaceIdUpdate, "The marketplaceId was not update correctly")
       assert.strictEqual(result[3].toString(), _workingDayPriceUpdate, "The workingDayPrice was not update correctly");
       assert.strictEqual(result[4].toString(), _nonWorkingDayPriceUpdate, "The nonWorkingDayPrice was not update correctly");
@@ -264,8 +263,8 @@ contract('Property', function (accounts) {
       assert.isFalse(result[9], "The isInstantBooking was not update correctly");
     });
 
-    it("should throw if trying to update property with empty propertyId", async function () {
-      await expectThrow(propertyContract.updateProperty(
+    it("should throw if trying to update rental with empty rentalId", async function () {
+      await expectThrow(rentalContract.updateRental(
         "",
         _marketplaceIdUpdate,
         _workingDayPriceUpdate,
@@ -274,14 +273,14 @@ contract('Property', function (accounts) {
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _propertyHostUpdate, {
-          from: _propertyHost
+        _rentalHostUpdate, {
+          from: _rentalHost
         }));
     });
 
-    it("should throw if trying to update property with wrong propertyId", async function () {
-      await expectThrow(propertyContract.updateProperty(
-        _propertyId2,
+    it("should throw if trying to update rental with wrong rentalId", async function () {
+      await expectThrow(rentalContract.updateRental(
+        _rentalId2,
         _marketplaceIdUpdate,
         _workingDayPriceUpdate,
         _nonWorkingDayPriceUpdate,
@@ -289,14 +288,14 @@ contract('Property', function (accounts) {
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _propertyHostUpdate, {
-          from: _propertyHost
+        _rentalHostUpdate, {
+          from: _rentalHost
         }));
     });
 
-    it("should throw if trying to update property with empty new host address", async function () {
-      await expectThrow(propertyContract.updateProperty(
-        _propertyId,
+    it("should throw if trying to update rental with empty new host address", async function () {
+      await expectThrow(rentalContract.updateRental(
+        _rentalId,
         _marketplaceIdUpdate,
         _workingDayPriceUpdate,
         _nonWorkingDayPriceUpdate,
@@ -305,13 +304,13 @@ contract('Property', function (accounts) {
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
         "", {
-          from: _propertyHost
+          from: _rentalHost
         }));
     });
 
-    it("should throw if non-host is trying to update property", async function () {
-      await expectThrow(propertyContract.updateProperty(
-        _propertyId,
+    it("should throw if non-host is trying to update rental", async function () {
+      await expectThrow(rentalContract.updateRental(
+        _rentalId,
         _marketplaceIdUpdate,
         _workingDayPriceUpdate,
         _nonWorkingDayPriceUpdate,
@@ -319,15 +318,15 @@ contract('Property', function (accounts) {
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _propertyHostUpdate, {
-          from: _propertyHostUpdate
+        _rentalHostUpdate, {
+          from: _rentalHostUpdate
         }));
     });
 
-    it("should emit event on property update", async function () {
-      const expectedEvent = 'LogUpdateProperty';
-      let result = await propertyContract.updateProperty(
-        _propertyId,
+    it("should emit event on rental update", async function () {
+      const expectedEvent = 'LogUpdateRental';
+      let result = await rentalContract.updateRental(
+        _rentalId,
         _marketplaceIdUpdate,
         _workingDayPriceUpdate,
         _nonWorkingDayPriceUpdate,
@@ -335,17 +334,17 @@ contract('Property', function (accounts) {
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _propertyHostUpdate, {
-          from: _propertyHost
+        _rentalHostUpdate, {
+          from: _rentalHost
         }
       );
 
-      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Property updation!");
+      assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Rental updation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
     });
   });
 
-  describe("set different price for specific date for property", () => {
+  describe("set different price for specific date for rental", () => {
     let anotherDayinSecunds = 1 * 24 * 60 * 1000;
     let randomDay = 2 * 24 * 60;
     let maxPeriodDays = 30 * 24 * 60;
@@ -353,31 +352,31 @@ contract('Property', function (accounts) {
     let price = 2000000000000000000;
     let timestampStart;
     let timestampEnd;
-    let propertyContractAddress;
-    let propertyContract;
+    let rentalContractAddress;
+    let rentalContract;
 
     beforeEach(async function () {
-      factoryImpl = await PropertyFactory.new();
-      factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
-      factoryContract = await IPropertyFactory.at(factoryProxy.address);
+      factoryImpl = await RentalFactory.new();
+      factoryProxy = await RentalFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IRentalFactory.at(factoryProxy.address);
       await factoryContract.init();
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      await propertyImpl.init();
+      rentalImpl = await Rental.new();
+      await rentalImpl.init();
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
-      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await marketplaceContract.setRentalFactoryContract(factoryContract.address);
+      await factoryContract.setImplAddress(rentalImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -390,8 +389,8 @@ contract('Property', function (accounts) {
         }
       );
 
-      await marketplaceContract.createProperty(
-        _propertyId,
+      await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -399,94 +398,94 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
       await factoryContract.setMaxBookingPeriod(maxPeriodDays * 1000);
       timestampStart = await getFutureTimestamp(randomDay);
       timestampEnd = await getFutureTimestamp(maxPeriodDays);
-      propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
-      propertyContract = await IProperty.at(propertyContractAddress);
+      rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      rentalContract = await IRental.at(rentalContractAddress);
     });
 
-    it("should set different price property for some days", async() => {
-      await propertyContract.setPrice(
+    it("should set different price rental for some days", async() => {
+      await rentalContract.setPrice(
         timestampStart,
         timestampEnd,
         price, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
       for (let day = timestampStart; day <= timestampEnd;
         (day += 86400)) {
-        amount = await propertyContract.getPrice(day);
+        amount = await rentalContract.getPrice(day);
         assert(amount.eq(price), "The price was not correct set in " + day + " day");
       }
     });
 
-    it("should set different price property for one day", async() => {
-      await propertyContract.setPrice(
+    it("should set different price rental for one day", async() => {
+      await rentalContract.setPrice(
         timestampStart,
         timestampStart,
         price, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      amount = await propertyContract.getPrice(timestampStart);
+      amount = await rentalContract.getPrice(timestampStart);
       assert(amount.eq(price), "The price was not correct set in " + timestampStart + " day");
     });
 
 
-    it("should set different price property for two days", async() => {
-      await propertyContract.setPrice(
+    it("should set different price rental for two days", async() => {
+      await rentalContract.setPrice(
         timestampStart,
         timestampStart,
         price, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      await propertyContract.setPrice(
+      await rentalContract.setPrice(
         timestampEnd,
         timestampEnd,
         price, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      amount = await propertyContract.getPrice(timestampStart);
+      amount = await rentalContract.getPrice(timestampStart);
       assert(amount.eq(price), "The price was not correct set in startday");
 
-      amount = await propertyContract.getPrice(timestampEnd);
+      amount = await rentalContract.getPrice(timestampEnd);
       assert(amount.eq(price), "The price was not correct set in endday");
     });
 
-    it("should set different price property for one day and for another day should be the default price", async() => {
-      await propertyContract.setPrice(
+    it("should set different price rental for one day and for another day should be the default price", async() => {
+      await rentalContract.setPrice(
         timestampStart,
         timestampStart,
         price, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
 
-      amount = await propertyContract.getPrice(timestampStart);
+      amount = await rentalContract.getPrice(timestampStart);
       assert(amount.eq(price), "The price was not correct set in startday");
 
-      amount = await propertyContract.getPrice(timestampEnd);
+      amount = await rentalContract.getPrice(timestampEnd);
       assert(amount.eq(_workingDayPrice), "The price was not correct in endday");
     });
 
     it("should throw when non-host trying to set price", async() => {
       await expectThrow(
-        propertyContract.setPrice(
+        rentalContract.setPrice(
           timestampEnd,
           timestampStart,
           price, {
-            from: _propertyHostUpdate
+            from: _rentalHostUpdate
           }
         )
       );
@@ -494,11 +493,11 @@ contract('Property', function (accounts) {
 
     it("should throw on endDay < startDay", async() => {
       await expectThrow(
-        propertyContract.setPrice(
+        rentalContract.setPrice(
           timestampEnd,
           timestampStart,
           price, {
-            from: _propertyHost
+            from: _rentalHost
           }
         )
       );
@@ -506,11 +505,11 @@ contract('Property', function (accounts) {
 
     it("should throw on startDay < now", async() => {
       await expectThrow(
-        propertyContract.setPrice(
+        rentalContract.setPrice(
           timestampStart - (86400 * 4),
           timestampEnd,
           price, {
-            from: _propertyHost
+            from: _rentalHost
           }
         )
       );
@@ -518,11 +517,11 @@ contract('Property', function (accounts) {
 
     it("should throw on endDay < now", async() => {
       await expectThrow(
-        propertyContract.setPrice(
+        rentalContract.setPrice(
           timestampStart,
           timestampStart - (86400 * 4),
           price, {
-            from: _propertyHost
+            from: _rentalHost
           }
         )
       );
@@ -530,11 +529,11 @@ contract('Property', function (accounts) {
 
     it("should throw on price < 0", async() => {
       await expectThrow(
-        propertyContract.setPrice(
+        rentalContract.setPrice(
           timestampStart,
           timestampEnd,
           0, {
-            from: _propertyHost
+            from: _rentalHost
           }
         )
       );
@@ -542,11 +541,11 @@ contract('Property', function (accounts) {
 
     it("should throw on interval pricing > max booking days interval", async() => {
       await expectThrow(
-        propertyContract.setPrice(
+        rentalContract.setPrice(
           timestampStart,
           closeOfMaxBookingDays,
           price, {
-            from: _propertyHost
+            from: _rentalHost
           }
         )
       );
@@ -554,34 +553,34 @@ contract('Property', function (accounts) {
 
     it("should throw on get price with timestamp = 0", async() => {
       await expectThrow(
-        propertyContract.getPrice(0)
+        rentalContract.getPrice(0)
       );
     });
   });
 
-  describe("upgrade property contract", () => {
+  describe("upgrade rental contract", () => {
     beforeEach(async function () {
-      factoryImpl = await PropertyFactory.new();
-      factoryProxy = await PropertyFactoryProxy.new(factoryImpl.address);
-      factoryContract = await IPropertyFactory.at(factoryProxy.address);
+      factoryImpl = await RentalFactory.new();
+      factoryProxy = await RentalFactoryProxy.new(factoryImpl.address);
+      factoryContract = await IRentalFactory.at(factoryProxy.address);
       await factoryContract.init();
 
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
 
-      propertyImpl = await Property.new();
-      await propertyImpl.init();
+      rentalImpl = await Rental.new();
+      await rentalImpl.init();
 
       await marketplaceContract.init();
-      await marketplaceContract.setPropertyFactoryContract(factoryContract.address);
-      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await marketplaceContract.setRentalFactoryContract(factoryContract.address);
+      await factoryContract.setImplAddress(rentalImpl.address);
       await factoryContract.setMarketplaceAddress(marketplaceContract.address);
 
       await marketplaceContract.createMarketplace(
         _marketplaceId,
         _url,
-        _propertyAPI,
+        _rentalAPI,
         _disputeAPI,
         _exchangeContractAddress, {
           from: _marketplaceAdmin
@@ -595,9 +594,9 @@ contract('Property', function (accounts) {
       );
     });
 
-    it("should change property implementation and keep storage", async() => {
-      let result = await marketplaceContract.createProperty(
-        _propertyId,
+    it("should change rental implementation and keep storage", async() => {
+      let result = await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -605,24 +604,24 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
-      let propertiesCount = await factoryContract.propertiesCount();
-      assert(propertiesCount.eq(1), "The properties count was not correct");
+      let rentalsCount = await factoryContract.rentalsCount();
+      assert(rentalsCount.eq(1), "The rentals count was not correct");
 
-      propertyImpl = await Property.new();
-      await propertyImpl.init();
+      rentalImpl = await Rental.new();
+      await rentalImpl.init();
 
-      await factoryContract.setPropertyImplAddress(propertyImpl.address);
+      await factoryContract.setImplAddress(rentalImpl.address);
 
-      propertiesCount = await factoryContract.propertiesCount();
-      assert(propertiesCount.eq(1), "The properties count was not correct");
+      rentalsCount = await factoryContract.rentalsCount();
+      assert(rentalsCount.eq(1), "The rentals count was not correct");
     });
 
-    it("should change property implementation and add new function", async() => {
-      await marketplaceContract.createProperty(
-        _propertyId,
+    it("should change rental implementation and add new function", async() => {
+      await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -630,31 +629,31 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
-      let propertiesCount = await factoryContract.propertiesCount();
-      assert(propertiesCount.eq(1), "The properties count was not correct");
+      let rentalsCount = await factoryContract.rentalsCount();
+      assert(rentalsCount.eq(1), "The rentals count was not correct");
 
-      propertyImpl2 = await PropertyUpgrade.new();
-      await propertyImpl2.init();
+      rentalImpl2 = await RentalUpgrade.new();
+      await rentalImpl2.init();
 
-      await factoryContract.setPropertyImplAddress(propertyImpl2.address);
-      let propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
-      let propertyContract = IPropertyUpgrade.at(propertyContractAddress);
+      await factoryContract.setImplAddress(rentalImpl2.address);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      let rentalContract = IRentalUpgrade.at(rentalContractAddress);
 
-      await propertyContract.updateCleaningFee(_cleaningFee2);
-      let result = await propertyContract.getProperty();
+      await rentalContract.updateCleaningFee(_cleaningFee2);
+      let result = await rentalContract.getRental();
 
       assert.strictEqual(result[5].toString(), _cleaningFee2, "The cleaningFee was not set correctly");
 
-      propertiesCount = await factoryContract.propertiesCount();
-      assert(propertiesCount.eq(1), "The properties count was not correct");
+      rentalsCount = await factoryContract.rentalsCount();
+      assert(rentalsCount.eq(1), "The rentals count was not correct");
     });
 
     it("should throw when using new function without upgrade", async() => {
-      await marketplaceContract.createProperty(
-        _propertyId,
+      await marketplaceContract.createRental(
+        _rentalId,
         _marketplaceId,
         _workingDayPrice,
         _nonWorkingDayPrice,
@@ -662,16 +661,16 @@ contract('Property', function (accounts) {
         _refundPercent,
         _daysBeforeStartForRefund,
         _isInstantBooking, {
-          from: _propertyHost
+          from: _rentalHost
         }
       );
-      let propertiesCount = await factoryContract.propertiesCount();
-      assert(propertiesCount.eq(1), "The properties count was not correct");
+      let rentalsCount = await factoryContract.rentalsCount();
+      assert(rentalsCount.eq(1), "The rentals count was not correct");
 
-      let propertyContractAddress = await factoryContract.getPropertyContractAddress(_propertyId);
-      let propertyContract = IPropertyUpgrade.at(propertyContractAddress);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      let rentalContract = IRentalUpgrade.at(rentalContractAddress);
 
-      await expectThrow(propertyContract.updateCleaningFee(_cleaningFee2));
+      await expectThrow(rentalContract.updateCleaningFee(_cleaningFee2));
     });
   });
 });

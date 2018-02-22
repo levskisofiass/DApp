@@ -2,33 +2,33 @@ let MarketplaceProxy = artifacts.require("./../Marketplace/MarketplaceProxy.sol"
 let Marketplace = artifacts.require("./../Marketplace/Marketplace.sol");
 let IMarketplace = artifacts.require("./../Marketplace/IMarketplace.sol");
 
-let PropertyProxy = artifacts.require("./../Property/PropertyProxy.sol");
-let Property = artifacts.require("./../Property/Property.sol");
-let IProperty = artifacts.require("./../Property/IProperty.sol");
+let RentalProxy = artifacts.require("./../Property/Rental/RentalProxy.sol");
+let Rental = artifacts.require("./../Property/Rental/Rental.sol");
+let IRental = artifacts.require("./../Property/Rental/IRental.sol");
 
-let PropertyFactoryProxy = artifacts.require("./../Property/PropertyFactory/PropertyFactoryProxy.sol");
-let PropertyFactory = artifacts.require("./../Property/PropertyFactory/PropertyFactory.sol");
-let IPropertyFactory = artifacts.require("./../Property/PropertyFactory/IPropertyFactory.sol");
+let RentalFactoryProxy = artifacts.require("./../Property/Rental/RentalFactory/RentalFactoryProxy.sol");
+let RentalFactory = artifacts.require("./../Property/Rental/RentalFactory/RentalFactory.sol");
+let IRentalFactory = artifacts.require("./../Property/Rental/RentalFactory/IRentalFactory.sol");
 
-let HotelRoomsProxy = artifacts.require("./../Hotel/HotelRoomsProxy.sol");
-let HotelRooms = artifacts.require("./../Hotel/HotelRooms.sol");
-let IHotelRooms = artifacts.require("./../Hotel/IHotelRooms.sol");
+let HotelRoomsProxy = artifacts.require("./../Property/Hotel/HotelRoomsProxy.sol");
+let HotelRooms = artifacts.require("./../Property/Hotel/HotelRooms.sol");
+let IHotelRooms = artifacts.require("./../Property/Hotel/IHotelRooms.sol");
 
-let HotelFactoryProxy = artifacts.require("./../Hotel/HotelFactory/HotelFactoryProxy.sol");
-let HotelFactory = artifacts.require("./../Hotel/HotelFactory/HotelFactory.sol");
-let IHotelFactory = artifacts.require("./../Hotel/HotelFactory/IHotelFactory.sol");
+let HotelFactoryProxy = artifacts.require("./../Property/Hotel/HotelFactory/HotelFactoryProxy.sol");
+let HotelFactory = artifacts.require("./../Property/Hotel/HotelFactory/HotelFactory.sol");
+let IHotelFactory = artifacts.require("./../Property/Hotel/HotelFactory/IHotelFactory.sol");
 
 module.exports = async function (deployer) {
-    // Property
-    await deployer.deploy(Property);
-    let PropertyImpl = await Property.deployed();
-    await PropertyImpl.init();
+    // Rental
+    await deployer.deploy(Rental);
+    let RentalImpl = await Rental.deployed();
+    await RentalImpl.init();
 
-    await deployer.deploy(PropertyFactory);
-    let PropertyFactoryImpl = await PropertyFactory.deployed();
-    await deployer.deploy(PropertyFactoryProxy, PropertyFactoryImpl.address);
-    let PropertyFactoryContract = await PropertyFactoryProxy.deployed();
-    PropertyFactoryContract = await IPropertyFactory.at(PropertyFactoryContract.address);
+    await deployer.deploy(RentalFactory);
+    let RentalFactoryImpl = await RentalFactory.deployed();
+    await deployer.deploy(RentalFactoryProxy, RentalFactoryImpl.address);
+    let RentalFactoryContract = await RentalFactoryProxy.deployed();
+    RentalFactoryContract = await IRentalFactory.at(RentalFactoryContract.address);
 
     // Hotel
     await deployer.deploy(HotelRooms);
@@ -48,18 +48,18 @@ module.exports = async function (deployer) {
     let MarketplaceContract = await MarketplaceProxy.deployed();
     MarketplaceContract = await IMarketplace.at(MarketplaceContract.address);
 
-    await PropertyFactoryContract.init();
+    await RentalFactoryContract.init();
     await HotelFactoryContract.init();
     await MarketplaceContract.init();
 
-    await MarketplaceContract.setPropertyFactoryContract(PropertyFactoryContract.address);
+    await MarketplaceContract.setRentalFactoryContract(RentalFactoryContract.address);
     await MarketplaceContract.setHotelFactoryContract(HotelFactoryContract.address);
 
-    await PropertyFactoryContract.setPropertyImplAddress(PropertyImpl.address);
-    await PropertyFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
-    await PropertyFactoryContract.setMaxBookingPeriod(30);
+    await RentalFactoryContract.setImplAddress(RentalImpl.address);
+    await RentalFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
+    await RentalFactoryContract.setMaxBookingPeriod(30);
 
-    await HotelFactoryContract.setHotelRoomsImplAddress(HotelRoomsImpl.address);
+    await HotelFactoryContract.setImplAddress(HotelRoomsImpl.address);
     await HotelFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
     await HotelFactoryContract.setMaxBookingPeriod(30);
 };

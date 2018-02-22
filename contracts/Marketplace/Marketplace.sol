@@ -3,17 +3,17 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IMarketplace.sol";
 import "./../Lifecycle/Pausable.sol";
-import "./../Property/PropertyFactory/IPropertyFactory.sol";
-import "./../Hotel/HotelFactory/IHotelFactory.sol";
+import "./../Property/Rental/RentalFactory/IRentalFactory.sol";
+import "./../Property/Hotel/HotelFactory/IHotelFactory.sol";
 
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
-    IPropertyFactory public PropertyFactoryContract;
+    IRentalFactory public RentalFactoryContract;
     IHotelFactory public HotelFactoryContract;
 
     struct MarketplaceStruct {
         address adminAddress;
         bytes32 url;
-        bytes32 propertyAPI;
+        bytes32 rentalAPI;
         bytes32 disputeAPI;
         address exchangeContractAddress;
         uint marketplaceArrayIndex;
@@ -31,33 +31,33 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	event LogApproveMarketplace(bytes32 marketplaceId);
 	event LogRejectMarketplace(bytes32 marketplaceId);
 	event LogChangeApprovalPolicy(bool isApprovalPolicyActive);
-    event LogCreatePropertyFromMarketplace(bytes32 propertyId, address hostAddress, bytes32 marketplaceId);
+    event LogCreateRentalFromMarketplace(bytes32 rentalId, address hostAddress, bytes32 marketplaceId);
     event LogCreateHotelFromMarketplace(bytes32 hotelId, address hostAddress, bytes32 marketplaceId);
 
 	uint public rate;
-// TODO Write tests for this setters and getters 
-    function setPropertyFactoryContract(address propertyFactoryContractAddress) onlyOwner public returns(bool success) {
-        require(propertyFactoryContractAddress != address(0));
-        PropertyFactoryContract = IPropertyFactory(propertyFactoryContractAddress);
+
+    function setRentalFactoryContract(address rentalFactoryContractAddress) public onlyOwner returns(bool success) {
+        require(rentalFactoryContractAddress != address(0));
+        RentalFactoryContract = IRentalFactory(rentalFactoryContractAddress);
 
         return true;
     }
 
-    function setHotelFactoryContract(address hotelFactoryContractAddress) onlyOwner public returns(bool success) {
+    function setHotelFactoryContract(address hotelFactoryContractAddress) public onlyOwner returns(bool success) {
         require(hotelFactoryContractAddress != address(0));
         HotelFactoryContract = IHotelFactory(hotelFactoryContractAddress);
 
         return true;
     }
 
-    function getPropertyFactoryContract() view public returns(address propertyFactoryAddress) {
-        return PropertyFactoryContract;
+    function getRentalFactoryContract() view public returns(address rentalFactoryAddress) {
+        return RentalFactoryContract;
     }
 
     function getHotelFactoryContract() view public returns(address hotelFactoryContractAddress) {
         return HotelFactoryContract;
     }
-// To here
+
     /**
      * @dev modifier ensuring that the modified method is only called on active marketplaces
      * @param marketplaceId - the identifier of the marketplace
@@ -103,13 +103,13 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     }
 
     function getMarketplace(bytes32 marketplaceId) public constant
-        returns(address adminAddress, bytes32 url, bytes32 propertyAPI, bytes32 disputeAPI, address exchangeContractAddress, uint marketplaceArrayIndex, bool isApproved, bool isActive)
+        returns(address adminAddress, bytes32 url, bytes32 rentalAPI, bytes32 disputeAPI, address exchangeContractAddress, uint marketplaceArrayIndex, bool isApproved, bool isActive)
     {
         MarketplaceStruct storage m = marketplaces[marketplaceId];
         return (
             m.adminAddress,
             m.url,
-            m.propertyAPI,
+            m.rentalAPI,
             m.disputeAPI,
             m.exchangeContractAddress,
             m.marketplaceArrayIndex,
@@ -125,20 +125,20 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 	function createMarketplace(
 		bytes32 _marketplaceId, 
 		bytes32 _url,
-		bytes32 _propertyAPI,
+		bytes32 _rentalAPI,
 		bytes32 _disputeAPI,
 		address _exchangeContractAddress
 		) public onlyInactive(_marketplaceId) whenNotPaused returns(bool success)
 	{
         require(_exchangeContractAddress != address(0));
         require(_url != "");
-        require(_propertyAPI != "");
+        require(_rentalAPI != "");
         require(_disputeAPI != "");
 
 		marketplaces[_marketplaceId] = MarketplaceStruct({
         	adminAddress: msg.sender,
 			url: _url,
-        	propertyAPI: _propertyAPI,
+        	rentalAPI: _rentalAPI,
         	disputeAPI: _disputeAPI,
          	exchangeContractAddress: _exchangeContractAddress,
         	marketplaceArrayIndex: marketplaceIds.length,
@@ -154,14 +154,14 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     function updateMarketplace(
 		bytes32 _marketplaceId, 
 		bytes32 _url,
-		bytes32 _propertyAPI,
+		bytes32 _rentalAPI,
 		bytes32 _disputeAPI,
 		address _exchangeContractAddress,
         address _newAdmin
 		) public onlyAdmin(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success)
 	{
         require(_url != "");
-        require(_propertyAPI != "");
+        require(_rentalAPI != "");
         require(_disputeAPI != "");
         require(_newAdmin != address(0));
         require(_exchangeContractAddress != address(0));
@@ -170,7 +170,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 
         marketplace.adminAddress = _newAdmin;
         marketplace.url = _url;
-        marketplace.propertyAPI = _propertyAPI;
+        marketplace.rentalAPI = _rentalAPI;
         marketplace.disputeAPI = _disputeAPI;
         marketplace.exchangeContractAddress = _exchangeContractAddress;
 
@@ -216,8 +216,8 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return !approveOnCreation;
     }
 
-    function createProperty(
-        bytes32 _propertyId,
+    function createRental(
+        bytes32 _rentalId,
 		bytes32 _marketplaceId, 
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
@@ -227,8 +227,8 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         bool _isInstantBooking
     ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
     {
-        PropertyFactoryContract.createNewProperty(
-            _propertyId,
+        RentalFactoryContract.createNewRental(
+            _rentalId,
             _marketplaceId, 
             msg.sender,
             _workingDayPrice,
@@ -239,7 +239,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
             _isInstantBooking
         );
 
-        LogCreatePropertyFromMarketplace(_propertyId, msg.sender, _marketplaceId);
+        LogCreateRentalFromMarketplace(_rentalId, msg.sender, _marketplaceId);
 
         return true;
     }
