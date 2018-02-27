@@ -25,5 +25,4 @@ event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function getHotelReservationsCount() public constant returns(uint);
 
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
-	function getLOCTokenCotractAddress() returns (address LOCTokenContractAddress);
 }

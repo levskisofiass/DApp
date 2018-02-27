@@ -201,7 +201,6 @@ contract('HotelReservation', function (accounts) {
 	})
 
 
-	//TODO Finish the tests for upgrading the contracts
 	// describe("upgrade hotel reservation contract", () => {
 	// 	beforeEach(async function () {
 
@@ -230,8 +229,8 @@ contract('HotelReservation', function (accounts) {
 
 	// 	});
 
-	// 	it("should change hotel reservation implementation and add new function", async function () {
-	// 		await hotelReservationContract.createHotelReservation(
+	// 	it("should change hotel reservation implementation and keep storage", async function () {
+	// 		let result = await hotelReservationContract.createHotelReservation(
 	// 			hotelReservationId,
 	// 			reservationCostLOC,
 	// 			reservationStartDate,
@@ -246,11 +245,35 @@ contract('HotelReservation', function (accounts) {
 	// 		let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
 	// 		assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 
-	// 		hotelReservationUpgraded = await HotelReservationUpgrade.new();
-	// 		await hotelReservationUpgraded.init();
+	// 		hotelReservation = await HotelReservation.new();
+	// 		await hotelReservation.init();
+	// 		await hotelReservationContract.setImplAddress(hotelReservation.address);
 
-	// 		await hotelReservationContract.setImplAddress(hotelReservationUpgraded.address);
-
+	// 		reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+	// 		assert.equal(reservationsCount, 1, "The hotel reservation count is not correct");
 	// 	})
+
+	// it("should change hotel reservation implementation and add new function", async function () {
+	// 	await hotelReservationContract.createHotelReservation(
+	// 		hotelReservationId,
+	// 		reservationCostLOC,
+	// 		reservationStartDate,
+	// 		reservationEndDate,
+	// 		daysBeforeStartForRefund,
+	// 		refundPercantage,
+	// 		hotelId,
+	// 		roomId, {
+	// 			from: customerAddress
+	// 		}
+	// 	);
+	// 	let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+	// 	assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
+
+	// 	hotelReservationUpgraded = await HotelReservationUpgrade.new();
+	// 	await hotelReservationUpgraded.init();
+
+	// 	await hotelReservationContract.setImplAddress(hotelReservationUpgraded.address);
+
+	// })
 	// })
 })
