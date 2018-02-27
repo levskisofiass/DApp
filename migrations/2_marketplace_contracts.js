@@ -18,6 +18,15 @@ let HotelFactoryProxy = artifacts.require("./../Property/Hotel/HotelFactory/Hote
 let HotelFactory = artifacts.require("./../Property/Hotel/HotelFactory/HotelFactory.sol");
 let IHotelFactory = artifacts.require("./../Property/Hotel/HotelFactory/IHotelFactory.sol");
 
+
+let HotelReservationProxy = artifacts.require("./../HotelReservation/HotelReservationProxy.sol");
+let HotelReservation = artifacts.require("./../HotelReservation/HotelReservation.sol");
+let IHotelReservation = artifacts.require("./../HotelReservation/IHotelReservation.sol");
+
+let HotelReservationFactoryProxy = artifacts.require("./../HotelReservation/HotelReservationFactory/HotelReservationFactoryProxy.sol");
+let HotelReservationFactory = artifacts.require("./../HotelReservation/HotelReservationFactory/HotelReservationFactory.sol");
+let IHotelReservationFactory = artifacts.require("./../HotelReservation/HotelReservationFactory/IHotelReservationFactory.sol");
+
 module.exports = async function (deployer) {
     // Rental
     await deployer.deploy(Rental);
@@ -48,6 +57,21 @@ module.exports = async function (deployer) {
     let MarketplaceContract = await MarketplaceProxy.deployed();
     MarketplaceContract = await IMarketplace.at(MarketplaceContract.address);
 
+    //Hotel Reservation
+
+    await deployer.deploy(HotelReservation);
+    let HotelReservationImpl = await HotelReservation.deployed();
+    await HotelReservationImpl.init();
+
+    await deployer.deploy(HotelReservationFactory);
+    let HotelReservationFactoryImpl = await HotelReservationFactory.deployed();
+
+    await deployer.deploy(HotelReservationFactoryProxy, HotelReservationFactoryImpl.address);
+    let HotelReservationFactoryContract = await HotelReservationFactoryProxy.deployed();
+    HotelReservationFactoryContract = await IHotelReservationFactory.at(HotelReservationFactoryContract.address);
+
+
+    await HotelReservationFactoryContract.init();
     await RentalFactoryContract.init();
     await HotelFactoryContract.init();
     await MarketplaceContract.init();
@@ -62,4 +86,6 @@ module.exports = async function (deployer) {
     await HotelFactoryContract.setImplAddress(HotelRoomsImpl.address);
     await HotelFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
     await HotelFactoryContract.setMaxBookingPeriod(30);
+
+    await HotelReservationFactoryContract.setImplAddress(HotelReservationImpl.address);
 };
