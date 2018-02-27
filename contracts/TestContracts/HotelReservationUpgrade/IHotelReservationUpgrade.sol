@@ -1,8 +1,8 @@
 pragma solidity ^0.4.17;
 
-import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
+import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 
-contract IHotelReservation is IOwnableUpgradeableImplementation {
+contract IHotelReservationUpgrade is IOwnableUpgradeableImplementation {
 
 event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 
@@ -16,4 +16,6 @@ event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		bytes32 _hotelId,
 		bytes32 _roomId
 	) public returns (bool success);
+
+	function updateReservationCostLOC(uint _newPrice) public returns(bool success);
 }

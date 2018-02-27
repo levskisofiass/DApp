@@ -1,10 +1,10 @@
 pragma solidity ^0.4.17;
 
-import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
-import "./IHotelReservation.sol";
-import "./../Tokens/ERC20.sol";
+import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
+import "./IHotelReservationUpgrade.sol";
+import "./../../Tokens/ERC20.sol";
 
-contract HotelReservation is OwnableUpgradeableImplementation {
+contract HotelReservationUpgrade is OwnableUpgradeableImplementation {
 	bytes32 hotelReservationId;
 	address customerAddress;
 	uint reservationCostLOC;
@@ -48,6 +48,15 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		roomId = _roomId;
 
 		LogCreateHotelReservation(_hotelReservationId, msg.sender, _reservationStartDate, _reservationEndDate);
+		return true;
+	}
+
+	function updateReservationCostLOC(
+        uint _newPrice
+		) public returns(bool success)
+	{
+        reservationCostLOC = _newPrice;
+        
 		return true;
 	}
 }

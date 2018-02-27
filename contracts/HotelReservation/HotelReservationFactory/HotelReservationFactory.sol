@@ -4,15 +4,22 @@ import "./../HotelReservationProxy.sol";
 import "./../IHotelReservation.sol";
 import "./IHotelReservationFactory.sol";
 import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
+import "./../../Tokens/ERC20.sol";
 
 contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeableImplementation {
 
 	address public implContract;
 	bytes32[] public hotelReservationIds;
     mapping (bytes32 => address) public hotelReservations;
+	ERC20 public LOCTokenContract;
 	 
 
-	event LogCreateHotelReservation(bytes32 _hotelId, bytes32 _roomId);
+	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+
+	modifier onlyNotExisting(bytes32 hotelReservationId) {
+        require(hotelReservations[hotelReservationId] == address(0));
+        _;
+    }
 
 	function setImplAddress(address implAddress) public onlyOwner {
         implContract = implAddress;
@@ -33,10 +40,12 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	function getHotelReservationsCount() public constant returns(uint) {
 		return hotelReservationIds.length;
 	}
+	function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
+		LOCTokenContract = ERC20(locTokenContractAddress);
+	}
 
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
-		address _customerAddress,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
@@ -44,7 +53,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		uint _refundPercantage,
 		bytes32 _hotelId,
 		bytes32 _roomId
-	) public returns(bool success)
+	) public onlyNotExisting(_hotelReservationId) returns(bool success)
 	{
 
 		HotelReservationProxy proxy = new HotelReservationProxy(this);
@@ -52,7 +61,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 
 		hotelReservationContract.createHotelReservation(
 		 _hotelReservationId,
-		 _customerAddress,
 		 _reservationCostLOC,
 		 _reservationStartDate,
 		 _reservationEndDate,
@@ -62,10 +70,12 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		 _roomId
 		);
 
+	
 	hotelReservations[_hotelReservationId] = hotelReservationContract;
     hotelReservationIds.push(_hotelReservationId);
+	assert(LOCTokenContract.transferFrom(msg.sender, this, _reservationCostLOC));
 
-	LogCreateHotelReservation(_hotelId, _roomId);
+	LogCreateHotelReservation(_hotelReservationId, msg.sender, _reservationStartDate, _reservationEndDate);
 	return true;
 	}
 }

@@ -28,7 +28,7 @@ contract('HotelReservationFactory', function (accounts) {
 	const _owner = accounts[0];
 	const _notOwner = accounts[1];
 
-	describe("create hotel room factory proxy", () => {
+	describe("create hotel reservation factory proxy", () => {
 		beforeEach(async function () {
 
 			hotelReservation = await HotelReservation.new();

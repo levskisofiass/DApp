@@ -5,15 +5,15 @@ import "./HotelReservationFactory/IHotelReservationFactory.sol";
 
 contract HotelReservationProxy is Forwardable {
 	address public hotelReservationFactoryAddress;
-	IHotelReservationFactory hotelReservationContract;
+	IHotelReservationFactory hotelReservationFactoryContract;
 
 	function HotelReservationProxy(address _hotelReservationFactoryAddress ) public {
 		hotelReservationFactoryAddress = _hotelReservationFactoryAddress;
-		hotelReservationContract = IHotelReservationFactory(hotelReservationFactoryAddress);
+		hotelReservationFactoryContract = IHotelReservationFactory(hotelReservationFactoryAddress);
 	}
 
 	function () payable public {
-		address hotelReservationImplAddress = hotelReservationContract.getImplAddress();
+		address hotelReservationImplAddress = hotelReservationFactoryContract.getImplAddress();
         delegatedFwd(hotelReservationImplAddress, msg.data);
     }
 
