@@ -12,9 +12,10 @@ event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		uint _reservationStartDate,
 		uint _reservationEndDate,
 		uint _daysBeforeStartForRefund,
-		uint _refundPercantage,
+		uint _refundPercentage,
 		bytes32 _hotelId,
-		bytes32 _roomId
+		bytes32 _roomId,
+		uint _numberOfTravelers
 	) public returns (bool success);
 
 	function getHotelReservation() public constant 
@@ -25,7 +26,8 @@ event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		uint _reservationStartDate,
 		uint _reservationEndDate,
 		uint _daysBeforeStartForRefund,
-		uint _refundPercantage,
+		uint _refundPercentage,
 		bytes32 _hotelId,
-		bytes32 _roomId );
+		bytes32 _roomId ,
+		uint _numberOfTravelers);
 }

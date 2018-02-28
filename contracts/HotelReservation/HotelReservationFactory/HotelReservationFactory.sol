@@ -50,12 +50,12 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		uint _reservationStartDate,
 		uint _reservationEndDate,
 		uint _daysBeforeStartForRefund,
-		uint _refundPercantage,
+		uint _refundPercentage,
 		bytes32 _hotelId,
-		bytes32 _roomId
+		bytes32 _roomId,
+		uint _numberOfTravelers
 	) public onlyNotExisting(_hotelReservationId) returns(bool success)
 	{
-
 		HotelReservationProxy proxy = new HotelReservationProxy(this);
         IHotelReservation hotelReservationContract = IHotelReservation(proxy);
 
@@ -65,12 +65,12 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		 _reservationStartDate,
 		 _reservationEndDate,
 		 _daysBeforeStartForRefund,
-		 _refundPercantage,
+		 _refundPercentage,
 		 _hotelId,
-		 _roomId
+		 _roomId,
+		 _numberOfTravelers
 		);
 
-	
 	hotelReservations[_hotelReservationId] = hotelReservationContract;
     hotelReservationIds.push(_hotelReservationId);
 	assert(LOCTokenContract.transferFrom(msg.sender, this, _reservationCostLOC));

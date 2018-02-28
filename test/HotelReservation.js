@@ -42,12 +42,13 @@ contract('HotelReservation', function (accounts) {
 	const reservationStartDate = currentTimestamp + day;
 	const reservationEndDate = currentTimestamp + (day * 3);
 	const daysBeforeStartForRefund = '10';
-	const refundPercantage = '20';
+	const refundPercentage = '20';
 	const hotelId = "testId135";
 	const roomId = "testId246";
 	const LOCAmount = '1000';
 	const newReservationCostLOC = '5';
-
+	const numberOfTravelers = '4'
+	const wrongRefundPercantage = '120'
 
 
 
@@ -92,9 +93,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			);
@@ -112,9 +114,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			);
@@ -132,9 +135,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			);
@@ -151,9 +155,10 @@ contract('HotelReservation', function (accounts) {
 				pastDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			));
@@ -166,9 +171,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				pastDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			));
@@ -180,9 +186,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			);
@@ -192,9 +199,26 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				pastDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+		});
+
+		it("should throw if the refund percantage is greater than 100%", async function () {
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				reservationStartDate,
+				pastDate,
+				daysBeforeStartForRefund,
+				wrongRefundPercantage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			));
@@ -237,9 +261,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			);
@@ -262,9 +287,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			);
@@ -296,9 +322,10 @@ contract('HotelReservation', function (accounts) {
 				reservationStartDate,
 				reservationEndDate,
 				daysBeforeStartForRefund,
-				refundPercantage,
+				refundPercentage,
 				hotelId,
-				roomId, {
+				roomId,
+				numberOfTravelers, {
 					from: customerAddress
 				}
 			);

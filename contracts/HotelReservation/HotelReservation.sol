@@ -11,9 +11,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	uint reservationStartDate;
 	uint reservationEndDate;
 	uint daysBeforeStartForRefund;
-	uint refundPercantage;
+	uint refundPercentage;
 	bytes32 hotelId;
 	bytes32 roomId;
+	uint numberOfTravelers;
 	address hotelReservationFactoryAddress;
 
 	ERC20 public LOCTokenContract;
@@ -34,9 +35,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		uint _reservationStartDate,
 		uint _reservationEndDate,
 		uint _daysBeforeStartForRefund,
-		uint _refundPercantage,
+		uint _refundPercentage,
 		bytes32 _hotelId,
-		bytes32 _roomId)
+		bytes32 _roomId,
+		uint _numberOfTravelers)
 		{
 			return (
 			hotelReservationId,
@@ -45,9 +47,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 			reservationStartDate,
 			reservationEndDate,
 			daysBeforeStartForRefund,
-			refundPercantage,
+			refundPercentage,
 			hotelId,
-			roomId);
+			roomId,
+			numberOfTravelers);
 		}
 
 	function createHotelReservation(
@@ -56,20 +59,24 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		uint _reservationStartDate,
 		uint _reservationEndDate,
 		uint _daysBeforeStartForRefund,
-		uint _refundPercantage,
+		uint _refundPercentage,
 		bytes32 _hotelId,
-		bytes32 _roomId
+		bytes32 _roomId,
+		uint _numberOfTravelers
 	) public onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate) returns(bool success) 
 		{
+		require(_refundPercentage <= 100);
+
 		hotelReservationId = _hotelReservationId;
 		customerAddress = msg.sender;
 		reservationCostLOC = _reservationCostLOC;
 		reservationStartDate = _reservationStartDate;
 		reservationEndDate = _reservationEndDate;
 		daysBeforeStartForRefund = _daysBeforeStartForRefund;
-		refundPercantage = _refundPercantage;
+		refundPercentage = _refundPercentage;
 		hotelId = _hotelId;
 		roomId = _roomId;
+		numberOfTravelers = _numberOfTravelers;
 
 		LogCreateHotelReservation(_hotelReservationId, msg.sender, _reservationStartDate, _reservationEndDate);
 		return true;
