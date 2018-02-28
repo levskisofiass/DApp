@@ -26,6 +26,30 @@ contract HotelReservationUpgrade is OwnableUpgradeableImplementation {
 		_;
 	}
 
+	function getHotelReservation() public constant 
+	returns(
+		bytes32 _hotelReservationId,
+		address customerAddress,
+		uint _reservationCostLOC,
+		uint _reservationStartDate,
+		uint _reservationEndDate,
+		uint _daysBeforeStartForRefund,
+		uint _refundPercantage,
+		bytes32 _hotelId,
+		bytes32 _roomId)
+		{
+			return (
+			hotelReservationId,
+			msg.sender,
+			reservationCostLOC,
+			reservationStartDate,
+			reservationEndDate,
+			daysBeforeStartForRefund,
+			refundPercantage,
+			hotelId,
+			roomId);
+		}
+
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
 		uint _reservationCostLOC,

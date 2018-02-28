@@ -46,6 +46,7 @@ contract('HotelReservation', function (accounts) {
 	const hotelId = "testId135";
 	const roomId = "testId246";
 	const LOCAmount = '1000';
+	const newReservationCostLOC = '5';
 
 
 
@@ -201,79 +202,113 @@ contract('HotelReservation', function (accounts) {
 	})
 
 
-	// describe("upgrade hotel reservation contract", () => {
-	// 	beforeEach(async function () {
+	describe("upgrade hotel reservation contract", () => {
+		beforeEach(async function () {
 
-	// 		ERC20Instance = await MintableToken.new({
-	// 			from: _owner
-	// 		});
-	// 		await ERC20Instance.mint(customerAddress, LOCAmount, {
-	// 			from: _owner
-	// 		});
+			ERC20Instance = await MintableToken.new({
+				from: _owner
+			});
+			await ERC20Instance.mint(customerAddress, LOCAmount, {
+				from: _owner
+			});
 
 
-	// 		hotelReservation = await HotelReservation.new();
-	// 		await hotelReservation.init();
+			hotelReservation = await HotelReservation.new();
+			await hotelReservation.init();
 
-	// 		hotelReservationFactoryImpl = await HotelReservationFactory.new();
-	// 		hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
-	// 		hotelReservationContract = await IHotelReservationFactory.at(hotelReservationFactoryProxy.address);
+			hotelReservationFactoryImpl = await HotelReservationFactory.new();
+			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
+			hotelReservationContract = await IHotelReservationFactory.at(hotelReservationFactoryProxy.address);
 
-	// 		await hotelReservationContract.init();
-	// 		await hotelReservationContract.setImplAddress(hotelReservation.address);
+			await hotelReservationContract.init();
+			await hotelReservationContract.setImplAddress(hotelReservation.address);
 
-	// 		await ERC20Instance.approve(hotelReservationContract.address, LOCAmount, {
-	// 			from: customerAddress
-	// 		});
-	// 		let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
+			await ERC20Instance.approve(hotelReservationContract.address, LOCAmount, {
+				from: customerAddress
+			});
+			let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
 
-	// 	});
+		});
 
-	// 	it("should change hotel reservation implementation and keep storage", async function () {
-	// 		let result = await hotelReservationContract.createHotelReservation(
-	// 			hotelReservationId,
-	// 			reservationCostLOC,
-	// 			reservationStartDate,
-	// 			reservationEndDate,
-	// 			daysBeforeStartForRefund,
-	// 			refundPercantage,
-	// 			hotelId,
-	// 			roomId, {
-	// 				from: customerAddress
-	// 			}
-	// 		);
-	// 		let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
-	// 		assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
+		it("should change hotel reservation implementation and keep storage", async function () {
+			let result = await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				reservationStartDate,
+				reservationEndDate,
+				daysBeforeStartForRefund,
+				refundPercantage,
+				hotelId,
+				roomId, {
+					from: customerAddress
+				}
+			);
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 
-	// 		hotelReservation = await HotelReservation.new();
-	// 		await hotelReservation.init();
-	// 		await hotelReservationContract.setImplAddress(hotelReservation.address);
+			hotelReservation = await HotelReservation.new();
+			await hotelReservation.init();
+			await hotelReservationContract.setImplAddress(hotelReservation.address);
 
-	// 		reservationsCount = await hotelReservationContract.getHotelReservationsCount();
-	// 		assert.equal(reservationsCount, 1, "The hotel reservation count is not correct");
-	// 	})
+			reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			1
+			assert.equal(reservationsCount, 1, "The hotel reservation count is not correct");
+		});
 
-	// it("should change hotel reservation implementation and add new function", async function () {
-	// 	await hotelReservationContract.createHotelReservation(
-	// 		hotelReservationId,
-	// 		reservationCostLOC,
-	// 		reservationStartDate,
-	// 		reservationEndDate,
-	// 		daysBeforeStartForRefund,
-	// 		refundPercantage,
-	// 		hotelId,
-	// 		roomId, {
-	// 			from: customerAddress
-	// 		}
-	// 	);
-	// 	let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
-	// 	assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
+		it("should change hotel reservation implementation and add new function", async function () {
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				reservationStartDate,
+				reservationEndDate,
+				daysBeforeStartForRefund,
+				refundPercantage,
+				hotelId,
+				roomId, {
+					from: customerAddress
+				}
+			);
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 
-	// 	hotelReservationUpgraded = await HotelReservationUpgrade.new();
-	// 	await hotelReservationUpgraded.init();
+			hotelReservationUpgraded = await HotelReservationUpgrade.new();
+			await hotelReservationUpgraded.init();
 
-	// 	await hotelReservationContract.setImplAddress(hotelReservationUpgraded.address);
+			await hotelReservationContract.setImplAddress(hotelReservationUpgraded.address);
+			let hotelReservationContractAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
+			let hotelReservationContractUpgrade = IHotelReservationUpgrade.at(hotelReservationContractAddress);
 
-	// })
-	// })
+
+			await hotelReservationContractUpgrade.updateReservationCostLOC(newReservationCostLOC);
+			let result = await hotelReservationContractUpgrade.getHotelReservation();
+
+			assert.strictEqual(result[2].toString(), newReservationCostLOC, "The new cost for hotel reservation was not set correctly");
+
+			reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
+
+		});
+
+		it("should throw when using new function without upgrade", async function () {
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				reservationStartDate,
+				reservationEndDate,
+				daysBeforeStartForRefund,
+				refundPercantage,
+				hotelId,
+				roomId, {
+					from: customerAddress
+				}
+			);
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
+
+			let hotelReservationContractAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
+			let hotelReservationContractUpgrade = IHotelReservationUpgrade.at(hotelReservationContractAddress);
+
+			await expectThrow(hotelReservationContractUpgrade.updateReservationCostLOC(newReservationCostLOC));
+		});
+	})
 })
