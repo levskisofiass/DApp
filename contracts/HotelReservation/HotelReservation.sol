@@ -20,10 +20,17 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	ERC20 public LOCTokenContract;
 
 	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _refundPercentage);
 
-	modifier onlyValidPeriodOfTime(uint startDate, uint endDate) {
-		require(startDate > now);
-		require(startDate < endDate);
+	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate) {
+		require(_startDate > now);
+		require(_startDate < _endDate);
+		_;
+	}
+
+	modifier onlyBeforeRefundDeadline(uint _startDate, uint _daysBeforeStartForRefund) {
+		uint refundPeriod = now + ( _daysBeforeStartForRefund * 1 days );
+		require(refundPeriod < _startDate);
 		_;
 	}
 
@@ -79,6 +86,11 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		numberOfTravelers = _numberOfTravelers;
 
 		LogCreateHotelReservation(_hotelReservationId, msg.sender, _reservationStartDate, _reservationEndDate);
+		return true;
+	}
+
+	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success) {
+
 		return true;
 	}
 }
