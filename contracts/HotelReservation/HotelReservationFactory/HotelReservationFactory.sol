@@ -4,20 +4,29 @@ import "./../HotelReservationProxy.sol";
 import "./../IHotelReservation.sol";
 import "./IHotelReservationFactory.sol";
 import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
-import "./../../Tokens/ERC20.sol";
+import "./../../Tokens/StandardToken.sol";
 
 contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeableImplementation {
 
 	address public implContract;
 	bytes32[] public hotelReservationIds;
-    mapping (bytes32 => address) public hotelReservations;
-	ERC20 public LOCTokenContract;
+	uint public locRemainder;
+
+	struct HotelReservationStruct {
+		address hotelReservationAddress;
+		uint hotelReservationArrayIndex;
+
+	}
+
+    mapping (bytes32 => HotelReservationStruct) public hotelReservations;
+	StandardToken public LOCTokenContract;
 	 
 
 	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
 
 	modifier onlyNotExisting(bytes32 hotelReservationId) {
-        require(hotelReservations[hotelReservationId] == address(0));
+        require(hotelReservations[hotelReservationId].hotelReservationAddress == address(0));
         _;
     }
 
@@ -34,15 +43,25 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
     }
 
     function getHotelReservationContractAddress(bytes32 _hotelReservationId) public constant returns(address hotelReservationContract) {
-        return hotelReservations[_hotelReservationId];
+        return hotelReservations[_hotelReservationId].hotelReservationAddress;
     }
 
 	function getHotelReservationsCount() public constant returns(uint) {
 		return hotelReservationIds.length;
 	}
 	function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
-		LOCTokenContract = ERC20(locTokenContractAddress);
+		LOCTokenContract = StandardToken(locTokenContractAddress);
 	}
+
+	function unlinkHotelReservation(bytes32 _hotelReservationId) private {
+		require(hotelReservations[_hotelReservationId].hotelReservationAddress != address(0));
+        bytes32 lastId = hotelReservationIds[hotelReservationIds.length-1];
+		hotelReservationIds[hotelReservations[_hotelReservationId].hotelReservationArrayIndex] = lastId;
+        hotelReservationIds.length--;
+        hotelReservations[lastId].hotelReservationArrayIndex = hotelReservations[_hotelReservationId].hotelReservationArrayIndex;
+		hotelReservations[_hotelReservationId].hotelReservationAddress = address(0);
+      
+    }
 
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
@@ -61,6 +80,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 
 		hotelReservationContract.createHotelReservation(
 		 _hotelReservationId,
+		 msg.sender,
 		 _reservationCostLOC,
 		 _reservationStartDate,
 		 _reservationEndDate,
@@ -71,11 +91,27 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		 _numberOfTravelers
 		);
 
-	hotelReservations[_hotelReservationId] = hotelReservationContract;
-    hotelReservationIds.push(_hotelReservationId);
+	hotelReservationIds.push(_hotelReservationId);
+	hotelReservations[_hotelReservationId].hotelReservationAddress = hotelReservationContract;
+	hotelReservations[_hotelReservationId].hotelReservationArrayIndex = (hotelReservationIds.length - 1);
 	assert(LOCTokenContract.transferFrom(msg.sender, this, _reservationCostLOC));
 
 	LogCreateHotelReservation(_hotelReservationId, msg.sender, _reservationStartDate, _reservationEndDate);
 	return true;
+	}
+
+	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success) {
+
+		uint locToBeRefunded;
+		IHotelReservation hotelReservationContract = IHotelReservation(hotelReservations[_hotelReservationId].hotelReservationAddress);
+		
+		hotelReservationContract.validateCancelation(msg.sender);
+		unlinkHotelReservation(_hotelReservationId);
+		(locToBeRefunded, locRemainder) = hotelReservationContract.getLocToBeRefunded();
+
+		assert(LOCTokenContract.transfer(hotelReservationContract.getCustomerAddress(), locToBeRefunded));
+
+		LogCancelHotelReservation(_hotelReservationId, msg.sender);
+		return true;
 	}
 }

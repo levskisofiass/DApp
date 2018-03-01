@@ -5,6 +5,7 @@ import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradea
 contract IHotelReservationFactory is IOwnableUpgradeableImplementation {
 
 event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
 
     function setImplAddress(address implAddress) public;
     function getImplAddress() public constant returns(address implAddress);
@@ -26,4 +27,5 @@ event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function getHotelReservationsCount() public constant returns(uint);
 
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
+	function cancelHotelReservation(bytes32 _hotelReservationId)  returns(bool success);
 }
