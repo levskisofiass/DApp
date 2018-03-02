@@ -24,14 +24,14 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
 
 	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate) {
-		require(_startDate > now);
+		require(_startDate >= now);
 		require(_startDate < _endDate);
 		_;
 	}
 
 	function validateCancelation(address _customerAddress) {
 		require(refundPercentage > 0);
-		require((now + ( daysBeforeStartForRefund * 1 days )) < reservationStartDate);
+		require((now + ( daysBeforeStartForRefund * 1 days )) <= reservationStartDate);
 		require(customerAddress == _customerAddress);
 	}
 

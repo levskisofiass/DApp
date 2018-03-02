@@ -1,4 +1,5 @@
 const web3 = require("web3");
+const moment = require("moment");
 
 let HotelReservationProxy = artifacts.require("./../HotelReservation/HotelReservationProxy.sol");
 let HotelReservation = artifacts.require("./../HotelReservation/HotelReservation.sol");
@@ -52,13 +53,30 @@ contract('HotelReservation', function (accounts) {
 	const amountToRefund = (reservationCostLOC * refundPercentage) / 100;
 
 	//For Cancelation
+	const tomorrowStardDate = currentTimestamp + (day);
+	const oneDayBeforeRefund = '1';
+	const zeroDaysBeforeRefund = '0'
+	const zeroRefundPercentage = '0';
+	const fullRefund = '100';
+	let locRemainder = reservationCostLOC - amountToRefund;
 
 	//For negative cases
 	const pastDate = '1518652800'
 	const wrongRefundPercantage = '120'
-	const zeroRefundPercentage = '0';
 	const wrongDatsForRefund = '10';
 	const zeroAddress = '0x0000000000000000000000000000000000000000';
+
+
+	function formatTimestamp(timestamp) {
+		let result = moment.unix(timestamp).utc();
+		result.set({
+			h: 23,
+			m: 59,
+			s: 59
+		});
+
+		return result.unix();
+	};
 
 
 	describe("create new hotel reservation", () => {
@@ -95,8 +113,27 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
+				daysBeforeStartForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
+		});
+
+		it("should create new Hotel Reservation for today", async function () {
+
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(currentTimestamp),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -116,8 +153,8 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -137,8 +174,8 @@ contract('HotelReservation', function (accounts) {
 			let result = await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -157,8 +194,8 @@ contract('HotelReservation', function (accounts) {
 			await expectThrow(hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				pastDate,
-				reservationEndDate,
+				formatTimestamp(pastDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -173,8 +210,8 @@ contract('HotelReservation', function (accounts) {
 			await expectThrow(hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				pastDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(pastDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -188,8 +225,8 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -201,8 +238,8 @@ contract('HotelReservation', function (accounts) {
 			await expectThrow(hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				pastDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -217,8 +254,8 @@ contract('HotelReservation', function (accounts) {
 			await expectThrow(hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				pastDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				wrongRefundPercantage,
 				hotelId,
@@ -227,8 +264,10 @@ contract('HotelReservation', function (accounts) {
 					from: customerAddress
 				}
 			));
-		})
-	})
+		});
+
+
+	});
 
 	describe("cancel hotel reservation", () => {
 		beforeEach(async function () {
@@ -258,8 +297,8 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -297,12 +336,42 @@ contract('HotelReservation', function (accounts) {
 			assert(finalContractBalance.eq(initialContractBalance - amountToRefund), "The cancelation wasn't successful. Contract balance is not decreased");
 		});
 
+		it("should cancel the reservation with refund 100%", async function () {
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationIdTwo,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
+				daysBeforeStartForRefund,
+				fullRefund,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+
+			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let initialContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
+
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationId, {
+					from: customerAddress
+				}
+			);
+			let finalCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let finalContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
+
+			assert(finalCustomerBalance.eq(initialCustomerBalance.plus(amountToRefund)), "The cancelation wasn't successful. Customer balance is not increased");
+			assert(finalContractBalance.eq(initialContractBalance - amountToRefund), "The cancelation wasn't successful. Contract balance is not decreased");
+		})
+
 		it("should make the resevation address equl to zero if the cancelation is successful", async function () {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationIdTwo,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -322,6 +391,109 @@ contract('HotelReservation', function (accounts) {
 			assert.equal(hotelReservationAddress, zeroAddress, "The hotel reservation address was not unlinked ");
 		})
 
+		it("should cancel the reservation if the current timesstamp is equal to the refund date ", async function () {
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationIdTwo,
+				reservationCostLOC,
+				formatTimestamp(tomorrowStardDate),
+				formatTimestamp(reservationEndDate),
+				zeroDaysBeforeRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationIdTwo, {
+					from: customerAddress
+				}
+			);
+
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 1, "The hotel reservation was not canceled properly");
+		});
+
+		it("should cancel the reservation if the current timesstamp is today ", async function () {
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationIdTwo,
+				reservationCostLOC,
+				formatTimestamp(currentTimestamp),
+				formatTimestamp(reservationEndDate),
+				zeroDaysBeforeRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationIdTwo, {
+					from: customerAddress
+				}
+			);
+
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 1, "The hotel reservation was not canceled properly");
+		});
+
+		it("should increase the loc remainder amount after cancelation", async function () {
+			let initialRemainder = await hotelReservationContract.getLocRemainderAmount();
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationId, {
+					from: customerAddress
+				}
+			);
+
+			let finalRemainder = await hotelReservationContract.getLocRemainderAmount();
+			assert(finalRemainder.eq(initialRemainder + locRemainder), "The ramainder wasn't increased properly");
+
+		});
+
+		it("should increase the loc remainder amount twice after cancelation", async function () {
+			let initialRemainder = await hotelReservationContract.getLocRemainderAmount();
+
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationId, {
+					from: customerAddress
+				}
+			);
+
+			let finalRemainder = await hotelReservationContract.getLocRemainderAmount();
+
+
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationIdTwo,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
+				daysBeforeStartForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+
+			let intermediateRemainder = await hotelReservationContract.getLocRemainderAmount();
+
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationIdTwo, {
+					from: customerAddress
+				}
+			);
+
+			let totalRemainder = await hotelReservationContract.getLocRemainderAmount();
+			assert(finalRemainder.eq(initialRemainder + locRemainder), "The ramainder wasn't increased properly first time");
+			assert(totalRemainder.eq(intermediateRemainder.plus(locRemainder)), "The ramainder wasn't increased properly second time");
+		});
+
+
 		it("should emit one event if the cancelation is successful", async function () {
 			let expectedEvent = "LogCancelHotelReservation";
 
@@ -335,13 +507,14 @@ contract('HotelReservation', function (accounts) {
 
 		});
 
+
 		it("should throw if the refund percentage is not greater than zero", async function () {
 
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationIdTwo,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				zeroRefundPercentage,
 				hotelId,
@@ -362,8 +535,8 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationIdTwo,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				wrongDatsForRefund,
 				refundPercentage,
 				hotelId,
@@ -434,8 +607,8 @@ contract('HotelReservation', function (accounts) {
 			let result = await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -459,8 +632,8 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
@@ -494,8 +667,8 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				reservationStartDate,
-				reservationEndDate,
+				formatTimestamp(reservationStartDate),
+				formatTimestamp(reservationEndDate),
 				daysBeforeStartForRefund,
 				refundPercentage,
 				hotelId,
