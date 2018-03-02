@@ -10,7 +10,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 
 	address public implContract;
 	bytes32[] public hotelReservationIds;
-	uint public locRemainder;
+	uint public locRefundsRemainder;
 
 	struct HotelReservationStruct {
 		address hotelReservationAddress;
@@ -23,12 +23,17 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	 
 
 	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
-	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
+	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _locRefundsRemainder);
 
-	modifier onlyNotExisting(bytes32 hotelReservationId) {
-        require(hotelReservations[hotelReservationId].hotelReservationAddress == address(0));
+	modifier onlyNotExisting(bytes32 _hotelReservationId) {
+        require(hotelReservations[_hotelReservationId].hotelReservationAddress == address(0));
         _;
     }
+
+	modifier onlyExisting(bytes32 _hotelReservationId) {
+		require(hotelReservations[_hotelReservationId].hotelReservationAddress != address(0));
+		_;
+	}
 
 	function setImplAddress(address implAddress) public onlyOwner {
         implContract = implAddress;
@@ -49,12 +54,16 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	function getHotelReservationsCount() public constant returns(uint) {
 		return hotelReservationIds.length;
 	}
+
+	function getLocRemainderAmount() public constant returns(uint _locRefundsRemainder) {
+		return locRefundsRemainder;
+	}
+
 	function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
 		LOCTokenContract = StandardToken(locTokenContractAddress);
 	}
 
 	function unlinkHotelReservation(bytes32 _hotelReservationId) private {
-		require(hotelReservations[_hotelReservationId].hotelReservationAddress != address(0));
         bytes32 lastId = hotelReservationIds[hotelReservationIds.length-1];
 		hotelReservationIds[hotelReservations[_hotelReservationId].hotelReservationArrayIndex] = lastId;
         hotelReservationIds.length--;
@@ -100,9 +109,10 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	return true;
 	}
 
-	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success) {
+	function cancelHotelReservation(bytes32 _hotelReservationId) onlyExisting(_hotelReservationId) returns(bool success) {
 
 		uint locToBeRefunded;
+		uint locRemainder;
 		IHotelReservation hotelReservationContract = IHotelReservation(hotelReservations[_hotelReservationId].hotelReservationAddress);
 		
 		hotelReservationContract.validateCancelation(msg.sender);
@@ -110,8 +120,8 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		(locToBeRefunded, locRemainder) = hotelReservationContract.getLocToBeRefunded();
 
 		assert(LOCTokenContract.transfer(hotelReservationContract.getCustomerAddress(), locToBeRefunded));
-
-		LogCancelHotelReservation(_hotelReservationId, msg.sender);
+		locRefundsRemainder += locRemainder;
+		LogCancelHotelReservation(_hotelReservationId, msg.sender, locRefundsRemainder);
 		return true;
 	}
 }
