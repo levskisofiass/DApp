@@ -9,6 +9,8 @@ import "./../../Tokens/StandardToken.sol";
 contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeableImplementation {
 
 	address public implContract;
+	address public userToWithdraw;
+	address public walletToWithdraw;
 	bytes32[] public hotelReservationIds;
 	uint public locRemainder;
 
@@ -24,11 +26,25 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 
 	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
+	event LodWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
 
 	modifier onlyNotExisting(bytes32 hotelReservationId) {
         require(hotelReservations[hotelReservationId].hotelReservationAddress == address(0));
         _;
     }
+
+	modifier onlyWithdralUser() {
+		require(msg.sender == userToWithdraw);
+		_;
+	}
+
+	function setUserToWithdraw(address _userToWithdraw) onlyOwner {
+		userToWithdraw = _userToWithdraw;
+	}
+
+	function setWalletToWithdraw(address _walletToWithdraw) onlyOwner {
+		walletToWithdraw = _walletToWithdraw;
+	}
 
 	function setImplAddress(address implAddress) public onlyOwner {
         implContract = implAddress;
@@ -62,6 +78,29 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		hotelReservations[_hotelReservationId].hotelReservationAddress = address(0);
       
     }
+	function calculateCyclesCount(address[] _hotelReservations) private constant  returns (uint cyclesCount) {
+		if (_hotelReservations.length < 50 ) {
+			return _hotelReservations.length;
+		}
+		return 50;
+	}
+
+	function validateWithdraw(address[] _hotelReservations) onlyWithdralUser private constant {
+		calculateCyclesCount(_hotelReservations);
+
+		for (uint i = 0 ; i < 50; i ++) {
+			require(_hotelReservations[i] != address(0));
+			IHotelReservation hotelReservationContract = IHotelReservation(_hotelReservations[i]);
+
+			hotelReservationContract.validatePeriodForWithdraw();
+			uint amountToWithdraw = hotelReservationContract.getLocForWithdraw();
+
+			unlinkHotelReservation(hotelReservationContract.getHotelReservationId());
+			assert(LOCTokenContract.transfer(walletToWithdraw, amountToWithdraw));
+
+		}
+
+	}
 
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
@@ -112,6 +151,24 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		assert(LOCTokenContract.transfer(hotelReservationContract.getCustomerAddress(), locToBeRefunded));
 
 		LogCancelHotelReservation(_hotelReservationId, msg.sender);
+		return true;
+	}
+
+	function withdraw(address[] _hotelReservations) onlyWithdralUser returns(bool success) {
+		validateWithdraw(_hotelReservations);
+		calculateCyclesCount(_hotelReservations);
+
+		for (uint i = 0 ; i < 50; i ++) {
+			IHotelReservation hotelReservationContract = IHotelReservation(_hotelReservations[i]);
+
+			hotelReservationContract.validatePeriodForWithdraw();
+			uint amountToWithdraw = hotelReservationContract.getLocForWithdraw();
+
+			unlinkHotelReservation(hotelReservationContract.getHotelReservationId());
+			assert(LOCTokenContract.transfer(walletToWithdraw, amountToWithdraw));
+			LodWithdrawal(hotelReservationContract.getHotelReservationId(), amountToWithdraw);
+		}
+
 		return true;
 	}
 }

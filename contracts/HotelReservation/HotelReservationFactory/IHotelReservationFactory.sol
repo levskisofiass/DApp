@@ -27,5 +27,6 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function getHotelReservationsCount() public constant returns(uint);
 
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
-	function cancelHotelReservation(bytes32 _hotelReservationId)  returns(bool success);
+	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success);
+	function withdraw(address[] hotelReservations) returns(bool success);
 }

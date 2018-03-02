@@ -35,6 +35,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		require(customerAddress == _customerAddress);
 	}
 
+	function validatePeriodForWithdraw() {
+		require(now > reservationEndDate);
+	}
+
 	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder) {
 		uint locToBeRefunded = (reservationCostLOC * refundPercentage) / 100;
 		uint locRemainder = reservationCostLOC - locToBeRefunded;
@@ -44,6 +48,14 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	function getCustomerAddress() public constant returns (address _customerAddress) {
 		return customerAddress;
+	}
+
+	function getLocForWithdraw() returns (uint _locAmountForWithdraw) {
+		return reservationCostLOC;
+	}
+
+	function getHotelReservationId() returns (bytes32 _hotelReservationId) {
+		return hotelReservationId;
 	}
 
 	function getHotelReservation() public constant 
