@@ -5,9 +5,11 @@ import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeable
 contract IHotelReservation is IOwnableUpgradeableImplementation {
 
 event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
 
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
+		address customerAddress,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
@@ -30,4 +32,9 @@ event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		bytes32 _hotelId,
 		bytes32 _roomId ,
 		uint _numberOfTravelers);
+
+	function cancelHotelReservation(bytes32 _hotelReservationId)  returns(bool success);
+	function validateCancelation(address _customerAddress);
+	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder);
+	function getCustomerAddress() public constant returns (address _customerAddress);
 }

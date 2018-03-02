@@ -2,7 +2,7 @@ pragma solidity ^0.4.17;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IHotelReservation.sol";
-import "./../Tokens/ERC20.sol";
+import "./../Tokens/StandardToken.sol";
 
 contract HotelReservation is OwnableUpgradeableImplementation {
 	bytes32 hotelReservationId;
@@ -15,16 +15,35 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	bytes32 hotelId;
 	bytes32 roomId;
 	uint numberOfTravelers;
-	address hotelReservationFactoryAddress;
+	// address hotelReservationFactoryAddress;
 
-	ERC20 public LOCTokenContract;
+	StandardToken public LOCTokenContract;
+	IHotelReservation public hotelReservationContract;
 
 	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
 
-	modifier onlyValidPeriodOfTime(uint startDate, uint endDate) {
-		require(startDate > now);
-		require(startDate < endDate);
+	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate) {
+		require(_startDate >= now);
+		require(_startDate < _endDate);
 		_;
+	}
+
+	function validateCancelation(address _customerAddress) {
+		require(refundPercentage > 0);
+		require((now + ( daysBeforeStartForRefund * 1 days )) <= reservationStartDate);
+		require(customerAddress == _customerAddress);
+	}
+
+	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder) {
+		uint locToBeRefunded = (reservationCostLOC * refundPercentage) / 100;
+		uint locRemainder = reservationCostLOC - locToBeRefunded;
+
+		return (locToBeRefunded, locRemainder);
+	}
+
+	function getCustomerAddress() public constant returns (address _customerAddress) {
+		return customerAddress;
 	}
 
 	function getHotelReservation() public constant 
@@ -42,7 +61,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		{
 			return (
 			hotelReservationId,
-			msg.sender,
+			customerAddress,
 			reservationCostLOC,
 			reservationStartDate,
 			reservationEndDate,
@@ -55,6 +74,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
+		address _customerAddress,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
@@ -68,7 +88,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		require(_refundPercentage <= 100);
 
 		hotelReservationId = _hotelReservationId;
-		customerAddress = msg.sender;
+		customerAddress = _customerAddress;
 		reservationCostLOC = _reservationCostLOC;
 		reservationStartDate = _reservationStartDate;
 		reservationEndDate = _reservationEndDate;
@@ -78,7 +98,8 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		roomId = _roomId;
 		numberOfTravelers = _numberOfTravelers;
 
-		LogCreateHotelReservation(_hotelReservationId, msg.sender, _reservationStartDate, _reservationEndDate);
+		LogCreateHotelReservation(_hotelReservationId, _customerAddress, _reservationStartDate, _reservationEndDate);
 		return true;
 	}
+
 }
