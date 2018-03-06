@@ -34,7 +34,7 @@ const util = {
         })
     },
 
-    getTransactionReceiptMined: async(txnHash, interval) => {
+    getTransactionReceiptMined: async (txnHash, interval) => {
         var transactionReceiptAsync;
         interval = interval ? interval : 500;
         transactionReceiptAsync = function (txnHash, resolve, reject) {
@@ -65,12 +65,42 @@ const util = {
         }
     },
 
-    getFutureTimestamp: async(minutes) => {
+    getFutureTimestamp: async (minutes) => {
         let date = new Date();
         date.setMinutes(date.getMinutes() + minutes)
         let timestamp = +date;
         timestamp = Math.ceil(timestamp / 1000);
         return timestamp;
+    },
+
+    web3Now: (web3) => {
+        return web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+    },
+
+    timeTravel: (web3, seconds) => {
+        return new Promise((resolve, reject) => {
+            web3.currentProvider.sendAsync({
+                jsonrpc: "2.0",
+                method: "evm_increaseTime",
+                params: [seconds], // 86400 seconds in a day
+                id: new Date().getTime()
+            }, (err, result) => {
+                if (err) {
+                    reject(err);
+                }
+                web3.currentProvider.sendAsync({
+                    jsonrpc: "2.0",
+                    method: "evm_mine",
+                    id: new Date().getTime()
+                }, function (err, result) {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(result);
+                });
+
+            });
+        })
     }
 }
 

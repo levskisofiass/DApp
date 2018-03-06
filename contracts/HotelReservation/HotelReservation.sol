@@ -23,15 +23,16 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
 
-	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate) {
-		require(_startDate > now);
+	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate, uint _daysBeforeStartForRefund) {
+		require(_startDate >= now);
 		require(_startDate < _endDate);
+		require((now + ( _daysBeforeStartForRefund * 1 days )) <= _startDate);
 		_;
 	}
 
 	function validateCancelation(address _customerAddress) {
 		require(refundPercentage > 0);
-		require((now + ( daysBeforeStartForRefund * 1 days )) < reservationStartDate);
+		require((now + ( daysBeforeStartForRefund * 1 days )) <= reservationStartDate);
 		require(customerAddress == _customerAddress);
 	}
 
@@ -61,7 +62,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	function getHotelReservation() public constant 
 	returns(
 		bytes32 _hotelReservationId,
-		address customerAddress,
+		address _customerAddress,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
@@ -95,7 +96,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		bytes32 _hotelId,
 		bytes32 _roomId,
 		uint _numberOfTravelers
-	) public onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate) returns(bool success) 
+	) public onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate,_daysBeforeStartForRefund) returns(bool success) 
 		{
 		require(_refundPercentage <= 100);
 

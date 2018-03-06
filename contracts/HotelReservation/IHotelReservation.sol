@@ -23,7 +23,7 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function getHotelReservation() public constant 
 	returns(
 		bytes32 _hotelReservationId,
-		address customerAddress,
+		address _customerAddress,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
