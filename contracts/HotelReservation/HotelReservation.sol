@@ -23,9 +23,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 	event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
 
-	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate) {
+	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate, uint _daysBeforeStartForRefund) {
 		require(_startDate >= now);
 		require(_startDate < _endDate);
+		require((now + ( _daysBeforeStartForRefund * 1 days )) <= _startDate);
 		_;
 	}
 
@@ -33,6 +34,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		require(refundPercentage > 0);
 		require((now + ( daysBeforeStartForRefund * 1 days )) <= reservationStartDate);
 		require(customerAddress == _customerAddress);
+	}
+
+	function validatePeriodForWithdraw() {
+		require(now > reservationEndDate);
 	}
 
 	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder) {
@@ -46,10 +51,18 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		return customerAddress;
 	}
 
+	function getLocForWithdraw() returns (uint _locAmountForWithdraw) {
+		return reservationCostLOC;
+	}
+
+	function getHotelReservationId() returns (bytes32 _hotelReservationId) {
+		return hotelReservationId;
+	}
+
 	function getHotelReservation() public constant 
 	returns(
 		bytes32 _hotelReservationId,
-		address customerAddress,
+		address _customerAddress,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
@@ -83,7 +96,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		bytes32 _hotelId,
 		bytes32 _roomId,
 		uint _numberOfTravelers
-	) public onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate) returns(bool success) 
+	) public onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate,_daysBeforeStartForRefund) returns(bool success) 
 		{
 		require(_refundPercentage <= 100);
 

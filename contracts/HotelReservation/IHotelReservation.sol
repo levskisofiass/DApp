@@ -23,7 +23,7 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function getHotelReservation() public constant 
 	returns(
 		bytes32 _hotelReservationId,
-		address customerAddress,
+		address _customerAddress,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
@@ -37,4 +37,7 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function validateCancelation(address _customerAddress);
 	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder);
 	function getCustomerAddress() public constant returns (address _customerAddress);
+	function validatePeriodForWithdraw();
+	function getLocForWithdraw() returns (uint _locAmountForWithdraw);
+	function getHotelReservationId() returns (bytes32 _hotelReservationId);
 }
