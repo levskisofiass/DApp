@@ -37,6 +37,7 @@ contract('HotelReservation', function (accounts) {
 	const _notOwner = accounts[1];
 	const withdrawerAddress = accounts[5];
 	const withdrawalDestinationAddress = accounts[6];
+	const withdrawerForTest = accounts[4]
 
 	var currentTimestamp = Date.now() / 1000 | 0;
 	const day = 24 * 60 * 60;
@@ -136,8 +137,6 @@ contract('HotelReservation', function (accounts) {
 				}
 			);
 			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
-			console.log(reservationStartDateTravel);
-			console.log(reservationEndDateTravel);
 			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 		});
 
@@ -591,7 +590,7 @@ contract('HotelReservation', function (accounts) {
 			ERC20Instance = await MintableToken.new({
 				from: _owner
 			});
-			await ERC20Instance.mint(customerAddress, LOCAmount, {
+			await ERC20Instance.mint(customerAddress, 100000000000000, {
 				from: _owner
 			});
 
@@ -606,7 +605,7 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.init();
 			await hotelReservationContract.setImplAddress(hotelReservation.address);
 
-			await ERC20Instance.approve(hotelReservationContract.address, LOCAmount, {
+			await ERC20Instance.approve(hotelReservationContract.address, 100000000000000, {
 				from: customerAddress
 			});
 			let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
@@ -646,7 +645,9 @@ contract('HotelReservation', function (accounts) {
 				from: _owner
 			});
 
-			await hotelReservationContract.setCyclesCount(50);
+			await hotelReservationContract.setmaxAllowedWithdrawCyclesCount(50, {
+				from: _owner
+			});
 
 		})
 
@@ -720,6 +721,91 @@ contract('HotelReservation', function (accounts) {
 			assert.equal(finalReservationsCount, 0, "The reservations were not unlinked");
 		})
 
+		it("should withdraw from many reservations", async function () {
+			let hotelReservations = [];
+			for (i = 1; i < 30; i++) {
+				let reservationId = i.toString() + "a";
+				await hotelReservationContract.createHotelReservation(
+					reservationId,
+					reservationCostLOC,
+					formatTimestamp(reservationStartDateTravel),
+					formatTimestamp(reservationEndDateTravel),
+					daysBeforeStartForRefund,
+					refundPercentage,
+					hotelId,
+					roomId,
+					numberOfTravelers, {
+						from: customerAddress
+					}
+				);
+				let allowance = await ERC20Instance.allowance(customerAddress, hotelReservationContract.address);
+				let reservationAddress = await hotelReservationContract.getHotelReservationContractAddress(reservationId);
+				hotelReservations.push(reservationAddress);
+			}
+
+			let destinationAddressInitBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
+			let futureDays = (day * 10)
+			await timeTravel(web3, futureDays);
+
+			await hotelReservationContract.validateWithdraw(hotelReservations, {
+				from: withdrawerAddress
+			})
+
+			await hotelReservationContract.withdraw(hotelReservations, {
+				from: withdrawerAddress
+			})
+
+			let destinationAddressFinalBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
+			assert(destinationAddressFinalBalance.eq(destinationAddressInitBalance.plus(reservationCostLOC * 29)), "The withdraw wasnt' correct");
+
+		})
+
+		it("should set the withdrawer address", async function () {
+			await hotelReservationContract.setWithdrawerAddress(withdrawerForTest, {
+				from: _owner
+			})
+
+			let withdrawerAddress = await hotelReservationContract.getWithdrawerAddress();
+
+			assert.strictEqual(withdrawerAddress, withdrawerForTest, "The withdrawer address was not set properly");
+		})
+
+		it("should throw if try to set the withdrawer from not owner", async function () {
+			await expectThrow(hotelReservationContract.setWithdrawerAddress(withdrawerForTest, {
+				from: _notOwner
+			}))
+		})
+
+		it("should set the withdraw destination address", async function () {
+			await hotelReservationContract.setWithdrawDestinationAddress(withdrawerForTest, {
+				from: _owner
+			})
+
+			let withdrawerAddress = await hotelReservationContract.getWithdrawDestinationAddress();
+			assert.strictEqual(withdrawerAddress, withdrawerForTest, "The withdrawer destination address was not set properly");
+		})
+
+		it("should throw if try to set the withdraw destination from not owner", async function () {
+			await expectThrow(hotelReservationContract.setWithdrawDestinationAddress(withdrawerForTest, {
+				from: _notOwner
+			}))
+		})
+
+		it("should set the max allowed cycles for the withdraw", async function () {
+			await hotelReservationContract.setmaxAllowedWithdrawCyclesCount(50, {
+				from: _owner
+			});
+
+			let maxCyclesCount = await hotelReservationContract.getmaxAllowedWithdrawCyclesCount()
+			assert.equal(maxCyclesCount, 50, "Max cycles count was not set properly");
+		})
+
+		it("should throw if person other than the owner tries to set the count", async function () {
+			await expectThrow(hotelReservationContract.setmaxAllowedWithdrawCyclesCount(50, {
+				from: _notOwner
+			}));
+		})
+
 		it("should emit events for every reservation when the withdraw is successful", async function () {
 			const expectedEvent = 'LogWithdrawal';
 			let futureDays = (day * 10)
@@ -735,6 +821,38 @@ contract('HotelReservation', function (accounts) {
 			assert.lengthOf(result.logs, hotelReservations.length, "There should be 1 event emitted from withdraw !");
 			assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
 
+		})
+
+		it("should throw if the reservations array is bigger than the cycles  count", async function () {
+			await hotelReservationContract.setmaxAllowedWithdrawCyclesCount(4, {
+				from: _owner
+			});
+			let hotelReservations = [];
+			for (i = 1; i < 7; i++) {
+				await hotelReservationContract.createHotelReservation(
+					i,
+					reservationCostLOC,
+					formatTimestamp(reservationStartDateTravel),
+					formatTimestamp(reservationEndDateTravel),
+					daysBeforeStartForRefund,
+					refundPercentage,
+					hotelId,
+					roomId,
+					numberOfTravelers, {
+						from: customerAddress
+					}
+				);
+				let reservationAddress = await hotelReservationContract.getHotelReservationContractAddress(i);
+				hotelReservations.push(reservationAddress);
+			}
+			let destinationAddressInitBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
+			let futureDays = (day * 10)
+			await timeTravel(web3, futureDays);
+
+
+			await expectThrow(hotelReservationContract.withdraw(hotelReservations, {
+				from: withdrawerAddress
+			}))
 		})
 
 		it("should throw if the persno other than the withdrawer wants to withdraw", async function () {
