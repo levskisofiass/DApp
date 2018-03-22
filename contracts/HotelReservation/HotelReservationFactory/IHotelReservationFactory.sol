@@ -30,9 +30,9 @@ event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
 		uint _numberOfTravelers
 	) public returns (bool success);
 
-	function getHotelReservationId(uint index) public constant returns(bytes32);
+	function getHotelReservationId(uint index) public constant returns(bytes32 _hotelReservaionId);
     function getHotelReservationContractAddress(bytes32 _hotelReservationId) public constant returns(address hotelReservationContract);
-	function getHotelReservationsCount() public constant returns(uint);
+	function getHotelReservationsCount() public constant returns(uint _hotelReservationCount);
 
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
 	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success);
@@ -44,5 +44,5 @@ event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
 	function getWithdrawDestinationAddress() public constant returns(address _withdrawDestinationAddress);
 	function setmaxAllowedWithdrawCyclesCount(uint _maxAllowedWithdrawCyclesCount);
 	function getmaxAllowedWithdrawCyclesCount() public constant returns(uint _maxAllowedWithdrawCyclesCount);
-	function validateWithdraw(address[] _hotelReservations) public constant;
+	function validateWithdraw(address[] _hotelReservations) public constant returns(bool success);
 }
