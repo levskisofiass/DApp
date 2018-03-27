@@ -73,7 +73,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
         return implContract;
     }
 
-	 function getHotelReservationId(uint index) public constant returns(bytes32) {
+	 function getHotelReservationId(uint index) public constant returns(bytes32 _hotelReservaionId) {
         return hotelReservationIds[index];
     }
 
@@ -81,7 +81,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
         return hotelReservations[_hotelReservationId].hotelReservationAddress;
     }
 
-	function getHotelReservationsCount() public constant returns(uint) {
+	function getHotelReservationsCount() public constant returns(uint _hotelReservationCount) {
 		return hotelReservationIds.length;
 	}
 
@@ -110,7 +110,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
       
     }
 	
-	function validateWithdraw(address[] _hotelReservations) validateCountCycle(_hotelReservations) public constant {
+	function validateWithdraw(address[] _hotelReservations) validateCountCycle(_hotelReservations) public constant returns(bool success) {
 		require(_hotelReservations.length > 0);
 
 		for (uint i = 0 ; i < _hotelReservations.length; i ++) {
@@ -121,7 +121,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 			uint amountToWithdraw = hotelReservationContract.getLocForWithdraw();
 
 		}
-
+		return true;
 	}
 
 	function createHotelReservation(

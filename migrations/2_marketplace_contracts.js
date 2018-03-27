@@ -35,12 +35,16 @@ var MintableToken = artifacts.require("./Tokens/MintableToken.sol");
 module.exports = async function (deployer, accounts) {
 
     const initialRate = 5000;
+    //This is calculated based on gas estimation for transactions
+    const cyclesCountForWithdraw = 70;
 
     // TODO should remove the addresses when deploing on main net
     let account1 = '0x919df2d59d0667764bfe25ecf2a457bef0156a94';
     let account2 = '0x7767e15abf2fd17bce0acfc834155182e56bb313';
     let account3 = '0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef';
     let account4 = '0x627306090abaB3A6e1400e9345bC60c78a8BEf57';
+    let account5 = '0x6524083c3a4b06cac3bb2d13c7c2bc3aeb50c680';
+    let ropstenAcc = '0xB63dF2068d209F8Ff3925C4c9DbBAbfD31301825';
     let testRpcAccount = accounts[3];
 
     let ERC20Instance;
@@ -48,33 +52,33 @@ module.exports = async function (deployer, accounts) {
     let LOCExchangeInstance;
 
     // Rental
-    await deployer.deploy(Rental);
-    let RentalImpl = await Rental.deployed();
-    await RentalImpl.init();
+    // await deployer.deploy(Rental);
+    // let RentalImpl = await Rental.deployed();
+    // await RentalImpl.init();
 
-    await deployer.deploy(RentalFactory);
-    let RentalFactoryImpl = await RentalFactory.deployed();
-    await deployer.deploy(RentalFactoryProxy, RentalFactoryImpl.address);
-    let RentalFactoryContract = await RentalFactoryProxy.deployed();
-    RentalFactoryContract = await IRentalFactory.at(RentalFactoryContract.address);
+    // await deployer.deploy(RentalFactory);
+    // let RentalFactoryImpl = await RentalFactory.deployed();
+    // await deployer.deploy(RentalFactoryProxy, RentalFactoryImpl.address);
+    // let RentalFactoryContract = await RentalFactoryProxy.deployed();
+    // RentalFactoryContract = await IRentalFactory.at(RentalFactoryContract.address);
 
-    // Hotel
-    await deployer.deploy(HotelRooms);
-    let HotelRoomsImpl = await HotelRooms.deployed();
-    await HotelRoomsImpl.init();
+    // // Hotel
+    // await deployer.deploy(HotelRooms);
+    // let HotelRoomsImpl = await HotelRooms.deployed();
+    // await HotelRoomsImpl.init();
 
-    await deployer.deploy(HotelFactory);
-    let HotelFactoryImpl = await HotelFactory.deployed();
-    await deployer.deploy(HotelFactoryProxy, HotelFactoryImpl.address);
-    let HotelFactoryContract = await HotelFactoryProxy.deployed();
-    HotelFactoryContract = await IHotelFactory.at(HotelFactoryContract.address);
+    // await deployer.deploy(HotelFactory);
+    // let HotelFactoryImpl = await HotelFactory.deployed();
+    // await deployer.deploy(HotelFactoryProxy, HotelFactoryImpl.address);
+    // let HotelFactoryContract = await HotelFactoryProxy.deployed();
+    // HotelFactoryContract = await IHotelFactory.at(HotelFactoryContract.address);
 
-    // Marketplace
-    await deployer.deploy(Marketplace);
-    let MarketplaceImpl = await Marketplace.deployed();
-    await deployer.deploy(MarketplaceProxy, MarketplaceImpl.address);
-    let MarketplaceContract = await MarketplaceProxy.deployed();
-    MarketplaceContract = await IMarketplace.at(MarketplaceContract.address);
+    // // Marketplace
+    // await deployer.deploy(Marketplace);
+    // let MarketplaceImpl = await Marketplace.deployed();
+    // await deployer.deploy(MarketplaceProxy, MarketplaceImpl.address);
+    // let MarketplaceContract = await MarketplaceProxy.deployed();
+    // MarketplaceContract = await IMarketplace.at(MarketplaceContract.address);
 
     //Hotel Reservation
 
@@ -91,20 +95,20 @@ module.exports = async function (deployer, accounts) {
 
 
     await HotelReservationFactoryContract.init();
-    await RentalFactoryContract.init();
-    await HotelFactoryContract.init();
-    await MarketplaceContract.init();
+    // await RentalFactoryContract.init();
+    // await HotelFactoryContract.init();
+    // await MarketplaceContract.init();
 
-    await MarketplaceContract.setRentalFactoryContract(RentalFactoryContract.address);
-    await MarketplaceContract.setHotelFactoryContract(HotelFactoryContract.address);
+    // await MarketplaceContract.setRentalFactoryContract(RentalFactoryContract.address);
+    // await MarketplaceContract.setHotelFactoryContract(HotelFactoryContract.address);
 
-    await RentalFactoryContract.setImplAddress(RentalImpl.address);
-    await RentalFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
-    await RentalFactoryContract.setMaxBookingPeriod(30);
+    // await RentalFactoryContract.setImplAddress(RentalImpl.address);
+    // await RentalFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
+    // await RentalFactoryContract.setMaxBookingPeriod(30);
 
-    await HotelFactoryContract.setImplAddress(HotelRoomsImpl.address);
-    await HotelFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
-    await HotelFactoryContract.setMaxBookingPeriod(30);
+    // await HotelFactoryContract.setImplAddress(HotelRoomsImpl.address);
+    // await HotelFactoryContract.setMarketplaceAddress(MarketplaceContract.address);
+    // await HotelFactoryContract.setMaxBookingPeriod(30);
 
     await HotelReservationFactoryContract.setImplAddress(HotelReservationImpl.address);
 
@@ -125,9 +129,19 @@ module.exports = async function (deployer, accounts) {
     LOCExchangeInstance = await LOCExchange.deployed();
 
     await HotelReservationFactoryContract.setLOCTokenContractAddress(ERC20Instance.address);
+    await HotelReservationFactoryContract.setmaxAllowedWithdrawCyclesCount(cyclesCountForWithdraw);
 
     await ERC20Instance.mint(account1, 200000000000000000000000);
     await ERC20Instance.mint(account2, 200000000000000000000000);
     await ERC20Instance.mint(account3, 200000000000000000000000);
     await ERC20Instance.mint(account4, 200000000000000000000000);
+    await ERC20Instance.mint(account5, 200000000000000000000000);
+    await ERC20Instance.mint(ropstenAcc, 200000000000000000000000);
+    // await web3.eth.sendTransaction({
+    //     from: ropstenAcc,
+    //     to: LOCExchangeInstance.address,
+    //     value: 2000000000000000000
+
+    // });
+
 };
