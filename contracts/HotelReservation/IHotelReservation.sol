@@ -20,7 +20,7 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		uint _numberOfTravelers
 	) public returns (bool success);
 
-	function getHotelReservation() public constant 
+	function getHotelReservation() public view 
 	returns(
 		bytes32 _hotelReservationId,
 		address _customerAddress,
@@ -33,11 +33,12 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		bytes32 _roomId ,
 		uint _numberOfTravelers);
 
-	function validateCancelation(address _customerAddress) constant returns (bool success);
-	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) constant;
-	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder);
-	function getCustomerAddress() public constant returns (address _customerAddress);
-	function validatePeriodForWithdraw();
+	function validateCancelation(address _customerAddress) view returns (bool success);
+	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) public view;
+	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder);
+	function getCustomerAddress() public view returns (address _customerAddress);
+	function validatePeriodForWithdraw() public view;
 	function getLocForWithdraw() returns (uint _locAmountForWithdraw);
 	function getHotelReservationId() returns (bytes32 _hotelReservationId);
+	function setMaxNumberForRefundDays(uint _maxNumberOfRefundPeriods) public;
 }

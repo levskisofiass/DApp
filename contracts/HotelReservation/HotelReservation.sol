@@ -15,7 +15,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	bytes32 hotelId;
 	bytes32 roomId;
 	uint numberOfTravelers;
-	// address hotelReservationFactoryAddress;
+	uint maxNumberOfRefundPeriods = 7;
 
 	StandardToken public LOCTokenContract;
 	IHotelReservation public hotelReservationContract;
@@ -36,10 +36,9 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		_; 
 	}
 
-	function validateCancelation(address _customerAddress) constant returns (bool success) {
+	function validateCancelation(address _customerAddress) view returns (bool success) {
 		require(customerAddress == _customerAddress);
-		// validateRefundForCreation(daysBeforeStartForRefund,refundPercentages, reservationStartDate );
-		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i ++) {
+		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
 			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
 				if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
 					return true;
@@ -49,22 +48,22 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		return false;
 	}
 
-	function validatePeriodForWithdraw() {
+	function validatePeriodForWithdraw() public view {
 		require(now > reservationEndDate);
 	}
 
-	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) constant {
+	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) public view {
 		
-		for (uint i = 0 ; i < _daysBeforeStartForRefund.length; i ++) {
+		for (uint i = 0 ; i < _daysBeforeStartForRefund.length; i++) {
 			require((now + ( _daysBeforeStartForRefund[i] * 1 days )) <= _startDate);
 			require(_refundPercentages[i] <= 100 && _refundPercentages[i] >= 0 );
 		}
 
 	}
 
-	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder) {
+	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder) {
 
-		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i ++) {
+		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
 			
 			if((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
 				uint locToBeRefunded = (reservationCostLOC * refundPercentages[i]) / 100;
@@ -75,19 +74,23 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		return (0, 0);
 	}
 
-	function getCustomerAddress() public constant returns (address _customerAddress) {
+	function getCustomerAddress() public view returns (address _customerAddress) {
 		return customerAddress;
 	}
 
-	function getLocForWithdraw() returns (uint _locAmountForWithdraw) {
+	function getLocForWithdraw() public returns (uint _locAmountForWithdraw) {
 		return reservationCostLOC;
 	}
 
-	function getHotelReservationId() returns (bytes32 _hotelReservationId) {
+	function getHotelReservationId() public returns (bytes32 _hotelReservationId) {
 		return hotelReservationId;
 	}
 
-	function getHotelReservation() public constant 
+	function setMaxNumberForRefundDays(uint _maxNumberOfRefundPeriods) public {
+		maxNumberOfRefundPeriods = _maxNumberOfRefundPeriods;
+	}
+
+	function getHotelReservation() public view 
 	returns(
 		bytes32 _hotelReservationId,
 		address _customerAddress,
