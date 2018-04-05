@@ -45,37 +45,50 @@ contract('HotelReservation', function (accounts) {
 	const hotelReservationId = "testId123";
 	const hotelReservationIdTwo = "testID456";
 	const hotelReservationIdThree = "testID980";
-	const customerAddress = '0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef';
+	const customerAddress = accounts[7];
 	// const customerAddress = accounts[3];
 	const reservationCostLOC = '1000';
-	const reservationStartDate = currentTimestamp + (day * 5);
-	const reservationEndDate = currentTimestamp + (day * 8);
-	const daysBeforeStartForRefund = '2';
-	const refundPercentage = '20';
+	const reservationStartDate = currentTimestamp + (day * 30);
+	const reservationEndDate = currentTimestamp + (day * 32);
+	const daysBeforeStartForRefund = ['8', '7', '5', '4', '3', '2', '1'];
+	const refundPercentage = ['90', '80', '70', '60', '50', '40', '30'];
 	const hotelId = "testId135";
 	const roomId = "testId246";
 	const LOCAmount = '10000';
 	const newReservationCostLOC = '5';
 	const numberOfTravelers = '4'
-	const amountToRefund = (reservationCostLOC * refundPercentage) / 100;
+	const amountToRefund = (reservationCostLOC * refundPercentage[0]) / 100;
+
 
 	//For Cancelation
 	const tomorrowStardDate = currentTimestamp + (day);
-	const oneDayBeforeRefund = '1';
-	const zeroDaysBeforeRefund = '0'
-	const zeroRefundPercentage = '0';
-	const fullRefund = '100';
+	const oneDayBeforeRefund = ['1'];
+	const zeroDaysBeforeRefund = ['0'];
+	const zeroRefundPercentage = ['0'];
+	const oneRefundPercentage = ['10'];
+	const daysForFullRefund = ['5'];
+	const fullRefund = ['100'];
 	let locRemainder = reservationCostLOC - amountToRefund;
+	const twoPeriodsForRefund = ['2', '1'];
+	const twoPercentagesForRefund = ['0', '0'];
 
 	//For negative cases
 	const pastDate = '1518652800'
-	const wrongRefundPercantage = '120'
-	const wrongDatsForRefund = '10';
+	const wrongRefundPercantage = ['90', '80', '70', '120', '50', '40', '30'];
+	const greaterRefundPercantage = ['90', '80', '70', '120', '50', '40', '30', '20'];
+	const greaterDateForRefund = ['9', '8', '7', '5', '4', '3', '2', '1'];
+	const wrongDatsForRefund = ['8', '7', '5', '4', '3', '2', '1'];
 	const zeroAddress = '0x0000000000000000000000000000000000000000';
+	const emptyDatesArray = [];
+	const emptyPercantageArray = [];
+	const pastRefundDays = ['20', '19'];
+	const pastPercantages = ['89', '45'];
+	const differentRefundDaysCount = ['3', '2', '1'];
+	const differentPercantageCount = ['10', '5'];
 
 	//For withdraw
-	let reservationStartDateTravel = currentTime(web3) + (day * 5)
-	let reservationEndDateTravel = currentTime(web3) + (day * 8)
+	let reservationStartDateTravel = currentTime(web3) + (day * 30)
+	let reservationEndDateTravel = currentTime(web3) + (day * 32)
 	let currentTimeStampTravel = currentTime(web3)
 	let pastDateTravel = currentTime(web3) - (day * 8);
 
@@ -96,6 +109,7 @@ contract('HotelReservation', function (accounts) {
 
 		beforeEach(async function () {
 
+
 			ERC20Instance = await MintableToken.new({
 				from: _owner
 			});
@@ -103,22 +117,18 @@ contract('HotelReservation', function (accounts) {
 				from: _owner
 			});
 
-
 			hotelReservation = await HotelReservation.new();
 			await hotelReservation.init();
-
 			hotelReservationFactoryImpl = await HotelReservationFactory.new();
 			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
 			hotelReservationContract = await IHotelReservationFactory.at(hotelReservationFactoryProxy.address);
 
 			await hotelReservationContract.init();
 			await hotelReservationContract.setImplAddress(hotelReservation.address);
-
 			await ERC20Instance.approve(hotelReservationContract.address, LOCAmount, {
 				from: customerAddress
 			});
 			let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
-
 		});
 
 		it("should create new Hotel Reservation", async function () {
@@ -145,10 +155,10 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(currentTimeStampTravel),
 				formatTimestamp(reservationEndDateTravel),
-				daysBeforeStartForRefund,
-				refundPercentage,
+				zeroDaysBeforeRefund,
+				zeroRefundPercentage,
 				hotelId,
 				roomId,
 				numberOfTravelers, {
@@ -295,6 +305,101 @@ contract('HotelReservation', function (accounts) {
 			));
 		})
 
+		it("should throw if the days for refund are greatear than 7", async function () {
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(currentTimeStampTravel),
+				formatTimestamp(reservationEndDateTravel),
+				greaterDateForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+		})
+
+		it("should throw if the refund percentages are greatear than 7", async function () {
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(currentTimeStampTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysBeforeStartForRefund,
+				greaterRefundPercantage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+		})
+
+		it("should throw if the days for refund array is empty", async function () {
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(currentTimeStampTravel),
+				formatTimestamp(reservationEndDateTravel),
+				emptyDatesArray,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+		})
+
+		it("should throw if the refund percentages array is empty", async function () {
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(currentTimeStampTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysBeforeStartForRefund,
+				emptyPercantageArray,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+		})
+
+		it("should throw if the refund days are in the past", async function () {
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(currentTimeStampTravel),
+				formatTimestamp(reservationEndDateTravel),
+				pastRefundDays,
+				pastPercantages,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+		})
+
+		it("should throw if the refund days array length is different than the percantage array", async function () {
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(currentTimeStampTravel),
+				formatTimestamp(reservationEndDateTravel),
+				differentRefundDaysCount,
+				differentPercantageCount,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+		})
 
 	});
 
@@ -336,6 +441,8 @@ contract('HotelReservation', function (accounts) {
 					from: customerAddress
 				}
 			);
+
+
 		})
 
 		it("should cancel the reservation properly", async function () {
@@ -371,7 +478,7 @@ contract('HotelReservation', function (accounts) {
 				reservationCostLOC,
 				formatTimestamp(reservationStartDateTravel),
 				formatTimestamp(reservationEndDateTravel),
-				daysBeforeStartForRefund,
+				daysForFullRefund,
 				fullRefund,
 				hotelId,
 				roomId,
@@ -427,7 +534,7 @@ contract('HotelReservation', function (accounts) {
 				formatTimestamp(reservationStartDateTravel),
 				formatTimestamp(reservationEndDateTravel),
 				zeroDaysBeforeRefund,
-				refundPercentage,
+				oneRefundPercentage,
 				hotelId,
 				roomId,
 				numberOfTravelers, {
@@ -452,7 +559,7 @@ contract('HotelReservation', function (accounts) {
 				formatTimestamp(currentTimeStampTravel),
 				formatTimestamp(reservationEndDateTravel),
 				zeroDaysBeforeRefund,
-				refundPercentage,
+				oneRefundPercentage,
 				hotelId,
 				roomId,
 				numberOfTravelers, {
@@ -522,7 +629,6 @@ contract('HotelReservation', function (accounts) {
 			assert(totalRemainder.eq(intermediateRemainder.plus(locRemainder)), "The ramainder wasn't increased properly second time");
 		});
 
-
 		it("should emit one event if the cancelation is successful", async function () {
 			let expectedEvent = "LogCancelHotelReservation";
 
@@ -544,8 +650,8 @@ contract('HotelReservation', function (accounts) {
 				reservationCostLOC,
 				formatTimestamp(reservationStartDateTravel),
 				formatTimestamp(reservationEndDateTravel),
-				daysBeforeStartForRefund,
-				zeroRefundPercentage,
+				twoPeriodsForRefund,
+				twoPercentagesForRefund,
 				hotelId,
 				roomId,
 				numberOfTravelers, {
@@ -579,18 +685,53 @@ contract('HotelReservation', function (accounts) {
 				}
 			));
 		})
+
+
+		it('should cancel the reservation in random period from the array', async function () {
+			let futureDays = (day * 4)
+			await timeTravel(web3, futureDays);
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationId, {
+					from: customerAddress
+				}
+			);
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			assert.equal(reservationsCount, 0, "The hotel reservation was not canceled properly");
+		})
+
+		it('should cancel the reservation in random period from the array and transfer the proper amount ', async function () {
+			let futureDays = (day * 20)
+			await timeTravel(web3, futureDays);
+			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let initialContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
+
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationId, {
+					from: customerAddress
+				}
+			);
+			const amountToRefundForPeriod = (reservationCostLOC * refundPercentage[2]) / 100;
+			let finalCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let finalContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
+
+			assert(finalCustomerBalance.eq(initialCustomerBalance.plus(amountToRefundForPeriod)), "The cancelation wasn't successful. Customer balance is not increased");
+			assert(finalContractBalance.eq(initialContractBalance - amountToRefundForPeriod), "The cancelation wasn't successful. Contract balance is not decreased");
+
+		})
+
+
 	})
 
 	describe("withdraw", () => {
 		beforeEach(async function () {
 
-			reservationStartDateTravel = currentTime(web3) + (day * 5);
-			reservationEndDateTravel = currentTime(web3) + (day * 8);
+			reservationStartDateTravel = currentTime(web3) + (day * 10);
+			reservationEndDateTravel = currentTime(web3) + (day * 12);
 
 			ERC20Instance = await MintableToken.new({
 				from: _owner
 			});
-			await ERC20Instance.mint(customerAddress, 100000000000000, {
+			await ERC20Instance.mint(customerAddress, 40000000000000000, {
 				from: _owner
 			});
 
@@ -605,7 +746,7 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.init();
 			await hotelReservationContract.setImplAddress(hotelReservation.address);
 
-			await ERC20Instance.approve(hotelReservationContract.address, 100000000000000, {
+			await ERC20Instance.approve(hotelReservationContract.address, 40000000000000000, {
 				from: customerAddress
 			});
 			let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
@@ -653,7 +794,7 @@ contract('HotelReservation', function (accounts) {
 
 		it("should withdraw the money to the wallet destination", async function () {
 			let destinationAddressInitBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
@@ -691,7 +832,7 @@ contract('HotelReservation', function (accounts) {
 			);
 
 			let destinationAddressInitBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
@@ -707,7 +848,7 @@ contract('HotelReservation', function (accounts) {
 		});
 
 		it("should make the reservation inactive after the withdrawal and remove it from the reservation array", async function () {
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
 			let reservationTwoAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationIdTwo)
@@ -744,7 +885,7 @@ contract('HotelReservation', function (accounts) {
 			}
 
 			let destinationAddressInitBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 
 			await hotelReservationContract.validateWithdraw(hotelReservations, {
@@ -808,7 +949,7 @@ contract('HotelReservation', function (accounts) {
 
 		it("should emit events for every reservation when the withdraw is successful", async function () {
 			const expectedEvent = 'LogWithdrawal';
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
@@ -846,7 +987,7 @@ contract('HotelReservation', function (accounts) {
 				hotelReservations.push(reservationAddress);
 			}
 			let destinationAddressInitBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 
 
@@ -856,7 +997,7 @@ contract('HotelReservation', function (accounts) {
 		})
 
 		it("should throw if the persno other than the withdrawer wants to withdraw", async function () {
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
@@ -870,7 +1011,7 @@ contract('HotelReservation', function (accounts) {
 		});
 
 		it("should throw if the reservation is inactive", async function () {
-			let futureDays = (day * 10)
+			let futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
 			let reservationTwoAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationIdTwo)

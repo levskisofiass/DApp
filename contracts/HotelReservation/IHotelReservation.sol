@@ -13,8 +13,8 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
-		uint _daysBeforeStartForRefund,
-		uint _refundPercentage,
+		uint[] _daysBeforeStartForRefund,
+		uint[] _refundPercentages,
 		bytes32 _hotelId,
 		bytes32 _roomId,
 		uint _numberOfTravelers
@@ -27,14 +27,14 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
-		uint _daysBeforeStartForRefund,
-		uint _refundPercentage,
+		uint[] _daysBeforeStartForRefund,
+		uint[] _refundPercentages,
 		bytes32 _hotelId,
 		bytes32 _roomId ,
 		uint _numberOfTravelers);
 
-	function cancelHotelReservation(bytes32 _hotelReservationId)  returns(bool success);
-	function validateCancelation(address _customerAddress);
+	function validateCancelation(address _customerAddress) constant returns (bool success);
+	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) constant;
 	function getLocToBeRefunded() public constant returns (uint _locToBeRefunded, uint _locRemainder);
 	function getCustomerAddress() public constant returns (address _customerAddress);
 	function validatePeriodForWithdraw();

@@ -129,8 +129,8 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
-		uint _daysBeforeStartForRefund,
-		uint _refundPercentage,
+		uint[] _daysBeforeStartForRefund,
+		uint[] _refundPercentages,
 		bytes32 _hotelId,
 		bytes32 _roomId,
 		uint _numberOfTravelers
@@ -146,7 +146,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		 _reservationStartDate,
 		 _reservationEndDate,
 		 _daysBeforeStartForRefund,
-		 _refundPercentage,
+		 _refundPercentages,
 		 _hotelId,
 		 _roomId,
 		 _numberOfTravelers
@@ -167,7 +167,8 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		uint locRemainder;
 		IHotelReservation hotelReservationContract = IHotelReservation(hotelReservations[_hotelReservationId].hotelReservationAddress);
 		
-		hotelReservationContract.validateCancelation(msg.sender);
+		bool isValidCancelation = hotelReservationContract.validateCancelation(msg.sender);
+		require(isValidCancelation == true);
 		unlinkHotelReservation(_hotelReservationId);
 		(locToBeRefunded, locRemainder) = hotelReservationContract.getLocToBeRefunded();
 

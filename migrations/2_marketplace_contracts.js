@@ -1,3 +1,4 @@
+// const web3 = require("web3");
 let MarketplaceProxy = artifacts.require("./../Marketplace/MarketplaceProxy.sol");
 let Marketplace = artifacts.require("./../Marketplace/Marketplace.sol");
 let IMarketplace = artifacts.require("./../Marketplace/IMarketplace.sol");
@@ -32,19 +33,20 @@ var LOCExchange = artifacts.require("./Exchange/LOCExchange.sol");
 var MintableToken = artifacts.require("./Tokens/MintableToken.sol");
 
 
-module.exports = async function (deployer, accounts) {
+module.exports = async function (deployer, network, accounts) {
 
-    const initialRate = 5000;
+    const initialRate = 200;
     //This is calculated based on gas estimation for transactions
     const cyclesCountForWithdraw = 70;
 
     // TODO should remove the addresses when deploing on main net
     let account1 = '0x919df2d59d0667764bfe25ecf2a457bef0156a94';
     let account2 = '0x7767e15abf2fd17bce0acfc834155182e56bb313';
-    let account3 = '0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef';
+    let account3 = '0x2B8e7487CdACC95889252FC77b5E8E757aF666E6';
     let account4 = '0x627306090abaB3A6e1400e9345bC60c78a8BEf57';
     let account5 = '0x6524083c3a4b06cac3bb2d13c7c2bc3aeb50c680';
     let ropstenAcc = '0xB63dF2068d209F8Ff3925C4c9DbBAbfD31301825';
+    let lockchainAcc = '0x264c1431983866d7626d7899638de183e60e6ad1';
     let testRpcAccount = accounts[3];
 
     let ERC20Instance;
@@ -133,15 +135,25 @@ module.exports = async function (deployer, accounts) {
 
     await ERC20Instance.mint(account1, 200000000000000000000000);
     await ERC20Instance.mint(account2, 200000000000000000000000);
-    await ERC20Instance.mint(account3, 200000000000000000000000);
+    await ERC20Instance.mint(account3, 400000000000000000000000000);
     await ERC20Instance.mint(account4, 200000000000000000000000);
     await ERC20Instance.mint(account5, 200000000000000000000000);
     await ERC20Instance.mint(ropstenAcc, 200000000000000000000000);
-    // await web3.eth.sendTransaction({
-    //     from: ropstenAcc,
-    //     to: LOCExchangeInstance.address,
-    //     value: 2000000000000000000
+    await ERC20Instance.mint(lockchainAcc, 200000000000000000000000);
+    await ERC20Instance.mint(accounts[0], 200000000000000000000000);
+    // console.log(LOCExchangeInstance.address);
+    // console.log(accounts[0])
+    await web3.eth.sendTransaction({
+        from: accounts[0],
+        to: LOCExchangeInstance.address,
+        value: 3000000000000000000
 
-    // });
+    });
+    await web3.eth.sendTransaction({
+        from: accounts[0],
+        to: account5,
+        value: 3000000000000000000
+
+    });
 
 };

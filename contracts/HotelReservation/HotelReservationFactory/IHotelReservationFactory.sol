@@ -23,8 +23,8 @@ event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
-		uint _daysBeforeStartForRefund,
-		uint _refundPercentage,
+		uint[] _daysBeforeStartForRefund,
+		uint[] _refundPercentages,
 		bytes32 _hotelId,
 		bytes32 _roomId,
 		uint _numberOfTravelers
