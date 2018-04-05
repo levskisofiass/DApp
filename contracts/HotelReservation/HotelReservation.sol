@@ -31,8 +31,8 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	modifier onlyValidArraysForCancelation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages) {
 		require(_daysBeforeStartForRefund.length == _refundPercentages.length);
-		require(_daysBeforeStartForRefund.length > 0 && _daysBeforeStartForRefund.length <= 7);
-		require(_refundPercentages.length > 0 && _refundPercentages.length <= 7);
+		require(_daysBeforeStartForRefund.length > 0 && _daysBeforeStartForRefund.length <= maxNumberOfRefundPeriods);
+		require(_refundPercentages.length > 0 && _refundPercentages.length <= maxNumberOfRefundPeriods);
 		_; 
 	}
 
@@ -78,11 +78,11 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		return customerAddress;
 	}
 
-	function getLocForWithdraw() public returns (uint _locAmountForWithdraw) {
+	function getLocForWithdraw() public view returns (uint _locAmountForWithdraw) {
 		return reservationCostLOC;
 	}
 
-	function getHotelReservationId() public returns (bytes32 _hotelReservationId) {
+	function getHotelReservationId() public view returns (bytes32 _hotelReservationId) {
 		return hotelReservationId;
 	}
 

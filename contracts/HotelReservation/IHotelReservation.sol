@@ -38,7 +38,7 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder);
 	function getCustomerAddress() public view returns (address _customerAddress);
 	function validatePeriodForWithdraw() public view;
-	function getLocForWithdraw() returns (uint _locAmountForWithdraw);
-	function getHotelReservationId() returns (bytes32 _hotelReservationId);
+	function getLocForWithdraw() public view returns  (uint _locAmountForWithdraw);
+	function getHotelReservationId() public view returns (bytes32 _hotelReservationId);
 	function setMaxNumberForRefundDays(uint _maxNumberOfRefundPeriods) public;
 }
