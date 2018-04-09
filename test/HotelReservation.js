@@ -403,7 +403,7 @@ contract('HotelReservation', function (accounts) {
 
 	});
 
-	describe("cancel hotel reservation", () => {
+	xdescribe("cancel hotel reservation", () => {
 		beforeEach(async function () {
 			ERC20Instance = await MintableToken.new({
 				from: _owner
@@ -722,7 +722,7 @@ contract('HotelReservation', function (accounts) {
 
 	})
 
-	describe("withdraw", () => {
+	xdescribe("withdraw", () => {
 		beforeEach(async function () {
 
 			reservationStartDateTravel = currentTime(web3) + (day * 10);
@@ -1043,7 +1043,7 @@ contract('HotelReservation', function (accounts) {
 
 
 
-	describe("upgrade hotel reservation contract", () => {
+	xdescribe("upgrade hotel reservation contract", () => {
 		beforeEach(async function () {
 
 			ERC20Instance = await MintableToken.new({

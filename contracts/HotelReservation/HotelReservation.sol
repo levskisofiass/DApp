@@ -15,7 +15,6 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	bytes32 hotelId;
 	bytes32 roomId;
 	uint numberOfTravelers;
-	uint maxNumberOfRefundPeriods = 7;
 
 	StandardToken public LOCTokenContract;
 	IHotelReservation public hotelReservationContract;
@@ -31,8 +30,8 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	modifier onlyValidArraysForCancelation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages) {
 		require(_daysBeforeStartForRefund.length == _refundPercentages.length);
-		require(_daysBeforeStartForRefund.length > 0 && _daysBeforeStartForRefund.length <= maxNumberOfRefundPeriods);
-		require(_refundPercentages.length > 0 && _refundPercentages.length <= maxNumberOfRefundPeriods);
+		require(_daysBeforeStartForRefund.length > 0 && _daysBeforeStartForRefund.length <= 7);
+		require(_refundPercentages.length > 0 && _refundPercentages.length <= 7);
 		_; 
 	}
 
@@ -84,10 +83,6 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	function getHotelReservationId() public view returns (bytes32 _hotelReservationId) {
 		return hotelReservationId;
-	}
-
-	function setMaxNumberForRefundDays(uint _maxNumberOfRefundPeriods) public {
-		maxNumberOfRefundPeriods = _maxNumberOfRefundPeriods;
 	}
 
 	function getHotelReservation() public view 
