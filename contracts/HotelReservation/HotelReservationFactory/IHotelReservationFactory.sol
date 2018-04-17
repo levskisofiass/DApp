@@ -16,33 +16,33 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
 
     function setImplAddress(address implAddress) public;
-    function getImplAddress() public constant returns(address implAddress);
+    function getImplAddress() public view returns(address implAddress);
 
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
 		uint _reservationCostLOC,
 		uint _reservationStartDate,
 		uint _reservationEndDate,
-		uint _daysBeforeStartForRefund,
-		uint _refundPercentage,
+		uint[] _daysBeforeStartForRefund,
+		uint[] _refundPercentages,
 		bytes32 _hotelId,
 		bytes32 _roomId,
 		uint _numberOfTravelers
 	) public returns (bool success);
 
-	function getHotelReservationId(uint index) public constant returns(bytes32 _hotelReservaionId);
-    function getHotelReservationContractAddress(bytes32 _hotelReservationId) public constant returns(address hotelReservationContract);
-	function getHotelReservationsCount() public constant returns(uint _hotelReservationCount);
+	function getHotelReservationId(uint index) public view returns(bytes32 _hotelReservaionId);
+    function getHotelReservationContractAddress(bytes32 _hotelReservationId) public view returns(address hotelReservationContract);
+	function getHotelReservationsCount() public view returns(uint _hotelReservationCount);
 
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
 	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success);
 	function withdraw(address[] _hotelReservations) returns(bool success);
-	function getLocRemainderAmount() public constant returns(uint _locRefundsRemainder);
+	function getLocRemainderAmount() public view returns(uint _locRefundsRemainder);
 	function setWithdrawDestinationAddress(address _withdrawDestinationAddress) public;
 	function setWithdrawerAddress(address _withdrawerAddress) public;
-	function getWithdrawerAddress() public constant returns(address _withdrawerAddress);
-	function getWithdrawDestinationAddress() public constant returns(address _withdrawDestinationAddress);
+	function getWithdrawerAddress() public view returns(address _withdrawerAddress);
+	function getWithdrawDestinationAddress() public view returns(address _withdrawDestinationAddress);
 	function setmaxAllowedWithdrawCyclesCount(uint _maxAllowedWithdrawCyclesCount);
-	function getmaxAllowedWithdrawCyclesCount() public constant returns(uint _maxAllowedWithdrawCyclesCount);
-	function validateWithdraw(address[] _hotelReservations) public constant returns(bool success);
+	function getmaxAllowedWithdrawCyclesCount() public view returns(uint _maxAllowedWithdrawCyclesCount);
+	function validateWithdraw(address[] _hotelReservations) public view returns(bool success);
 }
