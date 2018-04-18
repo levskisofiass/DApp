@@ -7,13 +7,16 @@ contract IHotelReservationFactory is IOwnableUpgradeableImplementation {
 	address public implContract;
 	address public withdrawerAddress;
 	address public withdrawDestinationAddress;
+	address public disputeDestinationAddress;
 	bytes32[] public hotelReservationIds;
+	bytes32[] public disputeHotelReservationIds;
 	uint public locRefundsRemainder;
 	uint public maxAllowedWithdrawCyclesCount;
 
 event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _locRefundsRemainder);
 event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
+event LogDisputeCreated(bytes32 _hotelReservationId, uint _locRefundsRemainder);
 
     function setImplAddress(address implAddress) public;
     function getImplAddress() public view returns(address implAddress);
@@ -33,6 +36,7 @@ event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
 	function getHotelReservationId(uint index) public view returns(bytes32 _hotelReservaionId);
     function getHotelReservationContractAddress(bytes32 _hotelReservationId) public view returns(address hotelReservationContract);
 	function getHotelReservationsCount() public view returns(uint _hotelReservationCount);
+	function getHotelReservationsForDisputeCount() public view returns(uint _hotelReservationCount);
 
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
 	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success);
@@ -45,4 +49,7 @@ event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
 	function setmaxAllowedWithdrawCyclesCount(uint _maxAllowedWithdrawCyclesCount);
 	function getmaxAllowedWithdrawCyclesCount() public view returns(uint _maxAllowedWithdrawCyclesCount);
 	function validateWithdraw(address[] _hotelReservations) public view returns(bool success);
+	function dispute(bytes32 _hotelReservationId) public returns(bool success);
+	function setDisputeDestinationAddress(address _disputeDestinationAddress) public;
+	function getDisputeDestinationAddress() public view returns(address _disputeDestinationAddress);
 }

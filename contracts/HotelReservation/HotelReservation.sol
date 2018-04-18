@@ -60,6 +60,11 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	}
 
+	function validateDispute(address _customerAddress) public view {
+		require(now > reservationEndDate);
+		require(customerAddress == _customerAddress);
+	}
+
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder) {
 
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
@@ -83,6 +88,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	function getHotelReservationId() public view returns (bytes32 _hotelReservationId) {
 		return hotelReservationId;
+	}
+
+	function getHotelReservationCost() public view returns (uint _hotelReservationCostLOC) {
+		return reservationCostLOC;
 	}
 
 	function getHotelReservation() public view 

@@ -38,6 +38,8 @@ contract('HotelReservation', function (accounts) {
 	const withdrawerAddress = accounts[5];
 	const withdrawalDestinationAddress = accounts[6];
 	const withdrawerForTest = accounts[4]
+	const disputeDestinationAddress = accounts[8];
+	const disputeDistinationAddressForTest = accounts[3];
 
 	var currentTimestamp = Date.now() / 1000 | 0;
 	const day = 24 * 60 * 60;
@@ -47,7 +49,7 @@ contract('HotelReservation', function (accounts) {
 	const hotelReservationIdThree = "testID980";
 	const customerAddress = accounts[7];
 	// const customerAddress = accounts[3];
-	const reservationCostLOC = '1000';
+	const reservationCostLOC = '10';
 	const reservationStartDate = currentTimestamp + (day * 30);
 	const reservationEndDate = currentTimestamp + (day * 32);
 	const daysBeforeStartForRefund = ['8', '7', '5', '4', '3', '2', '1'];
@@ -148,6 +150,25 @@ contract('HotelReservation', function (accounts) {
 			);
 			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
 			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
+		});
+
+		it("should increase the dispute reservations array when creating reservations", async function () {
+
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysBeforeStartForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+			let reservationsCount = await hotelReservationContract.getHotelReservationsForDisputeCount();
+			assert.equal(reservationsCount, 1, "The array with hotel reservations for dispute was not increased");
 		});
 
 		it("should create new Hotel Reservation for today", async function () {
@@ -1041,10 +1062,138 @@ contract('HotelReservation', function (accounts) {
 	})
 
 
+	describe("dispute", () => {
+		beforeEach(async function () {
+			reservationStartDateTravel = currentTime(web3) + (day * 10);
+			reservationEndDateTravel = currentTime(web3) + (day * 12);
+
+			ERC20Instance = await MintableToken.new({
+				from: _owner
+			});
+			await ERC20Instance.mint(customerAddress, 5000000000000000000, {
+				from: _owner
+			});
+
+
+			hotelReservation = await HotelReservation.new();
+			await hotelReservation.init();
+
+			hotelReservationFactoryImpl = await HotelReservationFactory.new();
+			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
+			hotelReservationContract = await IHotelReservationFactory.at(hotelReservationFactoryProxy.address);
+
+			await hotelReservationContract.init();
+			await hotelReservationContract.setImplAddress(hotelReservation.address);
+
+			await ERC20Instance.approve(hotelReservationContract.address, 5000000000000000000, {
+				from: customerAddress
+			});
+			let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
+
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysBeforeStartForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+
+			await hotelReservationContract.setDisputeDestinationAddress(disputeDestinationAddress, {
+				from: _owner
+			});
+		})
+
+		it("should open a dispute", async function () {
+			let futureDays = (day * 15)
+			await timeTravel(web3, futureDays);
+
+			let destinationAddressInitialBalance = await ERC20Instance.balanceOf(disputeDestinationAddress);
+
+			await hotelReservationContract.dispute(hotelReservationId, {
+				from: customerAddress
+			});
+
+			let finalReservationsCount = await hotelReservationContract.getHotelReservationsForDisputeCount();
+			let destinationAddressFinalBalance = await ERC20Instance.balanceOf(disputeDestinationAddress);
+
+			assert.equal(finalReservationsCount, 0, "The dispute reservations were not unlinked");
+			assert(destinationAddressFinalBalance.eq(destinationAddressInitialBalance.plus(reservationCostLOC)), "The dispute wasnt' correct");
+		});
+
+		it("should set the dispute destination address", async function () {
+			await hotelReservationContract.setDisputeDestinationAddress(disputeDistinationAddressForTest, {
+				from: _owner
+			})
+
+			let disputeAddress = await hotelReservationContract.getDisputeDestinationAddress();
+			assert.strictEqual(disputeAddress, disputeDistinationAddressForTest, "The dispute destination address was not set properly");
+		});
+
+		it("should emit one event when opening a dispute", async function () {
+			let futureDays = (day * 15)
+			await timeTravel(web3, futureDays);
+			const expectedEvent = 'LogDisputeCreated';
+
+			let result = await hotelReservationContract.dispute(hotelReservationId, {
+				from: customerAddress
+			});
+			assert.lengthOf(result.logs, 1, "There should be 1 event emitted from dispute !");
+			assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+		});
+
+		it("should throw when trying to open a dispute before end of the reservations", async function () {
+
+			await expectThrow(hotelReservationContract.dispute(hotelReservationId, {
+				from: customerAddress
+			}))
+		});
+
+		it("should throw if user different from the customer tries to open a dispute", async function () {
+			let futureDays = (day * 15)
+			await timeTravel(web3, futureDays);
+
+			await expectThrow(hotelReservationContract.dispute(hotelReservationId, {
+				from: _owner
+			}))
+		});
+
+		it("should throw if the reservation doesn't exist in the dispute reservations array", async function () {
+			let futureDays = (day * 15)
+			await timeTravel(web3, futureDays);
+
+			await expectThrow(hotelReservationContract.dispute(hotelReservationIdTwo, {
+				from: customerAddress
+			}))
+		});
+
+		it("should throw if you try to open more than one dispute for the same reservation", async function () {
+
+			let futureDays = (day * 15)
+			await timeTravel(web3, futureDays);
+
+			await hotelReservationContract.dispute(hotelReservationId, {
+				from: customerAddress
+			});
+
+			await expectThrow(hotelReservationContract.dispute(hotelReservationId, {
+				from: customerAddress
+			}))
+		});
+
+	})
 
 
 	describe("upgrade hotel reservation contract", () => {
 		beforeEach(async function () {
+
+			reservationStartDateTravel = currentTime(web3) + (day * 10);
+			reservationEndDateTravel = currentTime(web3) + (day * 12);
 
 			ERC20Instance = await MintableToken.new({
 				from: _owner

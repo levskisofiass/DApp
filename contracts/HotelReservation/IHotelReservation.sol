@@ -40,4 +40,6 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 	function validatePeriodForWithdraw() public view;
 	function getLocForWithdraw() public view returns  (uint _locAmountForWithdraw);
 	function getHotelReservationId() public view returns (bytes32 _hotelReservationId);
+	function getHotelReservationCost() public view returns (uint _hotelReservationCostLOC);
+	function validateDispute(address _customerAddress) public view;
 }
