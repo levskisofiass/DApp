@@ -49,11 +49,12 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	function validateCancelation(address _customerAddress) view returns (bool success) {
 		require(customerAddress == _customerAddress);
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
-			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
-				if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
+			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) > reservationStartDate) {
+				continue;
+			}
+			if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
 					return true;
 				}
-			}
 		}
 		return false;
 	}
