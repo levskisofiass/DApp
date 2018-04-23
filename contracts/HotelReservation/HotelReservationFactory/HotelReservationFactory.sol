@@ -13,7 +13,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	address public withdrawDestinationAddress;
 	address public disputeDestinationAddress;
 	bytes32[] public hotelReservationIds;
-	bytes32[] public disputeHotelReservationIds;
 	uint public locRefundsRemainder;
 	uint public maxAllowedWithdrawCyclesCount;
 
@@ -24,7 +23,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	}
 
     mapping (bytes32 => HotelReservationStruct) public hotelReservations;
-	mapping (bytes32 => HotelReservationStruct) public disputeHotelReservations;
 	StandardToken public LOCTokenContract;
 	 
 
@@ -37,11 +35,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
         require(hotelReservations[_hotelReservationId].hotelReservationAddress == address(0));
         _;
     }
-
-	modifier onlyExistingForDispute(bytes32 _hotelReservationId) {
-		require(disputeHotelReservations[_hotelReservationId].hotelReservationAddress != address(0));
-		_;
-	}
 
 	modifier onlyWithdrawer() {
 		require(msg.sender == withdrawerAddress);
@@ -98,10 +91,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		return hotelReservationIds.length;
 	}
 
-	function getHotelReservationsForDisputeCount() public view returns(uint _hotelReservationCount) {
-		return disputeHotelReservationIds.length;
-	}
-
 	function getLocRemainderAmount() public view returns(uint _locRefundsRemainder) {
 		return locRefundsRemainder;
 	}
@@ -131,15 +120,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
       
     } 
 
-	function unlinkDisputedHotelReservations(bytes32 _hotelReservationId) private view {
-		bytes32 lastId = disputeHotelReservationIds[disputeHotelReservationIds.length-1];
-		disputeHotelReservationIds[disputeHotelReservations[_hotelReservationId].hotelReservationArrayIndex] = lastId;
-        disputeHotelReservationIds.length--;
-        disputeHotelReservations[lastId].hotelReservationArrayIndex = disputeHotelReservations[_hotelReservationId].hotelReservationArrayIndex;
-		disputeHotelReservations[_hotelReservationId].hotelReservationAddress = address(0);
-
-	}
-	
 	function validateWithdraw(address[] _hotelReservations) validateCountCycle(_hotelReservations) public view returns(bool success) {
 		require(_hotelReservations.length > 0);
 
@@ -147,7 +127,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 			require(_hotelReservations[i] != address(0));
 			IHotelReservation hotelReservationContract = IHotelReservation(_hotelReservations[i]);
 
-			hotelReservationContract.validatePeriodForWithdraw();
+			hotelReservationContract.validateReservationForWithdraw();
 			uint amountToWithdraw = hotelReservationContract.getLocForWithdraw();
 
 		}
@@ -186,10 +166,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	hotelReservations[_hotelReservationId].hotelReservationAddress = hotelReservationContract;
 	hotelReservations[_hotelReservationId].hotelReservationArrayIndex = (hotelReservationIds.length - 1);
 
-	disputeHotelReservationIds.push(_hotelReservationId);
-	disputeHotelReservations[_hotelReservationId].hotelReservationAddress = hotelReservationContract;
-	disputeHotelReservations[_hotelReservationId].hotelReservationArrayIndex = (disputeHotelReservationIds.length - 1);
-
 	assert(LOCTokenContract.transferFrom(msg.sender, this, _reservationCostLOC));
 
 	LogCreateHotelReservation(_hotelReservationId, msg.sender, _reservationStartDate, _reservationEndDate);
@@ -205,7 +181,6 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		bool isValidCancelation = hotelReservationContract.validateCancelation(msg.sender);
 		require(isValidCancelation == true);
 		unlinkHotelReservation(_hotelReservationId);
-		unlinkDisputedHotelReservations(_hotelReservationId);
 		(locToBeRefunded, locRemainder) = hotelReservationContract.getLocToBeRefunded();
 
 		assert(LOCTokenContract.transfer(hotelReservationContract.getCustomerAddress(), locToBeRefunded));
@@ -225,25 +200,25 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		for (uint i = 0 ; i < _hotelReservations.length; i++) {
 			IHotelReservation hotelReservationContract = IHotelReservation(_hotelReservations[i]);
 
-			hotelReservationContract.validatePeriodForWithdraw();
+			hotelReservationContract.validateReservationForWithdraw();
 			uint amountToWithdraw = hotelReservationContract.getLocForWithdraw();
 			bytes32 hotelReservationId = hotelReservationContract.getHotelReservationId();
 			
 			unlinkHotelReservation(hotelReservationId);
-			unlinkDisputedHotelReservations(hotelReservationId);
 			assert(LOCTokenContract.transfer(withdrawDestinationAddress, amountToWithdraw));
 			LogWithdrawal(hotelReservationId, amountToWithdraw);
 		}
 		return true;
 	}
 
-	function dispute(bytes32 _hotelReservationId) onlyExistingForDispute(_hotelReservationId) public returns(bool success) {
+	function dispute(bytes32 _hotelReservationId) public returns(bool success) {
+		require(_hotelReservationId > 0);
 
-		IHotelReservation hotelReservationContract = IHotelReservation(disputeHotelReservations[_hotelReservationId].hotelReservationAddress);
+		IHotelReservation hotelReservationContract = IHotelReservation(hotelReservations[_hotelReservationId].hotelReservationAddress);
 
 		hotelReservationContract.validateDispute(msg.sender);
 		uint reservationCostLOC = hotelReservationContract.getHotelReservationCost();
-		unlinkDisputedHotelReservations(_hotelReservationId);
+		hotelReservationContract.setReservationDisputeStatus(true);
 		assert(LOCTokenContract.transfer(disputeDestinationAddress, reservationCostLOC));
 		LogDisputeCreated(_hotelReservationId, reservationCostLOC);
 

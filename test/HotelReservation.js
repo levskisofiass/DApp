@@ -26,6 +26,7 @@ contract('HotelReservation', function (accounts) {
 
 	let hotelReservationContract;
 	let reservationImpl;
+	let reservationOneDispute;
 
 	let hotelReservationFactory;
 	let hotelReservationFactoryProxy;
@@ -152,7 +153,7 @@ contract('HotelReservation', function (accounts) {
 			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 		});
 
-		it("should increase the dispute reservations array when creating reservations", async function () {
+		it("should set the dispute status of reservation to false, when creating a new reservation", async function () {
 
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
@@ -167,8 +168,14 @@ contract('HotelReservation', function (accounts) {
 					from: customerAddress
 				}
 			);
-			let reservationsCount = await hotelReservationContract.getHotelReservationsForDisputeCount();
-			assert.equal(reservationsCount, 1, "The array with hotel reservations for dispute was not increased");
+
+			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
+
+			const hotelReservationContractOne = IHotelReservation.at(reservationOneAddress);
+
+			const reservationStatus = await hotelReservationContractOne.getReservationDisputeStatus();
+
+			assert.equal(reservationStatus, false, "The hotel reservations dispute status is not correct");
 		});
 
 		it("should create new Hotel Reservation for today", async function () {
@@ -772,7 +779,7 @@ contract('HotelReservation', function (accounts) {
 			});
 			let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
 
-			await hotelReservationContract.createHotelReservation(
+			reservationOneDispute = await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
 				formatTimestamp(reservationStartDateTravel),
@@ -1059,6 +1066,24 @@ contract('HotelReservation', function (accounts) {
 			}))
 		});
 
+		it("should throw if the reservation is in dispute", async function () {
+
+			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
+			let reservationTwoAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationIdTwo)
+
+			const hotelReservationContractOne = IHotelReservation.at(reservationOneAddress);
+			const hotelReservationContractTwo = IHotelReservation.at(reservationOneAddress);
+
+			await hotelReservationContractOne.setReservationDisputeStatus(true);
+			await hotelReservationContractTwo.setReservationDisputeStatus(true);
+
+			let hotelReservations = [reservationOneAddress, reservationTwoAddress];
+
+			await expectThrow(hotelReservationContract.withdraw(hotelReservations, {
+				from: withdrawerAddress
+			}))
+		})
+
 	})
 
 
@@ -1118,11 +1143,13 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.dispute(hotelReservationId, {
 				from: customerAddress
 			});
+			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
+			const hotelReservationContractOne = IHotelReservation.at(reservationOneAddress);
+			const disputeReservationStatus = await hotelReservationContractOne.getReservationDisputeStatus();
 
-			let finalReservationsCount = await hotelReservationContract.getHotelReservationsForDisputeCount();
 			let destinationAddressFinalBalance = await ERC20Instance.balanceOf(disputeDestinationAddress);
 
-			assert.equal(finalReservationsCount, 0, "The dispute reservations were not unlinked");
+			assert.equal(disputeReservationStatus, true, "The dispute reservation's status was not changed");
 			assert(destinationAddressFinalBalance.eq(destinationAddressInitialBalance.plus(reservationCostLOC)), "The dispute wasnt' correct");
 		});
 
@@ -1160,15 +1187,6 @@ contract('HotelReservation', function (accounts) {
 
 			await expectThrow(hotelReservationContract.dispute(hotelReservationId, {
 				from: _owner
-			}))
-		});
-
-		it("should throw if the reservation doesn't exist in the dispute reservations array", async function () {
-			let futureDays = (day * 15)
-			await timeTravel(web3, futureDays);
-
-			await expectThrow(hotelReservationContract.dispute(hotelReservationIdTwo, {
-				from: customerAddress
 			}))
 		});
 

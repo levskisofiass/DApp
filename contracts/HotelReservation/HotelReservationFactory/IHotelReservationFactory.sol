@@ -9,7 +9,6 @@ contract IHotelReservationFactory is IOwnableUpgradeableImplementation {
 	address public withdrawDestinationAddress;
 	address public disputeDestinationAddress;
 	bytes32[] public hotelReservationIds;
-	bytes32[] public disputeHotelReservationIds;
 	uint public locRefundsRemainder;
 	uint public maxAllowedWithdrawCyclesCount;
 
@@ -36,8 +35,7 @@ event LogDisputeCreated(bytes32 _hotelReservationId, uint _locRefundsRemainder);
 	function getHotelReservationId(uint index) public view returns(bytes32 _hotelReservaionId);
     function getHotelReservationContractAddress(bytes32 _hotelReservationId) public view returns(address hotelReservationContract);
 	function getHotelReservationsCount() public view returns(uint _hotelReservationCount);
-	function getHotelReservationsForDisputeCount() public view returns(uint _hotelReservationCount);
-
+	
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
 	function cancelHotelReservation(bytes32 _hotelReservationId) returns(bool success);
 	function withdraw(address[] _hotelReservations) returns(bool success);
