@@ -158,10 +158,10 @@ contract('HotelReservation', function (accounts) {
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
-				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(currentTimeStampTravel),
 				formatTimestamp(reservationEndDateTravel),
-				daysBeforeStartForRefund,
-				refundPercentage,
+				zeroDaysBeforeRefund,
+				zeroRefundPercentage,
 				hotelId,
 				roomId,
 				numberOfTravelers, {

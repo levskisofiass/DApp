@@ -41,22 +41,27 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		_;
 	}
 
-	function validateCancelation(address _customerAddress) public view returns (bool success) {
+	function validateReservationForWithdraw() public view {
+		require(now > reservationEndDate);
+		require(isDisputeOpen != true);
+	}
+	
+	function validateCancelation(address _customerAddress) view returns (bool success) {
 		require(customerAddress == _customerAddress);
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
-			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) > reservationStartDate) {
-				continue;
-			}
-			if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
+			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
+				if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
 					return true;
 				}
+			}
 		}
 		return false;
 	}
 
-	function validateReservationForWithdraw() public view {
+	function validateDispute(address _customerAddress) public view {
 		require(now > reservationEndDate);
-		require(isDisputeOpen != true);
+		require(customerAddress == _customerAddress);
+		require(isDisputeOpen == false);
 	}
 
 	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) public view {
@@ -66,12 +71,6 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 			require(_refundPercentages[i] <= 100 && _refundPercentages[i] >= 0 );
 		}
 
-	}
-
-	function validateDispute(address _customerAddress) public view {
-		require(now > reservationEndDate);
-		require(customerAddress == _customerAddress);
-		require(isDisputeOpen == false);
 	}
 
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder) {
