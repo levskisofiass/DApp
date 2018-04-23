@@ -132,6 +132,7 @@ module.exports = async function (deployer, network, accounts) {
 
     await HotelReservationFactoryContract.setLOCTokenContractAddress(ERC20Instance.address);
     await HotelReservationFactoryContract.setmaxAllowedWithdrawCyclesCount(cyclesCountForWithdraw);
+    await HotelReservationFactoryContract.setDisputeDestinationAddress(accounts[1]);
 
     await ERC20Instance.mint(account1, 200000000000000000000000);
     await ERC20Instance.mint(account2, 200000000000000000000000);

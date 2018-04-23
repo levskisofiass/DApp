@@ -35,7 +35,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
         require(hotelReservations[_hotelReservationId].hotelReservationAddress == address(0));
         _;
     }
-	
+
 	modifier onlyWithdrawer() {
 		require(msg.sender == withdrawerAddress);
 		_;
@@ -178,8 +178,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		uint locRemainder;
 		IHotelReservation hotelReservationContract = IHotelReservation(hotelReservations[_hotelReservationId].hotelReservationAddress);
 		
-		bool isValidCancelation = hotelReservationContract.validateCancelation(msg.sender);
-		require(isValidCancelation == true);
+		require(hotelReservationContract.validateCancelation(msg.sender) != false);
 		unlinkHotelReservation(_hotelReservationId);
 		(locToBeRefunded, locRemainder) = hotelReservationContract.getLocToBeRefunded();
 
