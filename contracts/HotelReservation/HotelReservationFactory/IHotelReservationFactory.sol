@@ -4,14 +4,6 @@ import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradea
 
 contract IHotelReservationFactory is IOwnableUpgradeableImplementation {
 
-	address public implContract;
-	address public withdrawerAddress;
-	address public withdrawDestinationAddress;
-	address public disputeDestinationAddress;
-	bytes32[] public hotelReservationIds;
-	uint public locRefundsRemainder;
-	uint public maxAllowedWithdrawCyclesCount;
-
 event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _locRefundsRemainder);
 event LogWithdrawal(bytes32 _hotelReservationId, uint _withdrawnAmount);
@@ -50,4 +42,5 @@ event LogDisputeCreated(bytes32 _hotelReservationId, uint _locRefundsRemainder);
 	function dispute(bytes32 _hotelReservationId) public returns(bool success);
 	function setDisputeDestinationAddress(address _disputeDestinationAddress) public;
 	function getDisputeDestinationAddress() public view returns(address _disputeDestinationAddress);
+	function unlinkHotelReservation(bytes32 _hotelReservationId) private;
 }

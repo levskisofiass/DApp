@@ -429,6 +429,37 @@ contract('HotelReservation', function (accounts) {
 			));
 		})
 
+		it("should throw if you try to update existing reservation", async function () {
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysBeforeStartForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+
+			await expectThrow(hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				newReservationCostLOC,
+				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysBeforeStartForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			));
+
+		})
+
 	});
 
 	describe("cancel hotel reservation", () => {
@@ -1068,14 +1099,21 @@ contract('HotelReservation', function (accounts) {
 
 		it("should throw if the reservation is in dispute", async function () {
 
+			let futureDays = (day * 15)
+			await timeTravel(web3, futureDays);
+			await hotelReservationContract.setDisputeDestinationAddress(disputeDestinationAddress, {
+				from: _owner
+			});
+
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
 			let reservationTwoAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationIdTwo)
 
-			const hotelReservationContractOne = IHotelReservation.at(reservationOneAddress);
-			const hotelReservationContractTwo = IHotelReservation.at(reservationOneAddress);
-
-			await hotelReservationContractOne.setReservationDisputeStatus(true);
-			await hotelReservationContractTwo.setReservationDisputeStatus(true);
+			await hotelReservationContract.dispute(hotelReservationId, {
+				from: customerAddress
+			});
+			await hotelReservationContract.dispute(hotelReservationIdTwo, {
+				from: customerAddress
+			});
 
 			let hotelReservations = [reservationOneAddress, reservationTwoAddress];
 
@@ -1204,6 +1242,12 @@ contract('HotelReservation', function (accounts) {
 			}))
 		});
 
+		it("should throw if you try to change the dispute status of the reservation directly on the contract", async function () {
+
+			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
+			const hotelReservationContractOne = IHotelReservation.at(reservationOneAddress);
+			await expectThrow(hotelReservationContractOne.setReservationDisputeStatus(true));
+		})
 	})
 
 

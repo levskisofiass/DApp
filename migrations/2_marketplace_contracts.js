@@ -142,8 +142,6 @@ module.exports = async function (deployer, network, accounts) {
     await ERC20Instance.mint(ropstenAcc, 200000000000000000000000);
     await ERC20Instance.mint(lockchainAcc, 200000000000000000000000);
     await ERC20Instance.mint(accounts[0], 200000000000000000000000);
-    // console.log(LOCExchangeInstance.address);
-    // console.log(accounts[0])
     await web3.eth.sendTransaction({
         from: accounts[0],
         to: LOCExchangeInstance.address,

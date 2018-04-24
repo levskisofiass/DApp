@@ -111,7 +111,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		return withdrawDestinationAddress;
 	}
 
-	function unlinkHotelReservation(bytes32 _hotelReservationId) private view {
+	function unlinkHotelReservation(bytes32 _hotelReservationId) private {
         bytes32 lastId = hotelReservationIds[hotelReservationIds.length-1];
 		hotelReservationIds[hotelReservations[_hotelReservationId].hotelReservationArrayIndex] = lastId;
         hotelReservationIds.length--;
@@ -163,8 +163,10 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		);
 
 	hotelReservationIds.push(_hotelReservationId);
-	hotelReservations[_hotelReservationId].hotelReservationAddress = hotelReservationContract;
-	hotelReservations[_hotelReservationId].hotelReservationArrayIndex = (hotelReservationIds.length - 1);
+	hotelReservations[_hotelReservationId] = HotelReservationStruct({
+            hotelReservationAddress: hotelReservationContract,
+            hotelReservationArrayIndex: (hotelReservationIds.length - 1)       
+        });
 
 	assert(LOCTokenContract.transferFrom(msg.sender, this, _reservationCostLOC));
 

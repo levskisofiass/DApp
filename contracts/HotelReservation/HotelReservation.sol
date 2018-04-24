@@ -10,12 +10,13 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	uint reservationCostLOC;
 	uint reservationStartDate;
 	uint reservationEndDate;
-	uint[] daysBeforeStartForRefund;
-	uint[] refundPercentages;
 	bytes32 hotelId;
 	bytes32 roomId;
 	uint numberOfTravelers;
 	bool isDisputeOpen;
+	address factoryAddress;
+	uint[] daysBeforeStartForRefund;
+	uint[] refundPercentages;
 
 	StandardToken public LOCTokenContract;
 	IHotelReservation public hotelReservationContract;
@@ -38,6 +39,11 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	modifier onlyNewReservations() {
 		require(hotelReservationId == "");
+		_;
+	}
+
+	modifier onlyReservationFactory() {
+		require(factoryAddress == msg.sender);
 		_;
 	}
 
@@ -103,7 +109,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		return reservationCostLOC;
 	}
 
-	function setReservationDisputeStatus(bool _isDisputeOpen) public {
+	function setReservationDisputeStatus(bool _isDisputeOpen) public onlyReservationFactory {
 		isDisputeOpen = _isDisputeOpen;
 	}
 
@@ -165,6 +171,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		roomId = _roomId;
 		numberOfTravelers = _numberOfTravelers;
 		isDisputeOpen = false;
+		factoryAddress = msg.sender;
 
 		LogCreateHotelReservation(_hotelReservationId, _customerAddress, _reservationStartDate, _reservationEndDate);
 		return true;
