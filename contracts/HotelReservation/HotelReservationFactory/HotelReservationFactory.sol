@@ -180,7 +180,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		uint locRemainder;
 		IHotelReservation hotelReservationContract = IHotelReservation(hotelReservations[_hotelReservationId].hotelReservationAddress);
 		
-		require(hotelReservationContract.validateCancelation(msg.sender) != false);
+		require(hotelReservationContract.validateCancelation(msg.sender));
 		unlinkHotelReservation(_hotelReservationId);
 		(locToBeRefunded, locRemainder) = hotelReservationContract.getLocToBeRefunded();
 

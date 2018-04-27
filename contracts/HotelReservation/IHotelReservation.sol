@@ -35,14 +35,14 @@ event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAd
 		bool _isDisputeOpen);
 
 	function validateCancelation(address _customerAddress) public view returns (bool success);
-	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) public view;
+	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) public view returns (bool success);
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder);
 	function getCustomerAddress() public view returns (address _customerAddress);
-	function validateReservationForWithdraw() public view;
+	function validateReservationForWithdraw() public view returns (bool success);
 	function getLocForWithdraw() public view returns  (uint _locAmountForWithdraw);
 	function getHotelReservationId() public view returns (bytes32 _hotelReservationId);
 	function getHotelReservationCost() public view returns (uint _hotelReservationCostLOC);
-	function validateDispute(address _customerAddress) public view;
+	function validateDispute(address _customerAddress) public view returns (bool success);
 	function getReservationDisputeStatus() public view returns (bool _isDisputeOpen);
-	function setReservationDisputeStatus(bool _isDisputeOpen) public ;
+	function setReservationDisputeStatus(bool _isDisputeOpen) public;
 }
