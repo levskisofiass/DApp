@@ -132,17 +132,16 @@ module.exports = async function (deployer, network, accounts) {
 
     await HotelReservationFactoryContract.setLOCTokenContractAddress(ERC20Instance.address);
     await HotelReservationFactoryContract.setmaxAllowedWithdrawCyclesCount(cyclesCountForWithdraw);
+    await HotelReservationFactoryContract.setDisputeDestinationAddress(accounts[0]);
 
     await ERC20Instance.mint(account1, 200000000000000000000000);
     await ERC20Instance.mint(account2, 200000000000000000000000);
     await ERC20Instance.mint(account3, 400000000000000000000000000);
     await ERC20Instance.mint(account4, 200000000000000000000000);
     await ERC20Instance.mint(account5, 200000000000000000000000);
-    await ERC20Instance.mint(ropstenAcc, 200000000000000000000000);
+    await ERC20Instance.mint(ropstenAcc, 400000000000000000000000000);
     await ERC20Instance.mint(lockchainAcc, 200000000000000000000000);
-    await ERC20Instance.mint(accounts[0], 200000000000000000000000);
-    // console.log(LOCExchangeInstance.address);
-    // console.log(accounts[0])
+    await ERC20Instance.mint(accounts[0], 400000000000000000000000);
     await web3.eth.sendTransaction({
         from: accounts[0],
         to: LOCExchangeInstance.address,
