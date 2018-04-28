@@ -10,11 +10,13 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	uint reservationCostLOC;
 	uint reservationStartDate;
 	uint reservationEndDate;
-	uint[] daysBeforeStartForRefund;
-	uint[] refundPercentages;
 	bytes32 hotelId;
 	bytes32 roomId;
 	uint numberOfTravelers;
+	bool isDisputeOpen;
+	address factoryAddress;
+	uint[] daysBeforeStartForRefund;
+	uint[] refundPercentages;
 
 	StandardToken public LOCTokenContract;
 	IHotelReservation public hotelReservationContract;
@@ -35,29 +37,49 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		_; 
 	}
 
+	modifier onlyNewReservations() {
+		require(hotelReservationId == "");
+		_;
+	}
+
+	modifier onlyReservationFactory() {
+		require(factoryAddress == msg.sender);
+		_;
+	}
+
+	function validateReservationForWithdraw() public view returns (bool success) {
+		require(now > reservationEndDate);
+		require(!isDisputeOpen);
+	}
+	
 	function validateCancelation(address _customerAddress) view returns (bool success) {
 		require(customerAddress == _customerAddress);
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
-			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
-				if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
+			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) > reservationStartDate) {
+				continue;
+			}
+			if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
 					return true;
 				}
-			}
 		}
 		return false;
 	}
 
-	function validatePeriodForWithdraw() public view {
+	function validateDispute(address _customerAddress) public view returns (bool success) {
 		require(now > reservationEndDate);
+		require(customerAddress == _customerAddress);
+		require(!isDisputeOpen);
+
+		return true ;
 	}
 
-	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) public view {
+	function validateRefundForCreation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages, uint _startDate) public view returns (bool success) {
 		
 		for (uint i = 0 ; i < _daysBeforeStartForRefund.length; i++) {
 			require((now + ( _daysBeforeStartForRefund[i] * 1 days )) <= _startDate);
 			require(_refundPercentages[i] <= 100 && _refundPercentages[i] >= 0 );
 		}
-
+		return true;
 	}
 
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder) {
@@ -85,6 +107,18 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		return hotelReservationId;
 	}
 
+	function getHotelReservationCost() public view returns (uint _hotelReservationCostLOC) {
+		return reservationCostLOC;
+	}
+
+	function setReservationDisputeStatus(bool _isDisputeOpen) public onlyReservationFactory {
+		isDisputeOpen = _isDisputeOpen;
+	}
+
+	function getReservationDisputeStatus() public view returns (bool _isDisputeOpen) {
+		return isDisputeOpen;
+	}
+
 	function getHotelReservation() public view 
 	returns(
 		bytes32 _hotelReservationId,
@@ -96,7 +130,8 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		uint[] _refundPercentages,
 		bytes32 _hotelId,
 		bytes32 _roomId,
-		uint _numberOfTravelers)
+		uint _numberOfTravelers,
+		bool _isDisputeOpen)
 		{
 			return (
 			hotelReservationId,
@@ -108,7 +143,8 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 			refundPercentages,
 			hotelId,
 			roomId,
-			numberOfTravelers);
+			numberOfTravelers,
+			isDisputeOpen);
 		}
 
 	function createHotelReservation(
@@ -122,7 +158,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		bytes32 _hotelId,
 		bytes32 _roomId,
 		uint _numberOfTravelers
-	) public onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate) onlyValidArraysForCancelation(_daysBeforeStartForRefund,_refundPercentages) returns(bool success) 
+	) public onlyNewReservations onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate) onlyValidArraysForCancelation(_daysBeforeStartForRefund,_refundPercentages) returns(bool success) 
 		{
 		validateRefundForCreation(_daysBeforeStartForRefund,_refundPercentages, _reservationStartDate);
 
@@ -136,6 +172,8 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 		hotelId = _hotelId;
 		roomId = _roomId;
 		numberOfTravelers = _numberOfTravelers;
+		isDisputeOpen = false;
+		factoryAddress = msg.sender;
 
 		LogCreateHotelReservation(_hotelReservationId, _customerAddress, _reservationStartDate, _reservationEndDate);
 		return true;
