@@ -8,8 +8,8 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	bytes32 hotelReservationId;
 	address customerAddress;
 	uint reservationCostLOC;
-	uint reservationStartDate;
-	uint reservationEndDate;
+	uint reservationStartDate; //Check-in date
+	uint reservationEndDate; //Check-out date
 	bytes32 hotelId;
 	bytes32 roomId;
 	uint numberOfTravelers;
@@ -66,7 +66,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	}
 
 	function validateDispute(address _customerAddress) public view returns (bool success) {
-		require(now > reservationEndDate);
+		require(now > reservationStartDate && now < reservationEndDate);
 		require(customerAddress == _customerAddress);
 		require(!isDisputeOpen);
 

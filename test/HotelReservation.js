@@ -1099,7 +1099,7 @@ contract('HotelReservation', function (accounts) {
 
 		it("should throw if the reservation is in dispute", async function () {
 
-			let futureDays = (day * 15)
+			let futureDays = (day * 11)
 			await timeTravel(web3, futureDays);
 			await hotelReservationContract.setDisputeDestinationAddress(disputeDestinationAddress, {
 				from: _owner
@@ -1173,7 +1173,7 @@ contract('HotelReservation', function (accounts) {
 		})
 
 		it("should open a dispute", async function () {
-			let futureDays = (day * 15)
+			let futureDays = (day * 11)
 			await timeTravel(web3, futureDays);
 
 			let destinationAddressInitialBalance = await ERC20Instance.balanceOf(disputeDestinationAddress);
@@ -1201,7 +1201,7 @@ contract('HotelReservation', function (accounts) {
 		});
 
 		it("should emit one event when opening a dispute", async function () {
-			let futureDays = (day * 15)
+			let futureDays = (day * 11)
 			await timeTravel(web3, futureDays);
 			const expectedEvent = 'LogDisputeCreated';
 
@@ -1212,15 +1212,23 @@ contract('HotelReservation', function (accounts) {
 			assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
 		});
 
-		it("should throw when trying to open a dispute before end of the reservations", async function () {
+		it("should throw when trying to open a dispute before start date of the reservations", async function () {
 
 			await expectThrow(hotelReservationContract.dispute(hotelReservationId, {
 				from: customerAddress
 			}))
 		});
 
-		it("should throw if user different from the customer tries to open a dispute", async function () {
+		it("should throw when trying to open a dispute after the end date of the reservations", async function () {
 			let futureDays = (day * 15)
+			await timeTravel(web3, futureDays);
+			await expectThrow(hotelReservationContract.dispute(hotelReservationId, {
+				from: customerAddress
+			}))
+		});
+
+		it("should throw if user different from the customer tries to open a dispute", async function () {
+			let futureDays = (day * 11)
 			await timeTravel(web3, futureDays);
 
 			await expectThrow(hotelReservationContract.dispute(hotelReservationId, {
@@ -1230,7 +1238,7 @@ contract('HotelReservation', function (accounts) {
 
 		it("should throw if you try to open more than one dispute for the same reservation", async function () {
 
-			let futureDays = (day * 15)
+			let futureDays = (day * 11)
 			await timeTravel(web3, futureDays);
 
 			await hotelReservationContract.dispute(hotelReservationId, {
