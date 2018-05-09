@@ -9,28 +9,31 @@ contract IRental is IOwnableUpgradeableImplementation {
 
     function createRental(
         bytes32 _rentalId,
-		bytes32 _marketplaceId, 
         address _hostAddress,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
         uint _rentalArrayIndex,
         bool _isInstantBooking,
-        address _rentalFactoryContractAddress
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle
 		) public returns(bool success);
 
     function updateRental(
-        bytes32 _rentalId,
-		bytes32 _marketplaceId,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+      bytes32 _rentalId,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
         bool _isInstantBooking,
-        address _newHostAddress
+        address _newHostAddress,
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle
         ) public returns(bool success);
 
     function validateUpdate(
@@ -40,16 +43,18 @@ contract IRental is IOwnableUpgradeableImplementation {
 
     function getRental() public constant
         returns(
-            bytes32 rentalId,
-            address hostAddress, 
-            bytes32 marketplaceId, 
-            uint workingDayPrice, 
-            uint nonWorkingDayPrice,
-            uint cleaningFee, 
-            uint refundPercent, 
-            uint daysBeforeStartForRefund, 
-            uint rentalArrayIndex,
-            bool isInstantBooking);
+            bytes32 _rentalId,
+            address _hostAddress,  
+            uint _defaultDailyRate, 
+            uint _weekendRate,
+            uint _cleaningFee, 
+            uint[] _refundPercent, 
+            uint[] _daysBeforeStartForRefund, 
+            uint _rentalArrayIndex,
+            bool _isInstantBooking,
+            uint _deposit,
+            uint _minNightsStay,
+            string _rentalTitle);
 
     function setPrice(uint256 _timestampStart, uint256 _timestampEnd, uint256 _price) public returns(bool success);
 

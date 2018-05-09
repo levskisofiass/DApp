@@ -43,8 +43,8 @@ contract('Rental', function (accounts) {
   const _rentalId2 = "testId223";
   const _marketplaceId = "ID123";
   const _marketplaceIdUpdate = "ID1234";
-  const _workingDayPrice = '1000000000000000000';
-  const _workingDayPriceUpdate = '2000000000000000000';
+  const _defaultDailyRate = '1000000000000000000';
+  const _defaultDailyRateUpdate = '2000000000000000000';
   const _nonWorkingDayPriceUpdate = '3000000000000000000';
   const _nonWorkingDayPrice = '2000000000000000000';
   const _cleaningFee = '100000000000000000';
@@ -99,11 +99,11 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should create new Rental from Marketplace contract and Rental factory contract", async() => {
+    it("should create new Rental from Marketplace contract and Rental factory contract", async () => {
       let result = await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -116,11 +116,11 @@ contract('Rental', function (accounts) {
       assert(rentalsCount.eq(1), "The rentals count was not correct");
     });
 
-    it("should throw on creating second rental in same contract", async() => {
+    it("should throw on creating second rental in same contract", async () => {
       let result = await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -137,7 +137,7 @@ contract('Rental', function (accounts) {
         _rentalId2,
         _marketplaceId,
         _rentalHost,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -150,11 +150,11 @@ contract('Rental', function (accounts) {
       ));
     });
 
-    it("should throw on creating rental with empty rentalId", async() => {
+    it("should throw on creating rental with empty rentalId", async () => {
       await expectThrow(marketplaceContract.createRental(
         "",
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -204,7 +204,7 @@ contract('Rental', function (accounts) {
       await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -223,7 +223,7 @@ contract('Rental', function (accounts) {
       let result = await rentalContract.updateRental(
         _rentalId,
         _marketplaceIdUpdate,
-        _workingDayPriceUpdate,
+        _defaultDailyRateUpdate,
         _nonWorkingDayPriceUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
@@ -241,7 +241,7 @@ contract('Rental', function (accounts) {
       await rentalContract.updateRental(
         _rentalId,
         _marketplaceIdUpdate,
-        _workingDayPriceUpdate,
+        _defaultDailyRateUpdate,
         _nonWorkingDayPriceUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
@@ -255,7 +255,7 @@ contract('Rental', function (accounts) {
       let result = await rentalContract.getRental();
       assert.strictEqual(result[1].toString(), _rentalHostUpdate, "The Host was not update correctly")
       assert.strictEqual(web3.utils.hexToUtf8(result[2]), _marketplaceIdUpdate, "The marketplaceId was not update correctly")
-      assert.strictEqual(result[3].toString(), _workingDayPriceUpdate, "The workingDayPrice was not update correctly");
+      assert.strictEqual(result[3].toString(), _defaultDailyRateUpdate, "The workingDayPrice was not update correctly");
       assert.strictEqual(result[4].toString(), _nonWorkingDayPriceUpdate, "The nonWorkingDayPrice was not update correctly");
       assert.strictEqual(result[5].toString(), _cleaningFeeUpdate, "The cleaningFee was not update correctly");
       assert.strictEqual(result[6].toString(), _refundPercentUpdate, "The refundPercent was not update correctly");
@@ -267,7 +267,7 @@ contract('Rental', function (accounts) {
       await expectThrow(rentalContract.updateRental(
         "",
         _marketplaceIdUpdate,
-        _workingDayPriceUpdate,
+        _defaultDailyRateUpdate,
         _nonWorkingDayPriceUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
@@ -282,7 +282,7 @@ contract('Rental', function (accounts) {
       await expectThrow(rentalContract.updateRental(
         _rentalId2,
         _marketplaceIdUpdate,
-        _workingDayPriceUpdate,
+        _defaultDailyRateUpdate,
         _nonWorkingDayPriceUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
@@ -297,7 +297,7 @@ contract('Rental', function (accounts) {
       await expectThrow(rentalContract.updateRental(
         _rentalId,
         _marketplaceIdUpdate,
-        _workingDayPriceUpdate,
+        _defaultDailyRateUpdate,
         _nonWorkingDayPriceUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
@@ -312,7 +312,7 @@ contract('Rental', function (accounts) {
       await expectThrow(rentalContract.updateRental(
         _rentalId,
         _marketplaceIdUpdate,
-        _workingDayPriceUpdate,
+        _defaultDailyRateUpdate,
         _nonWorkingDayPriceUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
@@ -328,7 +328,7 @@ contract('Rental', function (accounts) {
       let result = await rentalContract.updateRental(
         _rentalId,
         _marketplaceIdUpdate,
-        _workingDayPriceUpdate,
+        _defaultDailyRateUpdate,
         _nonWorkingDayPriceUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
@@ -392,7 +392,7 @@ contract('Rental', function (accounts) {
       await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -409,7 +409,7 @@ contract('Rental', function (accounts) {
       rentalContract = await IRental.at(rentalContractAddress);
     });
 
-    it("should set different price rental for some days", async() => {
+    it("should set different price rental for some days", async () => {
       await rentalContract.setPrice(
         timestampStart,
         timestampEnd,
@@ -425,7 +425,7 @@ contract('Rental', function (accounts) {
       }
     });
 
-    it("should set different price rental for one day", async() => {
+    it("should set different price rental for one day", async () => {
       await rentalContract.setPrice(
         timestampStart,
         timestampStart,
@@ -439,7 +439,7 @@ contract('Rental', function (accounts) {
     });
 
 
-    it("should set different price rental for two days", async() => {
+    it("should set different price rental for two days", async () => {
       await rentalContract.setPrice(
         timestampStart,
         timestampStart,
@@ -463,7 +463,7 @@ contract('Rental', function (accounts) {
       assert(amount.eq(price), "The price was not correct set in endday");
     });
 
-    it("should set different price rental for one day and for another day should be the default price", async() => {
+    it("should set different price rental for one day and for another day should be the default price", async () => {
       await rentalContract.setPrice(
         timestampStart,
         timestampStart,
@@ -476,10 +476,10 @@ contract('Rental', function (accounts) {
       assert(amount.eq(price), "The price was not correct set in startday");
 
       amount = await rentalContract.getPrice(timestampEnd);
-      assert(amount.eq(_workingDayPrice), "The price was not correct in endday");
+      assert(amount.eq(_defaultDailyRate), "The price was not correct in endday");
     });
 
-    it("should throw when non-host trying to set price", async() => {
+    it("should throw when non-host trying to set price", async () => {
       await expectThrow(
         rentalContract.setPrice(
           timestampEnd,
@@ -491,7 +491,7 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should throw on endDay < startDay", async() => {
+    it("should throw on endDay < startDay", async () => {
       await expectThrow(
         rentalContract.setPrice(
           timestampEnd,
@@ -503,7 +503,7 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should throw on startDay < now", async() => {
+    it("should throw on startDay < now", async () => {
       await expectThrow(
         rentalContract.setPrice(
           timestampStart - (86400 * 4),
@@ -515,7 +515,7 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should throw on endDay < now", async() => {
+    it("should throw on endDay < now", async () => {
       await expectThrow(
         rentalContract.setPrice(
           timestampStart,
@@ -527,7 +527,7 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should throw on price < 0", async() => {
+    it("should throw on price < 0", async () => {
       await expectThrow(
         rentalContract.setPrice(
           timestampStart,
@@ -539,7 +539,7 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should throw on interval pricing > max booking days interval", async() => {
+    it("should throw on interval pricing > max booking days interval", async () => {
       await expectThrow(
         rentalContract.setPrice(
           timestampStart,
@@ -551,7 +551,7 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should throw on get price with timestamp = 0", async() => {
+    it("should throw on get price with timestamp = 0", async () => {
       await expectThrow(
         rentalContract.getPrice(0)
       );
@@ -594,11 +594,11 @@ contract('Rental', function (accounts) {
       );
     });
 
-    it("should change rental implementation and keep storage", async() => {
+    it("should change rental implementation and keep storage", async () => {
       let result = await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -619,11 +619,11 @@ contract('Rental', function (accounts) {
       assert(rentalsCount.eq(1), "The rentals count was not correct");
     });
 
-    it("should change rental implementation and add new function", async() => {
+    it("should change rental implementation and add new function", async () => {
       await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,
@@ -651,11 +651,11 @@ contract('Rental', function (accounts) {
       assert(rentalsCount.eq(1), "The rentals count was not correct");
     });
 
-    it("should throw when using new function without upgrade", async() => {
+    it("should throw when using new function without upgrade", async () => {
       await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
-        _workingDayPrice,
+        _defaultDailyRate,
         _nonWorkingDayPrice,
         _cleaningFee,
         _refundPercent,

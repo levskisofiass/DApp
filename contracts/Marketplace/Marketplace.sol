@@ -94,6 +94,13 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         _;
     }
 
+    modifier onlyValidMarketplace(bytes32 marketplaceId) {
+        require(marketplaceId != "");
+        require(marketplaces[marketplaceId].isApproved);
+        require(!marketplaces[marketplaceId].isActive);
+        _;
+    }
+
     function isApprovedMarketplace(bytes32 marketplaceId) public constant returns(bool result) {
         return marketplaces[marketplaceId].isApproved;
     }
@@ -158,7 +165,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 		bytes32 _disputeAPI,
 		address _exchangeContractAddress,
         address _newAdmin
-		) public onlyAdmin(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success)
+		) public onlyValidMarketplace(_marketplaceId) whenNotPaused returns(bool success)
 	{
         require(_url != "");
         require(_rentalAPI != "");
@@ -216,27 +223,40 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return !approveOnCreation;
     }
 
+    function getRentalAndMarketplaceHash(bytes32 _rentalId, bytes32 _marketplaceId) public pure returns(bytes32 _rentalIdHash) {
+        return keccak256(_rentalId,_marketplaceId);
+    }
+
     function createRental(
         bytes32 _rentalId,
 		bytes32 _marketplaceId, 
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
+        bool _isInstantBooking,
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle
+    ) public onlyValidMarketplace(_marketplaceId) whenNotPaused returns(bool success) 
     {
+
+        bytes32 _rentalIdHash = getRentalAndMarketplaceHash(_rentalId,_marketplaceId);
+
         RentalFactoryContract.createNewRental(
-            _rentalId,
-            _marketplaceId, 
+            _rentalIdHash,
             msg.sender,
-            _workingDayPrice,
-            _nonWorkingDayPrice,
+            _defaultDailyRate,
+            _weekendRate,
             _cleaningFee,
-            _refundPercent,
+            _refundPercentages,
             _daysBeforeStartForRefund,
-            _isInstantBooking
+            _isInstantBooking,
+            _deposit,
+            _minNightsStay,
+            _rentalTitle
+
         );
 
         LogCreateRentalFromMarketplace(_rentalId, msg.sender, _marketplaceId);
@@ -249,7 +269,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 		bytes32 _marketplaceId, 
         uint _roomsCount,
         bytes32 _roomsType,
-        uint _workingDayPrice
+        uint _defaultDailyRate
     ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns (bool success)
     {
         HotelFactoryContract.createHotelRooms(
@@ -258,7 +278,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
             msg.sender,
             _roomsCount,
             _roomsType,
-            _workingDayPrice
+            _defaultDailyRate
         );
 
         LogCreateHotelFromMarketplace(_hotelId, msg.sender, _marketplaceId);

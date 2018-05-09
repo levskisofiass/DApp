@@ -48,14 +48,16 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
 
     function createNewRental(
         bytes32 _rentalId,
-		bytes32 _marketplaceId, 
         address _hostAddress,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
+        bool _isInstantBooking,
+        uint deposit,
+        uint minNightsStay,
+        string rentalTitle
 		) public returns(bool success)
 	{
         require(_hostAddress != address(0));
@@ -66,16 +68,18 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
 
         rentalContract.createRental(
             _rentalId,
-            _marketplaceId, 
             _hostAddress,
-            _workingDayPrice,
-            _nonWorkingDayPrice,
+            _defaultDailyRate,
+            _weekendRate,
             _cleaningFee,
-            _refundPercent,
+            _refundPercentages,
             _daysBeforeStartForRefund,
             rentalIds.length,
             _isInstantBooking,
-            this
+            deposit,
+            minNightsStay,
+            rentalTitle
+            
         );
 		rentals[_rentalId] = rentalContract;
         rentalIds.push(_rentalId);

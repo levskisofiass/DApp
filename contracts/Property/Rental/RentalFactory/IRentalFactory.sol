@@ -14,14 +14,16 @@ contract IRentalFactory is IOwnableUpgradeableImplementation, IPropertyFactory {
 
     function createNewRental(
         bytes32 _rentalId,
-		bytes32 _marketplaceId, 
         address _hostAddress,
 		uint _workingDayPrice,
         uint _nonWorkingDayPrice,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
+        bool _isInstantBooking,
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle
 		) public returns(bool success);
 
     function rentalsCount() public constant returns(uint);

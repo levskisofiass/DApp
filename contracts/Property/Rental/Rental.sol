@@ -6,20 +6,22 @@ import "./RentalFactory/IRentalFactory.sol";
 
 contract Rental is IRental, OwnableUpgradeableImplementation {
     bytes32 rentalId;
-    bytes32 marketplaceId;
     address hostAddress;
-    uint workingDayPrice;
-    uint nonWorkingDayPrice;
+    uint defaultDailyRate;
+    uint weekendRate;
     uint cleaningFee;
-    uint refundPercent;
-    uint daysBeforeStartForRefund;
+    uint[] refundPercentages;
+    uint[] daysBeforeStartForRefund;
     uint rentalArrayIndex;
     bool isInstantBooking;
     address rentalFactoryContractAddress;
-    mapping (uint256 => uint256) public timestampPrices;
+    uint deposit;
+    uint minNightsStay;
+    string rentalTitle;
+    mapping (uint256 => uint256) public customRate;
 
     event LogCreateRental(bytes32 _rentalId, address _hostAddress);
-    event LogUpdateRental(bytes32 _marketplaceId, bytes32 _rentalId, address _newHostAddress);
+    event LogUpdateRental( bytes32 _rentalId, address _newHostAddress);
     event LogSetPriceRental(bytes32 rentalId, uint256 timestamp, uint256 price);
 
     /**
@@ -43,55 +45,62 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
     function getRental() public constant
         returns(
             bytes32 _rentalId,
-            address _hostAddress, 
-            bytes32 _marketplaceId, 
-            uint _workingDayPrice, 
-            uint _nonWorkingDayPrice,
+            address _hostAddress,  
+            uint _defaultDailyRate, 
+            uint _weekendRate,
             uint _cleaningFee, 
-            uint _refundPercent, 
-            uint _daysBeforeStartForRefund, 
+            uint[] _refundPercentages, 
+            uint[] _daysBeforeStartForRefund, 
             uint _rentalArrayIndex,
-            bool _isInstantBooking)
+            bool _isInstantBooking,
+            uint _deposit,
+            uint _minNightsStay,
+            string _rentalTitle)
     {
         return (
             rentalId,
             hostAddress,
-            marketplaceId,
-            workingDayPrice,
-            nonWorkingDayPrice,
+            defaultDailyRate,
+            weekendRate,
             cleaningFee,
-            refundPercent,
+            refundPercentages,
             daysBeforeStartForRefund,
             rentalArrayIndex,
-            isInstantBooking
+            isInstantBooking,
+            deposit,
+            minNightsStay,
+            rentalTitle
         );
     }
 
     function createRental(
         bytes32 _rentalId,
-		bytes32 _marketplaceId, 
         address _hostAddress,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
         uint _rentalArrayIndex,
         bool _isInstantBooking,
-        address _rentalFactoryContractAddress
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle
 		) public onlyNewRental onlyValidRental(_rentalId) returns(bool success)
 	{
         rentalId = _rentalId;
         hostAddress = _hostAddress;
-        marketplaceId = _marketplaceId;
-        workingDayPrice = _workingDayPrice;
-        nonWorkingDayPrice = _nonWorkingDayPrice;
+        defaultDailyRate = _defaultDailyRate;
+        weekendRate = _weekendRate;
         cleaningFee = _cleaningFee;
-        refundPercent = _refundPercent;
+        refundPercentages = _refundPercentages;
         daysBeforeStartForRefund = _daysBeforeStartForRefund;
         rentalArrayIndex = _rentalArrayIndex;
         isInstantBooking = _isInstantBooking;
-        rentalFactoryContractAddress = _rentalFactoryContractAddress;
+        rentalFactoryContractAddress = msg.sender;
+        deposit = _deposit;
+        minNightsStay = _minNightsStay;
+        rentalTitle = _rentalTitle;
 
         LogCreateRental(_rentalId, _hostAddress);
         
@@ -111,28 +120,32 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
 
     function updateRental(
         bytes32 _rentalId,
-		bytes32 _marketplaceId,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
         bool _isInstantBooking,
-        address _newHostAddress
+        address _newHostAddress,
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle
     ) public returns(bool success)
     {
         validateUpdate(_rentalId, _newHostAddress);
      
-        marketplaceId = _marketplaceId;
         hostAddress = _newHostAddress;
-        workingDayPrice = _workingDayPrice;
-        nonWorkingDayPrice = _nonWorkingDayPrice;
+        defaultDailyRate = _defaultDailyRate;
+        weekendRate = _weekendRate;
         cleaningFee = _cleaningFee;
-        refundPercent = _refundPercent;
+        refundPercentages = _refundPercentages;
         daysBeforeStartForRefund = _daysBeforeStartForRefund;
         isInstantBooking = _isInstantBooking;
+        deposit = _deposit;
+        minNightsStay = _minNightsStay;
+        rentalTitle = _rentalTitle;
 
-        LogUpdateRental(_marketplaceId, _rentalId, _newHostAddress);
+        LogUpdateRental( _rentalId, _newHostAddress);
 
         return true;
     }
@@ -157,7 +170,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         require((_timestampEnd - _timestampStart) <= rentalFactoryContract.getMaxBookingPeriod() * 1 days);
 
         for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
-            timestampPrices[day] = _price;
+            customRate[day] = _price;
             LogSetPriceRental(rentalId, day, _price);
         }
 
@@ -171,9 +184,9 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
     function getPrice(uint256 _timestamp) public constant returns(uint256 price) {
         require(_timestamp > 0);
 
-        if (timestampPrices[_timestamp] > 0) 
-            return timestampPrices[_timestamp];
+        if (customRate[_timestamp] > 0) 
+            return customRate[_timestamp];
         else
-            return workingDayPrice;
+            return defaultDailyRate;
     }
 }
