@@ -45,18 +45,31 @@ contract('Rental', function (accounts) {
   const _marketplaceIdUpdate = "ID1234";
   const _defaultDailyRate = '1000000000000000000';
   const _defaultDailyRateUpdate = '2000000000000000000';
-  const _nonWorkingDayPriceUpdate = '3000000000000000000';
-  const _nonWorkingDayPrice = '2000000000000000000';
+  const _weekendRateUpdate = '3000000000000000000';
+  const _weekendRate = '2000000000000000000';
   const _cleaningFee = '100000000000000000';
   const _cleaningFeeUpdate = '400000000000000000';
   const _cleaningFee2 = '200000000000000000';
-  const _refundPercent = '80';
-  const _refundPercentUpdate = '50';
-  const _daysBeforeStartForRefund = '10';
-  const _daysBeforeStartForRefundUpdate = '5';
-  const _arrayIndex = 1;
+  const _refundPercentages = ['80'];
+  const _refundPercentUpdate = ['50'];
+  const _daysBeforeStartForRefund = ['10'];
+  const _daysBeforeStartForRefundUpdate = ['5'];
+  const _rentalArrayIndex = 1;
   const _isInstantBooking = true;
   const _isInstantBookingUpdate = false;
+  const _hostAddress = accounts[0]
+  const _deposit = '2000000000000000000'
+  const _minNightsStay = '2'
+  const _rentalTitle = 'Great Rental'
+  const _depositUpdate = '300000000000';
+  const _minNightsStayUpadate = '4';
+  const _rentalTitleUpdate = 'Poor Rental'
+
+  const _wrongRefundPercentages = ['80', '70'];
+  const _wrongRefundDays = ['3', '2'];
+  const _greaterRefundPercentages = ['90', '80', '70', '60', '50', '40', '30', '20'];
+  const _greaterRefundDays = ['10', '9', '8', '7', '6', '5', '4', '3'];
+  const _greaterThanFullRefund = ['101']
 
   const _url = "https://lockchain.co/marketplace";
   const _rentalAPI = "https://lockchain.co/RentalAPI";
@@ -100,15 +113,19 @@ contract('Rental', function (accounts) {
     });
 
     it("should create new Rental from Marketplace contract and Rental factory contract", async () => {
+
       let result = await marketplaceContract.createRental(
         _rentalId,
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       );
@@ -121,30 +138,34 @@ contract('Rental', function (accounts) {
         _rentalId,
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       );
-
-      const rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      const rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
 
       let rentalContract = await IRental.at(rentalContractAddress);
       await expectThrow(rentalContract.createRental(
         _rentalId2,
-        _marketplaceId,
-        _rentalHost,
+        _hostAddress,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _arrayIndex,
+        _rentalArrayIndex,
         _isInstantBooking,
-        factoryContract.address, {
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       ));
@@ -152,18 +173,112 @@ contract('Rental', function (accounts) {
 
     it("should throw on creating rental with empty rentalId", async () => {
       await expectThrow(marketplaceContract.createRental(
-        "",
+        '',
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       ));
     });
+
+    it("should throw on creating rental if the percentage array is greater than the other", async () => {
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
+        _marketplaceId,
+        _defaultDailyRate,
+        _weekendRate,
+        _cleaningFee,
+        _wrongRefundPercentages,
+        _daysBeforeStartForRefund,
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on creating rental if the refund days array is greater than the other", async () => {
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
+        _marketplaceId,
+        _defaultDailyRate,
+        _weekendRate,
+        _cleaningFee,
+        _refundPercentages,
+        _wrongRefundDays,
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on creating rental if the refund days array length is greater 7", async () => {
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
+        _marketplaceId,
+        _defaultDailyRate,
+        _weekendRate,
+        _cleaningFee,
+        _refundPercentages,
+        _greaterRefundDays,
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on creating rental if the percentages array length is greater 7", async () => {
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
+        _marketplaceId,
+        _defaultDailyRate,
+        _weekendRate,
+        _cleaningFee,
+        _greaterRefundPercentages,
+        _daysBeforeStartForRefund,
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on creating rental if the percentages array is greater than 100% ", async () => {
+      await expectThrow(marketplaceContract.createRental(
+        _rentalId,
+        _marketplaceId,
+        _defaultDailyRate,
+        _weekendRate,
+        _cleaningFee,
+        _greaterThanFullRefund,
+        _daysBeforeStartForRefund,
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
+          from: _rentalHost
+        }
+      ));
+    });
+
   });
 
   describe("update rental", () => {
@@ -205,75 +320,88 @@ contract('Rental', function (accounts) {
         _rentalId,
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       );
 
-      let rentalAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      let rentalAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
       rentalContract = await IRental.at(rentalAddress);
 
     });
 
     it("should update rental", async function () {
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       let result = await rentalContract.updateRental(
-        _rentalId,
-        _marketplaceIdUpdate,
+        rentalIdHash,
         _defaultDailyRateUpdate,
-        _nonWorkingDayPriceUpdate,
+        _weekendRateUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _rentalHostUpdate, {
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
           from: _rentalHost
         }
       );
-
       assert.isTrue(Boolean(result.receipt.status), "The Rental updating was not successful");
     });
 
     it("should update the values in a rental correctly", async function () {
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       await rentalContract.updateRental(
-        _rentalId,
-        _marketplaceIdUpdate,
+        rentalIdHash,
         _defaultDailyRateUpdate,
-        _nonWorkingDayPriceUpdate,
+        _weekendRateUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _rentalHostUpdate, {
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
           from: _rentalHost
         }
       );
 
       let result = await rentalContract.getRental();
       assert.strictEqual(result[1].toString(), _rentalHostUpdate, "The Host was not update correctly")
-      assert.strictEqual(web3.utils.hexToUtf8(result[2]), _marketplaceIdUpdate, "The marketplaceId was not update correctly")
-      assert.strictEqual(result[3].toString(), _defaultDailyRateUpdate, "The workingDayPrice was not update correctly");
-      assert.strictEqual(result[4].toString(), _nonWorkingDayPriceUpdate, "The nonWorkingDayPrice was not update correctly");
-      assert.strictEqual(result[5].toString(), _cleaningFeeUpdate, "The cleaningFee was not update correctly");
-      assert.strictEqual(result[6].toString(), _refundPercentUpdate, "The refundPercent was not update correctly");
-      assert.strictEqual(result[7].toString(), _daysBeforeStartForRefundUpdate, "The daysBeforeStartForRefund was not update correctly");
-      assert.isFalse(result[9], "The isInstantBooking was not update correctly");
+      assert.strictEqual(result[2].toString(), _defaultDailyRateUpdate, "The workingDayPrice was not update correctly");
+      assert.strictEqual(result[3].toString(), _weekendRateUpdate, "The nonWorkingDayPrice was not update correctly");
+      assert.strictEqual(result[4].toString(), _cleaningFeeUpdate, "The cleaningFee was not update correctly");
+      assert.isTrue(_.isEqual(result[5].toString(), _refundPercentUpdate.toString()), "The refundPercent was not set correctly");
+      assert.isTrue(_.isEqual(result[6].toString(), _daysBeforeStartForRefundUpdate.toString()), "The daysBeforeStartForRefund was not set correctly");
+      assert.isFalse(result[8], "The isInstantBooking was not update correctly");
+      assert.strictEqual(result[9].toString(), _depositUpdate, "The cleaningFee was not update correctly");
+      assert.strictEqual(result[10].toString(), _minNightsStayUpadate, "The cleaningFee was not update correctly");
+      assert.strictEqual(result[11].toString(), _rentalTitleUpdate, "The cleaningFee was not update correctly");
     });
 
     it("should throw if trying to update rental with empty rentalId", async function () {
       await expectThrow(rentalContract.updateRental(
         "",
-        _marketplaceIdUpdate,
         _defaultDailyRateUpdate,
-        _nonWorkingDayPriceUpdate,
+        _weekendRateUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _rentalHostUpdate, {
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
           from: _rentalHost
         }));
     });
@@ -281,67 +409,178 @@ contract('Rental', function (accounts) {
     it("should throw if trying to update rental with wrong rentalId", async function () {
       await expectThrow(rentalContract.updateRental(
         _rentalId2,
-        _marketplaceIdUpdate,
         _defaultDailyRateUpdate,
-        _nonWorkingDayPriceUpdate,
+        _weekendRateUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _rentalHostUpdate, {
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
           from: _rentalHost
         }));
     });
 
     it("should throw if trying to update rental with empty new host address", async function () {
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       await expectThrow(rentalContract.updateRental(
-        _rentalId,
-        _marketplaceIdUpdate,
+        rentalIdHash,
         _defaultDailyRateUpdate,
-        _nonWorkingDayPriceUpdate,
+        _weekendRateUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        "", {
+        "",
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
           from: _rentalHost
         }));
     });
 
     it("should throw if non-host is trying to update rental", async function () {
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       await expectThrow(rentalContract.updateRental(
-        _rentalId,
-        _marketplaceIdUpdate,
+        rentalIdHash,
         _defaultDailyRateUpdate,
-        _nonWorkingDayPriceUpdate,
+        _weekendRateUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _rentalHostUpdate, {
-          from: _rentalHostUpdate
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
+          from: _owner
         }));
     });
 
     it("should emit event on rental update", async function () {
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       const expectedEvent = 'LogUpdateRental';
       let result = await rentalContract.updateRental(
-        _rentalId,
-        _marketplaceIdUpdate,
+        rentalIdHash,
         _defaultDailyRateUpdate,
-        _nonWorkingDayPriceUpdate,
+        _weekendRateUpdate,
         _cleaningFeeUpdate,
         _refundPercentUpdate,
         _daysBeforeStartForRefundUpdate,
         _isInstantBookingUpdate,
-        _rentalHostUpdate, {
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
           from: _rentalHost
         }
       );
-
       assert.lengthOf(result.logs, 1, "There should be 1 event emitted from Rental updation!");
       assert.strictEqual(result.logs[0].event, expectedEvent, `The event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
     });
+
+    it("should throw on updating rental if the percentage array is greater than the other", async () => {
+
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      await expectThrow(rentalContract.updateRental(
+        rentalIdHash,
+        _defaultDailyRateUpdate,
+        _weekendRateUpdate,
+        _cleaningFeeUpdate,
+        _wrongRefundPercentages,
+        _daysBeforeStartForRefund,
+        _isInstantBookingUpdate,
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on updating rental if the refund days array is greater than the other", async () => {
+
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      await expectThrow(rentalContract.updateRental(
+        rentalIdHash,
+        _defaultDailyRateUpdate,
+        _weekendRateUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _wrongRefundDays,
+        _isInstantBookingUpdate,
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on updating rental if the refund days array length is greater 7", async () => {
+
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      await expectThrow(rentalContract.updateRental(
+        rentalIdHash,
+        _defaultDailyRateUpdate,
+        _weekendRateUpdate,
+        _cleaningFeeUpdate,
+        _refundPercentUpdate,
+        _greaterRefundDays,
+        _isInstantBookingUpdate,
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on updating rental if the percentages array length is greater 7", async () => {
+
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      await expectThrow(rentalContract.updateRental(
+        rentalIdHash,
+        _defaultDailyRateUpdate,
+        _weekendRateUpdate,
+        _cleaningFeeUpdate,
+        _greaterRefundPercentages,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
+          from: _rentalHost
+        }
+      ));
+    });
+
+    it("should throw on updating rental if the percentages array is greater than 100% ", async () => {
+
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      await expectThrow(rentalContract.updateRental(
+        rentalIdHash,
+        _defaultDailyRateUpdate,
+        _weekendRateUpdate,
+        _cleaningFeeUpdate,
+        _greaterThanFullRefund,
+        _daysBeforeStartForRefundUpdate,
+        _isInstantBookingUpdate,
+        _rentalHostUpdate,
+        _depositUpdate,
+        _minNightsStayUpadate,
+        _rentalTitleUpdate, {
+          from: _rentalHost
+        }
+      ));
+    });
+
   });
 
   describe("set different price for specific date for rental", () => {
@@ -393,19 +632,22 @@ contract('Rental', function (accounts) {
         _rentalId,
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       );
-
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       await factoryContract.setMaxBookingPeriod(maxPeriodDays * 1000);
       timestampStart = await getFutureTimestamp(randomDay);
       timestampEnd = await getFutureTimestamp(maxPeriodDays);
-      rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
       rentalContract = await IRental.at(rentalContractAddress);
     });
 
@@ -599,11 +841,14 @@ contract('Rental', function (accounts) {
         _rentalId,
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       );
@@ -624,11 +869,14 @@ contract('Rental', function (accounts) {
         _rentalId,
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       );
@@ -637,9 +885,9 @@ contract('Rental', function (accounts) {
 
       rentalImpl2 = await RentalUpgrade.new();
       await rentalImpl2.init();
-
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       await factoryContract.setImplAddress(rentalImpl2.address);
-      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
       let rentalContract = IRentalUpgrade.at(rentalContractAddress);
 
       await rentalContract.updateCleaningFee(_cleaningFee2);
@@ -656,18 +904,22 @@ contract('Rental', function (accounts) {
         _rentalId,
         _marketplaceId,
         _defaultDailyRate,
-        _nonWorkingDayPrice,
+        _weekendRate,
         _cleaningFee,
-        _refundPercent,
+        _refundPercentages,
         _daysBeforeStartForRefund,
-        _isInstantBooking, {
+        _isInstantBooking,
+        _deposit,
+        _minNightsStay,
+        _rentalTitle, {
           from: _rentalHost
         }
       );
       let rentalsCount = await factoryContract.rentalsCount();
       assert(rentalsCount.eq(1), "The rentals count was not correct");
 
-      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
       let rentalContract = IRentalUpgrade.at(rentalContractAddress);
 
       await expectThrow(rentalContract.updateCleaningFee(_cleaningFee2));

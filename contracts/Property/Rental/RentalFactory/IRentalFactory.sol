@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 import "./../../PropertyFactory/IPropertyFactory.sol";
@@ -30,4 +30,6 @@ contract IRentalFactory is IOwnableUpgradeableImplementation, IPropertyFactory {
     
     function getRentalId(uint index) public constant returns(bytes32);
     function getRentalContractAddress(bytes32 _rentalId) public constant returns(address rentalContract);
+    function setMarkeplaceId(bytes32 _marketplaceId) public;
+    function getMarketplaceId() public view returns(bytes32 _marketplaceId);
 }

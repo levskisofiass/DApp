@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../../Upgradeability/Forwardable.sol";
 import "./RentalFactory/IRentalFactory.sol";

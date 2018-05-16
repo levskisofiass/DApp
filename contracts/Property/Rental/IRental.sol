@@ -1,10 +1,10 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 
 contract IRental is IOwnableUpgradeableImplementation {
     event LogCreateRental(bytes32 rentalId, address hostAddress);
-    event LogUpdateRental(bytes32 _marketplaceId, bytes32 _rentalId, address _newHostAddress);
+    event LogUpdateRental(bytes32 _rentalId, address _newHostAddress);
     event LogSetPriceRental(bytes32 rentalId, uint256 timestamp, uint256 price);
 
     function createRental(
@@ -59,4 +59,5 @@ contract IRental is IOwnableUpgradeableImplementation {
     function setPrice(uint256 _timestampStart, uint256 _timestampEnd, uint256 _price) public returns(bool success);
 
     function getPrice(uint256 _timestamp) public constant returns(uint price);
+    function validateRefundPercentages( uint[] _refundPercentages) public view returns (bool success);
 }

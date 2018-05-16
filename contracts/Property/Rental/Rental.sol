@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IRental.sol";
@@ -32,15 +32,29 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         _;
     }
 
-    modifier onlyValidRental(bytes32 _rentalId) {
+    function onlyValidRental(bytes32 _rentalId) public view returns(bool success) {
         require(_rentalId != "");
-        _;
+        return true;
     }
 
     modifier onlyNewRental() {
         require(rentalId == "");
         _;
     }
+    modifier onlyValidArraysForCancelation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages) {
+		require(_daysBeforeStartForRefund.length == _refundPercentages.length);
+		require(_daysBeforeStartForRefund.length > 0 && _daysBeforeStartForRefund.length <= 7);
+		require(_refundPercentages.length > 0 && _refundPercentages.length <= 7);
+		_; 
+	}
+
+    function validateRefundPercentages( uint[] _refundPercentages) public view returns (bool success) {
+		
+		for (uint i = 0 ; i < _refundPercentages.length; i++) {
+			require(_refundPercentages[i] <= 100 && _refundPercentages[i] >= 0 );
+		}
+		return true;
+	}
 
     function getRental() public constant
         returns(
@@ -86,8 +100,11 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         uint _deposit,
         uint _minNightsStay,
         string _rentalTitle
-		) public onlyNewRental onlyValidRental(_rentalId) returns(bool success)
+		) public onlyNewRental onlyValidArraysForCancelation(_refundPercentages, _daysBeforeStartForRefund)  returns(bool success)
 	{
+        require(onlyValidRental(_rentalId));
+        validateRefundPercentages(_refundPercentages);
+
         rentalId = _rentalId;
         hostAddress = _hostAddress;
         defaultDailyRate = _defaultDailyRate;
@@ -102,7 +119,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         minNightsStay = _minNightsStay;
         rentalTitle = _rentalTitle;
 
-        LogCreateRental(_rentalId, _hostAddress);
+       emit LogCreateRental(_rentalId, _hostAddress);
         
 		return true;
 	}
@@ -130,9 +147,10 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         uint _deposit,
         uint _minNightsStay,
         string _rentalTitle
-    ) public returns(bool success)
+    ) public onlyValidArraysForCancelation(_refundPercentages, _daysBeforeStartForRefund) returns(bool success)
     {
         validateUpdate(_rentalId, _newHostAddress);
+        validateRefundPercentages(_refundPercentages);
      
         hostAddress = _newHostAddress;
         defaultDailyRate = _defaultDailyRate;
@@ -145,7 +163,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         minNightsStay = _minNightsStay;
         rentalTitle = _rentalTitle;
 
-        LogUpdateRental( _rentalId, _newHostAddress);
+        emit LogUpdateRental( _rentalId, _newHostAddress);
 
         return true;
     }
@@ -171,7 +189,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
 
         for (uint day = _timestampStart; day <= _timestampEnd; (day += 1 days)) {
             customRate[day] = _price;
-            LogSetPriceRental(rentalId, day, _price);
+          emit LogSetPriceRental(rentalId, day, _price);
         }
 
         return true;

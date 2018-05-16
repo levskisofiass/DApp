@@ -36,12 +36,15 @@ contract('Rental factory', function (accounts) {
     const _rentalId = "testId123";
     const _rentalId2 = "testId223";
     const _marketplaceId = "ID123";
-    const _workingDayPrice = '1000000000000000000';
-    const _nonWorkingDayPrice = '2000000000000000000';
+    const _defaultDailyRate = '1000000000000000000';
+    const _weekendRate = '2000000000000000000';
     const _cleaningFee = '100000000000000000';
-    const _refundPercent = '80';
-    const _daysBeforeStartForRefund = '10';
+    const _refundPercentages = ['80'];
+    const _daysBeforeStartForRefund = ['10'];
     const _isInstantBooking = true;
+    const _deposit = "2000";
+    const _minNightsStay = "2";
+    const _rentalTitle = "Great Rental";
 
     const _url = "https://lockchain.co/marketplace";
     const _rentalAPI = "https://lockchain.co/RentalAPI";
@@ -128,16 +131,19 @@ contract('Rental factory', function (accounts) {
             );
         });
 
-        it("should create new rental from Marketplace contract and Rental factory contract", async() => {
+        it("should create new rental from Marketplace contract and Rental factory contract", async () => {
             let result = await marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             );
@@ -145,76 +151,87 @@ contract('Rental factory', function (accounts) {
             assert(rentalsCount.eq(1), "The rentals count was not correct");
         });
 
-        it("should add correct rental contract address to the rentals mapping", async() => {
+        it("should add correct rental contract address to the rentals mapping", async () => {
             await marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             );
-
+            let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
             let createdRentalId = await factoryContract.getRentalId(0);
 
-            assert.strictEqual(web3.utils.hexToUtf8(createdRentalId), _rentalId, "The rentalId was not correct");
+            assert.strictEqual(createdRentalId, rentalIdHash, "The rentalId was not correct");
         });
 
-        it("should add correct rentalId to the rentalIds array", async() => {
+        it("should add correct rentalId to the rentalIds array", async () => {
             await marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             );
-
-            let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+            let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+            let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
             let rentalContractLocal = await IRental.at(rentalContractAddress);
 
             let result = await rentalContractLocal.getRental();
 
-            assert.strictEqual(web3.utils.hexToUtf8(result[0]), _rentalId, "The rentalId was not correct, not using correct address");
+            assert.strictEqual(result[0], rentalIdHash, "The rentalId was not correct, not using correct address");
         });
 
         it("should set the values in a rental correctly", async function () {
             await marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             );
-
-            let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+            let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+            let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
             let rentalContractLocal = await IRental.at(rentalContractAddress);
 
             let result = await rentalContractLocal.getRental();
 
-            assert.strictEqual(web3.utils.hexToUtf8(result[0]), _rentalId, "The rentalId was not set correctly");
+            assert.strictEqual(result[0].toString(), rentalIdHash, "The rentalId was not set correctly");
             assert.strictEqual(result[1], _rentalHost, "The host was not set correctly");
-            assert.strictEqual(web3.utils.hexToUtf8(result[2]), _marketplaceId, "The marketplaceId was not set correctly");
-            assert.strictEqual(result[3].toString(), _workingDayPrice, "The workingDayPrice was not set correctly");
-            assert.strictEqual(result[4].toString(), _nonWorkingDayPrice, "The nonWorkingDayPrice was not set correctly");
-            assert.strictEqual(result[5].toString(), _cleaningFee, "The cleaningFee was not set correctly");
-            assert.strictEqual(result[6].toString(), _refundPercent, "The refundPercent was not set correctly");
-            assert.strictEqual(result[7].toString(), _daysBeforeStartForRefund, "The daysBeforeStartForRefund was not set correctly");
-            assert(result[8].eq(0), "The arrayIndex was not set correctly");
-            assert.isTrue(result[9], "The isInstantBooking was not set correctly");
+            assert.strictEqual(result[2].toString(), _defaultDailyRate, "The workingDayPrice was not set correctly");
+            assert.strictEqual(result[3].toString(), _weekendRate, "The nonWorkingDayPrice was not set correctly");
+            assert.strictEqual(result[4].toString(), _cleaningFee, "The cleaningFee was not set correctly");
+            assert.isTrue(_.isEqual(result[5].toString(), _refundPercentages.toString()), "The refundPercent was not set correctly");
+            assert.isTrue(_.isEqual(result[6].toString(), _daysBeforeStartForRefund.toString()), "The daysBeforeStartForRefund was not set correctly");
+            assert(result[7].eq(0), "The arrayIndex was not set correctly");
+            assert.isTrue(result[8], "The isInstantBooking was not set correctly");
+            assert.strictEqual(result[9].toString(), _deposit, "The deposit was not set correctly");
+            assert.strictEqual(result[10].toString(), _minNightsStay, "The minimum nights stay was not set correctly");
+            assert.strictEqual(result[11], _rentalTitle, "The rental title was not set correctly");
         });
 
         it("should throw if trying to create rental when contract is paused", async function () {
@@ -225,12 +242,15 @@ contract('Rental factory', function (accounts) {
             await expectThrow(marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             ));
@@ -240,12 +260,15 @@ contract('Rental factory', function (accounts) {
             await marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             );
@@ -253,12 +276,15 @@ contract('Rental factory', function (accounts) {
             await expectThrow(marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             ));
@@ -267,14 +293,16 @@ contract('Rental factory', function (accounts) {
         it("should throw if trying to create rental without using marketplace contract", async function () {
             await expectThrow(factoryContract.createNewRental(
                 _rentalId,
-                _marketplaceId,
                 _rentalHost,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             ));
@@ -290,12 +318,15 @@ contract('Rental factory', function (accounts) {
             await expectThrow(marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             ));
@@ -340,30 +371,36 @@ contract('Rental factory', function (accounts) {
             await marketplaceContract.createRental(
                 _rentalId,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             );
         });
 
-        it("should get correct rental count", async() => {
+        it("should get correct rental count", async () => {
             let rentalsCount = await factoryContract.rentalsCount();
             assert(rentalsCount.eq(1), "The rentals count was not correct");
 
             await marketplaceContract.createRental(
                 _rentalId2,
                 _marketplaceId,
-                _workingDayPrice,
-                _nonWorkingDayPrice,
+                _defaultDailyRate,
+                _weekendRate,
                 _cleaningFee,
-                _refundPercent,
+                _refundPercentages,
                 _daysBeforeStartForRefund,
-                _isInstantBooking, {
+                _isInstantBooking,
+                _deposit,
+                _minNightsStay,
+                _rentalTitle, {
                     from: _rentalHost
                 }
             );
@@ -373,16 +410,18 @@ contract('Rental factory', function (accounts) {
         });
 
         it("should get correct rentalId by array index", async function () {
+            let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
             const resultRentalId = await factoryContract.getRentalId(0);
-            assert.strictEqual(web3.utils.hexToUtf8(resultRentalId), _rentalId, "The rentalId for this index is incorrect");
+            assert.strictEqual(resultRentalId, rentalIdHash, "The rentalId for this index is incorrect");
         });
 
         it("should get correct rental contract address by rentalId", async function () {
-            const rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId);
+            let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+            const rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
 
             let rentalContract = await IRental.at(rentalContractAddress);
             let result = await rentalContract.getRental();
-            assert.strictEqual(web3.utils.hexToUtf8(result[0]), _rentalId, "The rentalId in this contract is incorrect");
+            assert.strictEqual(result[0], rentalIdHash, "The rentalId in this contract is incorrect");
         });
     });
 });

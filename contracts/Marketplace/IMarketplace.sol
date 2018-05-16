@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 import "./../Lifecycle/IPausable.sol";
@@ -73,4 +73,6 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
         bytes32 _roomsType,
         uint _workingDayPrice
     ) public returns (bool success);
+
+    function getRentalAndMarketplaceHash(bytes32 _rentalId, bytes32 _marketplaceId) public pure returns(bytes32 _rentalIdHash);
 }

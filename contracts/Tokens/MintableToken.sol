@@ -15,6 +15,7 @@ contract MintableToken is StandardToken, Ownable {
   event MintFinished();
 
   bool public mintingFinished = false;
+  uint8 public constant decimals = 18;
 
 
   modifier canMint() {

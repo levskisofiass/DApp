@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../RentalProxy.sol";
 import "./../IRental.sol";
@@ -7,6 +7,7 @@ import "./../../PropertyFactory/PropertyFactory.sol";
 
 
 contract RentalFactory is IRentalFactory, PropertyFactory {
+    bytes32 marketplaceId;
     bytes32[] public rentalIds;
     mapping (bytes32 => address) public rentals;
 
@@ -31,6 +32,14 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
 
     function getRentalContractAddress(bytes32 _rentalId) public constant returns(address rentalContract) {
         return rentals[_rentalId];
+    }
+
+    function setMarkeplaceId(bytes32 _marketplaceId) public {
+        marketplaceId = _marketplaceId;
+    }
+
+    function getMarketplaceId() public view returns(bytes32 _marketplaceId) {
+        return marketplaceId;
     }
 
     function validateCreate(
@@ -58,13 +67,13 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         uint deposit,
         uint minNightsStay,
         string rentalTitle
-		) public returns(bool success)
+		) public returns(bool)
 	{
         require(_hostAddress != address(0));
-        validateCreate(_rentalId, _marketplaceId);
+        validateCreate(_rentalId, getMarketplaceId());
 
-        RentalProxy proxy = new RentalProxy(this);
-        IRental rentalContract = IRental(proxy);
+        // RentalProxy proxy = new RentalProxy(this);
+        IRental rentalContract = IRental(new RentalProxy(this));
 
         rentalContract.createRental(
             _rentalId,
@@ -84,7 +93,7 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
 		rentals[_rentalId] = rentalContract;
         rentalIds.push(_rentalId);
 
-        LogCreateRentalContract(_rentalId, _hostAddress, rentalContract);
+       emit LogCreateRentalContract(_rentalId, _hostAddress, rentalContract);
 		return true;
 	}
 }
