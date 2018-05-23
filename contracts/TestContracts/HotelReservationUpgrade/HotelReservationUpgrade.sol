@@ -3,8 +3,9 @@ pragma solidity ^0.4.17;
 import "./../../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IHotelReservationUpgrade.sol";
 import "./../../Tokens/StandardToken.sol";
+import "./../../Upgradeability/SharedStorage.sol";
 
-contract HotelReservationUpgrade is OwnableUpgradeableImplementation {
+contract HotelReservationUpgrade is SharedStorage {
 	bytes32 hotelReservationId;
 	address customerAddress;
 	uint reservationCostLOC;

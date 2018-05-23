@@ -3,7 +3,6 @@ pragma solidity ^0.4.17;
 import './../Lifecycle/Ownable.sol';
 import './../Lifecycle/PausableBasic.sol';
 import './Oraclized.sol';
-import './../Lifecycle/Destructible.sol';
 import './../tokens/ERC20.sol';
 import './../Math/SafeMath.sol';
 
@@ -12,7 +11,7 @@ import './../Math/SafeMath.sol';
  * @dev Contract for exchanging LOC to ETH
  * Allows for exchanging LOCwei to wei
  */
-contract LOCExchange is Ownable, PausableBasic, Destructible, Oraclized {
+contract LOCExchange is Ownable, PausableBasic, Oraclized {
     ERC20 public LOCTokenContract;
 
     event LogLocExchanged(uint locWei, uint ethWei, uint rate);
