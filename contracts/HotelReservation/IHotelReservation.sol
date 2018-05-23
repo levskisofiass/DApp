@@ -1,8 +1,9 @@
 pragma solidity ^0.4.17;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
+import "./../Upgradeability/SharedStorage.sol";
 
-contract IHotelReservation is IOwnableUpgradeableImplementation {
+contract IHotelReservation {
 
 event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 event LogCancelHotelReservation(bytes32 _hotelReservationId, address _customerAddress);
