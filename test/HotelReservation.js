@@ -1,4 +1,4 @@
-// const web3 = require("web3");
+const ethers = require("ethers");
 const moment = require("moment");
 
 let HotelReservationProxy = artifacts.require("./../HotelReservation/HotelReservationProxy.sol");
@@ -60,7 +60,7 @@ contract('HotelReservation', function (accounts) {
 	const LOCAmount = '10000';
 	const newReservationCostLOC = '5';
 	const numberOfTravelers = '4'
-	const amountToRefund = (reservationCostLOC * refundPercentage[0]) / 100;
+	let amountToRefund = (reservationCostLOC * refundPercentage[1]) / 100;
 
 
 	//For Cancelation
@@ -107,6 +107,10 @@ contract('HotelReservation', function (accounts) {
 		return result.unix();
 	};
 
+	function removeNullBytes(stringValue) {
+		return stringValue.replace(/\u0000/g, '')
+	}
+
 
 	describe("create new hotel reservation", () => {
 
@@ -121,7 +125,7 @@ contract('HotelReservation', function (accounts) {
 			});
 
 			hotelReservation = await HotelReservation.new();
-			await hotelReservation.init();
+			// await hotelReservation.init();
 			hotelReservationFactoryImpl = await HotelReservationFactory.new();
 			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
 			hotelReservationContract = await IHotelReservationFactory.at(hotelReservationFactoryProxy.address);
@@ -152,6 +156,37 @@ contract('HotelReservation', function (accounts) {
 			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
 			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 		});
+
+		it("should create reservation and set the correct parameters", async function () {
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysBeforeStartForRefund,
+				refundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+			let reservationAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
+			let hotelReservationInstance = await HotelReservation.at(reservationAddress);
+			let result = await hotelReservationInstance.getHotelReservation();
+
+			assert.equal(removeNullBytes(ethers.utils.toUtf8String(result[0])), hotelReservationId, "The reservation id was not set correctly")
+			assert.strictEqual(result[1], customerAddress, "The customer address was not set correctly")
+			assert.strictEqual(result[2].toString(), reservationCostLOC, "The reservation cost was not set correctly");
+			assert.strictEqual(result[3].toString(), (formatTimestamp(reservationStartDateTravel)).toString(), "The check in date  was not set correctly");
+			assert.strictEqual(result[4].toString(), (formatTimestamp(reservationEndDateTravel)).toString(), "The check out date was not set correctly");
+			assert.isTrue(_.isEqual(result[5].toString(), daysBeforeStartForRefund.toString()), "The daysBeforeStartForRefund was not set correctly");
+			assert.isTrue(_.isEqual(result[6].toString(), refundPercentage.toString()), "The refund percent was not set correctly");
+			assert.strictEqual(removeNullBytes(ethers.utils.toUtf8String(result[7])), hotelId, "The hotelid was not set correctly");
+			assert.strictEqual(removeNullBytes(ethers.utils.toUtf8String(result[8])), roomId, "The room id was not set correctly");
+			assert.strictEqual(result[9].toString(), numberOfTravelers, "The number of travelers was not set correctly");
+
+		})
 
 		it("should set the dispute status of reservation to false, when creating a new reservation", async function () {
 
@@ -464,6 +499,11 @@ contract('HotelReservation', function (accounts) {
 
 	describe("cancel hotel reservation", () => {
 		beforeEach(async function () {
+
+			reservationStartDateTravel = currentTime(web3) + (day * 30);
+			reservationEndDateTravel = currentTime(web3) + (day * 32);
+			currentTimeStampTravel = currentTime(web3)
+
 			ERC20Instance = await MintableToken.new({
 				from: _owner
 			});
@@ -473,7 +513,7 @@ contract('HotelReservation', function (accounts) {
 
 
 			hotelReservation = await HotelReservation.new();
-			await hotelReservation.init();
+			// await hotelReservation.init();
 
 			hotelReservationFactoryImpl = await HotelReservationFactory.new();
 			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
@@ -486,7 +526,6 @@ contract('HotelReservation', function (accounts) {
 				from: customerAddress
 			});
 			let tokenInstanceAddress = await hotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
-
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationId,
 				reservationCostLOC,
@@ -516,6 +555,10 @@ contract('HotelReservation', function (accounts) {
 		});
 
 		it("should transfer the amount to the customer", async function () {
+			let futureDays = (day * 26)
+			await timeTravel(web3, futureDays);
+			amountToRefund = (reservationCostLOC * refundPercentage[3]) / 100;
+
 			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
 			let initialContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
 
@@ -527,11 +570,15 @@ contract('HotelReservation', function (accounts) {
 			let finalCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
 			let finalContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
 
+
 			assert(finalCustomerBalance.eq(initialCustomerBalance.plus(amountToRefund)), "The cancelation wasn't successful. Customer balance is not increased");
 			assert(finalContractBalance.eq(initialContractBalance - amountToRefund), "The cancelation wasn't successful. Contract balance is not decreased");
 		});
 
 		it("should cancel the reservation with refund 100%", async function () {
+
+			amountToRefund = reservationCostLOC
+
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationIdTwo,
 				reservationCostLOC,
@@ -546,11 +593,13 @@ contract('HotelReservation', function (accounts) {
 				}
 			);
 
+			// await timeTravel(web3, futureDays);
+
 			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
 			let initialContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
 
 			await hotelReservationContract.cancelHotelReservation(
-				hotelReservationId, {
+				hotelReservationIdTwo, {
 					from: customerAddress
 				}
 			);
@@ -559,6 +608,64 @@ contract('HotelReservation', function (accounts) {
 
 			assert(finalCustomerBalance.eq(initialCustomerBalance.plus(amountToRefund)), "The cancelation wasn't successful. Customer balance is not increased");
 			assert(finalContractBalance.eq(initialContractBalance - amountToRefund), "The cancelation wasn't successful. Contract balance is not decreased");
+		})
+
+		it("should cancel the reservation with 0% and dont transfer nothing to the customer", async function () {
+
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationIdTwo,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysForFullRefund,
+				zeroRefundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+
+			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationIdTwo, {
+					from: customerAddress
+				}
+			);
+			let finalCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+
+			assert.equal(reservationsCount, 1, "The hotel reservation was not canceled properly");
+			assert(finalCustomerBalance.eq(initialCustomerBalance), "The cancelation wasn't successful. Customer balance is not increased");
+		});
+
+		it("should cancel the hotel reservation before the refund period and full refund the client", async function () {
+
+			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let initialContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
+
+			await hotelReservationContract.createHotelReservation(
+				hotelReservationIdTwo,
+				reservationCostLOC,
+				formatTimestamp(reservationStartDateTravel),
+				formatTimestamp(reservationEndDateTravel),
+				daysForFullRefund,
+				oneRefundPercentage,
+				hotelId,
+				roomId,
+				numberOfTravelers, {
+					from: customerAddress
+				}
+			);
+			await hotelReservationContract.cancelHotelReservation(
+				hotelReservationIdTwo, {
+					from: customerAddress
+				}
+			);
+			let finalCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let finalContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
+			assert(finalCustomerBalance.eq(initialCustomerBalance), "The cancelation wasn't successful. Customer balance is not increased");
+			assert(finalContractBalance.eq(initialContractBalance), "The cancelation wasn't successful. Contract balance is not decreased");
 		})
 
 		it("should make the resevation address equl to zero if the cancelation is successful", async function () {
@@ -637,6 +744,11 @@ contract('HotelReservation', function (accounts) {
 		});
 
 		it("should increase the loc remainder amount after cancelation", async function () {
+			let futureDays = (day * 26)
+			await timeTravel(web3, futureDays);
+			amountToRefund = (reservationCostLOC * refundPercentage[3]) / 100;
+			locRemainder = reservationCostLOC - amountToRefund;
+
 			let initialRemainder = await hotelReservationContract.getLocRemainderAmount();
 			await hotelReservationContract.cancelHotelReservation(
 				hotelReservationId, {
@@ -650,7 +762,11 @@ contract('HotelReservation', function (accounts) {
 		});
 
 		it("should increase the loc remainder amount twice after cancelation", async function () {
+			let futureDays = (day * 26)
+			await timeTravel(web3, futureDays);
 			let initialRemainder = await hotelReservationContract.getLocRemainderAmount();
+			amountToRefund = (reservationCostLOC * refundPercentage[3]) / 100;
+			locRemainder = reservationCostLOC - amountToRefund;
 
 			await hotelReservationContract.cancelHotelReservation(
 				hotelReservationId, {
@@ -659,6 +775,8 @@ contract('HotelReservation', function (accounts) {
 			);
 
 			let finalRemainder = await hotelReservationContract.getLocRemainderAmount();
+			reservationStartDateTravel = currentTime(web3) + (day * 30);
+			reservationEndDateTravel = currentTime(web3) + (day * 32);
 
 
 			await hotelReservationContract.createHotelReservation(
@@ -674,6 +792,8 @@ contract('HotelReservation', function (accounts) {
 					from: customerAddress
 				}
 			);
+			futureDays = (day * 26)
+			await timeTravel(web3, futureDays);
 
 			let intermediateRemainder = await hotelReservationContract.getLocRemainderAmount();
 
@@ -702,7 +822,7 @@ contract('HotelReservation', function (accounts) {
 		});
 
 
-		it("should throw if the refund percentage is not greater than zero", async function () {
+		xit("should throw if the refund percentage is not greater than zero", async function () {
 
 			await hotelReservationContract.createHotelReservation(
 				hotelReservationIdTwo,
@@ -759,7 +879,7 @@ contract('HotelReservation', function (accounts) {
 		})
 
 		it('should cancel the reservation in random period from the array and transfer the proper amount ', async function () {
-			let futureDays = (day * 20)
+			let futureDays = (day * 24)
 			await timeTravel(web3, futureDays);
 			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
 			let initialContractBalance = await ERC20Instance.balanceOf(hotelReservationContract.address);
@@ -796,7 +916,7 @@ contract('HotelReservation', function (accounts) {
 
 
 			hotelReservation = await HotelReservation.new();
-			await hotelReservation.init();
+			// await hotelReservation.init();
 
 			hotelReservationFactoryImpl = await HotelReservationFactory.new();
 			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
@@ -883,15 +1003,19 @@ contract('HotelReservation', function (accounts) {
 					from: customerAddress
 				}
 			);
+			let futureDays = (day * 5)
+			await timeTravel(web3, futureDays);
 
 			await hotelReservationContract.cancelHotelReservation(
 				hotelReservationIdThree, {
 					from: customerAddress
 				}
 			);
+			amountToRefund = (reservationCostLOC * refundPercentage[2]) / 100;
+			locRemainder = reservationCostLOC - amountToRefund;
 
 			let destinationAddressInitBalance = await ERC20Instance.balanceOf(withdrawalDestinationAddress);
-			let futureDays = (day * 15)
+			futureDays = (day * 15)
 			await timeTravel(web3, futureDays);
 
 			let reservationOneAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);
@@ -1139,7 +1263,7 @@ contract('HotelReservation', function (accounts) {
 
 
 			hotelReservation = await HotelReservation.new();
-			await hotelReservation.init();
+			// await hotelReservation.init();
 
 			hotelReservationFactoryImpl = await HotelReservationFactory.new();
 			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
@@ -1274,7 +1398,7 @@ contract('HotelReservation', function (accounts) {
 
 
 			hotelReservation = await HotelReservation.new();
-			await hotelReservation.init();
+			// await hotelReservation.init();
 
 			hotelReservationFactoryImpl = await HotelReservationFactory.new();
 			hotelReservationFactoryProxy = await HotelReservationFactoryProxy.new(hotelReservationFactoryImpl.address);
@@ -1308,7 +1432,7 @@ contract('HotelReservation', function (accounts) {
 			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 
 			hotelReservation = await HotelReservation.new();
-			await hotelReservation.init();
+			// await hotelReservation.init();
 			await hotelReservationContract.setImplAddress(hotelReservation.address);
 
 			reservationsCount = await hotelReservationContract.getHotelReservationsCount();
@@ -1333,7 +1457,7 @@ contract('HotelReservation', function (accounts) {
 			assert.equal(reservationsCount, 1, "The hotel reservation was not created properly");
 
 			hotelReservationUpgraded = await HotelReservationUpgrade.new();
-			await hotelReservationUpgraded.init();
+			// await hotelReservationUpgraded.init();
 
 			await hotelReservationContract.setImplAddress(hotelReservationUpgraded.address);
 			let hotelReservationContractAddress = await hotelReservationContract.getHotelReservationContractAddress(hotelReservationId);

@@ -3,8 +3,9 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IHotelReservation.sol";
 import "./../Tokens/StandardToken.sol";
+import "./../Upgradeability/SharedStorage.sol";
 
-contract HotelReservation is OwnableUpgradeableImplementation {
+contract HotelReservation is SharedStorage {
 	bytes32 hotelReservationId;
 	address customerAddress;
 	uint reservationCostLOC;
@@ -58,7 +59,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) > reservationStartDate) {
 				continue;
 			}
-			if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
+			if(refundPercentages[i] <= 100 && refundPercentages[i] >= 0 ) {
 					return true;
 				}
 		}
@@ -83,6 +84,10 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	}
 
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder) {
+
+		if (reservationStartDate - (daysBeforeStartForRefund[0] * 1 days)  > now && refundPercentages[0] > 0) {
+			return (reservationCostLOC , 0);
+		}
 
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
 			
