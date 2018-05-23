@@ -634,8 +634,10 @@ contract('HotelReservation', function (accounts) {
 			);
 			let finalCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
 			let reservationsCount = await hotelReservationContract.getHotelReservationsCount();
+			let remainder = await hotelReservationContract.getLocRemainderAmount();
 
 			assert.equal(reservationsCount, 1, "The hotel reservation was not canceled properly");
+			assert(remainder.eq(reservationCostLOC), "The remainder is not correct after cancelation");
 			assert(finalCustomerBalance.eq(initialCustomerBalance), "The cancelation wasn't successful. Customer balance is not increased");
 		});
 

@@ -88,10 +88,14 @@ contract HotelReservation is SharedStorage {
 		if (reservationStartDate - (daysBeforeStartForRefund[0] * 1 days)  > now && refundPercentages[0] > 0) {
 			return (reservationCostLOC , 0);
 		}
+		if (refundPercentages[0] == 0) {
+			return (0 , reservationCostLOC);
+		}
 
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
 			
 			if((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
+			
 				uint locToBeRefunded = (reservationCostLOC * refundPercentages[i]) / 100;
 				uint locRemainder = reservationCostLOC - locToBeRefunded;
 				return (locToBeRefunded, locRemainder);
