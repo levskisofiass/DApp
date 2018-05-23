@@ -11,10 +11,9 @@ let apiKey = "Up5uvBHSCSqtOmnlhL87";
 (async function () {
 
 
-
 	const privateKey = process.argv[2];
 
-	const localNodeProvider = new providers.InfuraProvider(ethers.providers.networks.ropsten, apiKey);
+	const localNodeProvider = new providers.InfuraProvider(ethers.providers.networks.mainnet, apiKey);
 	provider = new providers.FallbackProvider([
 		localNodeProvider
 	]);
@@ -25,12 +24,14 @@ let apiKey = "Up5uvBHSCSqtOmnlhL87";
 
 	let deployTransaction = ethers.Contract.getDeployTransaction(bytecode, abi);
 	deployTransaction.gasLimit = 4500000;
-	deployTransaction.gasPrice = 13000000000;
+	deployTransaction.gasPrice = 15000000000;
 	let transaction = await wallet.sendTransaction(deployTransaction);
 	console.log(transaction);
+
 
 	let result = await localNodeProvider.waitForTransaction(transaction.hash);
 
 	console.log(result);
+	console.log("Hotel Reservation");
 
 })()

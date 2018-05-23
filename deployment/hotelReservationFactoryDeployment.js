@@ -11,10 +11,11 @@ let factoryproxyBytecode = hotelReservationFactoryProxyJson.bytecode;
 let iFactoryAbi = iHotelReservationFactoryJson.abi;
 let LocTokenAddress = "0x5e3346444010135322268a4630d2ed5f8d09446c";
 
-let cyclesCountForWithdraw = 50
+let cyclesCountForWithdraw = 70
 let setDisputeDestinationAddress = '0xa99c523BfC2E1374ac528FE39e4dD7c35F6C1d46'
 let setWirhdrawDestinationAddress = '0xa99c523BfC2E1374ac528FE39e4dD7c35F6C1d46'
-let hotelReservationImplAdr = '0xd6f17aBe7DD0B0E1315a8970adf24FEa70738Be2';
+let withdrawer = '0x40B9f8957d9444bD56566B0c277F4c83Eb902fb5'
+let hotelReservationImplAdr = '0x0674Ec052FE9220a9Af7a34Ff4640c0389B6A4bb';
 
 
 let apiKey = "Up5uvBHSCSqtOmnlhL87";
@@ -25,7 +26,7 @@ let apiKey = "Up5uvBHSCSqtOmnlhL87";
 
 	const privateKey = process.argv[2];
 
-	const localNodeProvider = new providers.InfuraProvider(ethers.providers.networks.ropsten, apiKey);
+	const localNodeProvider = new providers.InfuraProvider(ethers.providers.networks.mainnet, apiKey);
 	provider = new providers.FallbackProvider([
 		localNodeProvider
 	]);
@@ -34,35 +35,42 @@ let apiKey = "Up5uvBHSCSqtOmnlhL87";
 
 	wallet.provider = provider;
 
-	let deployHotelReservationFactory = ethers.Contract.getDeployTransaction(factoryBytecode, factoryAbi);
-	deployHotelReservationFactory.gasLimit = 4500000;
-	deployHotelReservationFactory.gasPrice = 13000000000;
-	let factoryDeploy = await wallet.sendTransaction(deployHotelReservationFactory, );
-	console.log(factoryDeploy);
-	let resultFactoryDeploy = await localNodeProvider.waitForTransaction(factoryDeploy.hash);
-	let factoryAddress = resultFactoryDeploy.creates;
+	// let deployHotelReservationFactory = ethers.Contract.getDeployTransaction(factoryBytecode, factoryAbi);
+	// deployHotelReservationFactory.gasLimit = 4500000;
+	// deployHotelReservationFactory.gasPrice = 15000000000;
+	// let factoryDeploy = await wallet.sendTransaction(deployHotelReservationFactory, );
+	// console.log(factoryDeploy);
+	// let resultFactoryDeploy = await localNodeProvider.waitForTransaction(factoryDeploy.hash);
+	// let factoryAddress = resultFactoryDeploy.creates;
+	// console.log(factoryAddress, "HOTEL RESERVATION FACTORY ADDRESS")
 
-	let deployHotelReservationFactoryProxy = ethers.Contract.getDeployTransaction(factoryproxyBytecode, factoryProxyAbi, factoryAddress);
-	deployHotelReservationFactoryProxy.gasLimit = 4500000;
-	deployHotelReservationFactoryProxy.gasPrice = 13000000000;
-	let factoryProxyDeploy = await wallet.sendTransaction(deployHotelReservationFactoryProxy, overrideOptions);
-	console.log(factoryProxyDeploy);
+	// let factoryAddress = '0x1055f1925A00a3A8397a3FDf13d4C416F797100f'
 
-	let resultFactoryProxyDeploy = await localNodeProvider.waitForTransaction(factoryProxyDeploy.hash);
+	// let deployHotelReservationFactoryProxy = ethers.Contract.getDeployTransaction(factoryproxyBytecode, factoryProxyAbi, factoryAddress);
+	// deployHotelReservationFactoryProxy.gasLimit = 4500000;
+	// deployHotelReservationFactoryProxy.gasPrice = 15000000000;
+	// let factoryProxyDeploy = await wallet.sendTransaction(deployHotelReservationFactoryProxy);
+	// console.log(factoryProxyDeploy);
 
-	let factoryProxyAddress = resultFactoryProxyDeploy.creates
+	// let resultFactoryProxyDeploy = await localNodeProvider.waitForTransaction(factoryProxyDeploy.hash);
 
-	const factoryProxyInstance = new ethers.Contract(factoryProxyAddress, iFactoryAbi, wallet);
+	// let factoryProxyAddress = resultFactoryProxyDeploy.creates
+	// console.log(factoryProxyAddress, "HOTEL RESERVATION FACTORY PROXY ADDRESS");
 
-	const finalResult = await factoryProxyInstance.init({
-		gasLimit: 4500000,
-		gasPrice: 13000000000
-	});
-	console.log(finalResult);
 
-	let finalTransactionResult = await localNodeProvider.waitForTransaction(finalResult.hash);
+	// const factoryProxyInstance = new ethers.Contract(factoryProxyAddress, iFactoryAbi, wallet);
 
-	let setHotelReservationImplAddress = await factoryProxyInstance.setImplAddress(hotelReservationImplAdr)
+	// const finalResult = await factoryProxyInstance.init({
+	// 	gasLimit: 4500000,
+	// 	gasPrice: 15000000000
+	// });
+	// console.log(finalResult);
+
+	// let finalTransactionResult = await localNodeProvider.waitForTransaction(finalResult.hash);
+
+	// let setHotelReservationImplAddress = await factoryProxyInstance.setImplAddress(hotelReservationImplAdr)
+	// console.log("SET IMPL ADDRESS")
+	// await localNodeProvider.waitForTransaction(setHotelReservationImplAddress.hash);
 
 	let setTokenContract = await factoryProxyInstance.setLOCTokenContractAddress(LocTokenAddress);
 	console.log(setTokenContract);
@@ -76,7 +84,7 @@ let apiKey = "Up5uvBHSCSqtOmnlhL87";
 	console.log(setDisputeDestination);
 	await localNodeProvider.waitForTransaction(setDisputeDestination.hash);
 
-	let setWithdrawer = await factoryProxyInstance.setWithdrawerAddress(setDisputeDestinationAddress);
+	let setWithdrawer = await factoryProxyInstance.setWithdrawerAddress(withdrawer);
 	console.log(setWithdrawer);
 	await localNodeProvider.waitForTransaction(setWithdrawer.hash);
 
