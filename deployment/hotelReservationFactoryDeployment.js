@@ -72,21 +72,21 @@ let apiKey = "Up5uvBHSCSqtOmnlhL87";
 	// console.log("SET IMPL ADDRESS")
 	// await localNodeProvider.waitForTransaction(setHotelReservationImplAddress.hash);
 
-	let setTokenContract = await factoryProxyInstance.setLOCTokenContractAddress(LocTokenAddress);
-	console.log(setTokenContract);
-	await localNodeProvider.waitForTransaction(setTokenContract.hash);
+	// let setTokenContract = await factoryProxyInstance.setLOCTokenContractAddress(LocTokenAddress);
+	// console.log(setTokenContract);
+	// await localNodeProvider.waitForTransaction(setTokenContract.hash);
 
-	let cyclesCount = await factoryProxyInstance.setmaxAllowedWithdrawCyclesCount(cyclesCountForWithdraw);
-	console.log(cyclesCount);
-	await localNodeProvider.waitForTransaction(cyclesCount.hash);
+	// let cyclesCount = await factoryProxyInstance.setmaxAllowedWithdrawCyclesCount(cyclesCountForWithdraw);
+	// console.log(cyclesCount);
+	// await localNodeProvider.waitForTransaction(cyclesCount.hash);
 
-	let setDisputeDestination = await factoryProxyInstance.setDisputeDestinationAddress(setDisputeDestinationAddress);
-	console.log(setDisputeDestination);
-	await localNodeProvider.waitForTransaction(setDisputeDestination.hash);
+	// let setDisputeDestination = await factoryProxyInstance.setDisputeDestinationAddress(setDisputeDestinationAddress);
+	// console.log(setDisputeDestination);
+	// await localNodeProvider.waitForTransaction(setDisputeDestination.hash);
 
-	let setWithdrawer = await factoryProxyInstance.setWithdrawerAddress(withdrawer);
-	console.log(setWithdrawer);
-	await localNodeProvider.waitForTransaction(setWithdrawer.hash);
+	// let setWithdrawer = await factoryProxyInstance.setWithdrawerAddress(withdrawer);
+	// console.log(setWithdrawer);
+	// await localNodeProvider.waitForTransaction(setWithdrawer.hash);
 
 	let setWithdrawerDestination = await factoryProxyInstance.setWithdrawDestinationAddress(setWirhdrawDestinationAddress);
 	console.log(setWithdrawerDestination);

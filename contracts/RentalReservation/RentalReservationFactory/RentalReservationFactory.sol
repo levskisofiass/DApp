@@ -46,6 +46,10 @@ contract RentalReservationFactory is IRentalReservationFactory, OwnableUpgradeab
 		return rentalReservationIds.length;
 	}
 
+	 function getRentalReservationContractAddress(bytes32 _rentalReservationId) public view returns(address rentalReservationContract) {
+        return rentalReservations[_rentalReservationId].rentalReservationAddress;
+    }
+
 
 
 	function createRentalReservation(
@@ -67,6 +71,7 @@ contract RentalReservationFactory is IRentalReservationFactory, OwnableUpgradeab
 
 		rentalReservationContract.createRentalReservation (
 			 _rentalReservationId,
+			 msg.sender,
 			 _checkInDate,
 			 _checkOutDate,
 			 _numberOfTravelers,

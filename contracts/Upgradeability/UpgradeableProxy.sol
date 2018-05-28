@@ -18,6 +18,6 @@ contract UpgradeableProxy is SharedStorage, Forwardable {
     * @return Any bytes32 value the implementation returns
     */
     function () payable public {
-        delegatedFwd(contractImplementation, msg.data);
+        delegatedFwd(contractImplementation);
     }
 }

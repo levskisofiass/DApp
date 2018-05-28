@@ -1,12 +1,12 @@
 pragma solidity 0.4.23;
 
-import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
+import "./../Upgradeability/SharedStorage.sol";
 import "./IRentalReservation.sol";
 import "./../Tokens/StandardToken.sol";
 import "./../Property/Rental/IRental.sol";
 import "./../Property/Rental/RentalFactory/IRentalFactory.sol";
 
-contract RentalReservation is OwnableUpgradeableImplementation {
+contract RentalReservation is SharedStorage {
 
 	bytes32 rentalReservationId;
 	address customerAddress;
@@ -35,12 +35,9 @@ contract RentalReservation is OwnableUpgradeableImplementation {
 		_;
 	}
 
-	function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
-		LOCTokenContract = StandardToken(locTokenContractAddress);
-	}
-
 	function createRentalReservation(
 		bytes32 _rentalReservationId,
+		address _customerAddress,
 		uint _checkInDate,
 		uint _checkOutDate,
 		uint _numberOfTravelers,
@@ -55,12 +52,33 @@ contract RentalReservation is OwnableUpgradeableImplementation {
 		isDisputeOpen = false;
 		rentalId = _rentalId;
 		reservationCostLOC = _reservationCostLOC;
-		customerAddress = msg.sender;
+		customerAddress = _customerAddress;
 
 
 		emit LogReservationCreated(_rentalReservationId, msg.sender, reservationCostLOC);
 
 		return true;
 	}
+
+	function getRentalReservation() public view returns (
+		bytes32 _rentalReservationId,
+		address _customerAddress,
+		uint _reservationCostLOC,
+		uint _checkInDate,
+		uint _checkOutDate,
+		uint _numberOfTravelers,
+		bool _isDisputeOpen,
+		bytes32 _rentalId) {
+
+			return(
+			 rentalReservationId,
+			 customerAddress,
+			 reservationCostLOC,
+			 checkInDate,
+			 checkOutDate,
+			 numberOfTravelers,
+			 isDisputeOpen,
+			 rentalId);
+		}
 
 }

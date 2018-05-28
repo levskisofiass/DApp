@@ -1,4 +1,5 @@
 const moment = require("moment");
+const ethers = require("ethers");
 
 let RentalReservationProxy = artifacts.require("./../RentalReservation/RentalReservationProxy.sol")
 let RentalReservation = artifacts.require("./../RentalReservation/RentalReservation.sol")
@@ -63,6 +64,7 @@ contract('RentalReservation', function (accounts) {
 	let rentalContract;
 	let rentalImpl;
 	let rentalImpl2;
+	let rentalReservation
 
 	let marketplaceProxy;
 	let marketplaceImpl;
@@ -93,14 +95,37 @@ contract('RentalReservation', function (accounts) {
 	//Create reservation
 	const rentalReservationId = "rentalReservationId123421"
 	const checkInDate = currentTime(web3) + (day * 2);
+	const checkInDateToday = currentTime(web3);
 	const checkOutDate = currentTime(web3) + (day * 5);
 	const numberOfTravelers = "2"
-	const rentalId = "rentalId"
+	let rentalId = "rentalId"
 	const reservationCostLOC = "100000000"
 	let rentalIdHash
 
+	//Negative
+	let pastCheckInDate = currentTime(web3) - (day * 8);
+	let newNumberOfTravelers = "4";
+
 
 	const LOCAmount = '100000000000000000';
+	let actualReservationCost;
+
+
+	function removeNullBytes(stringactualReservationCost) {
+		return stringactualReservationCost.replace(/\u0000/g, '')
+	}
+
+	function formatTimestamp(timestamp) {
+		let result = moment.unix(timestamp).utc();
+		result.set({
+			h: 23,
+			m: 59,
+			s: 59
+		});
+
+		return result.unix();
+	};
+
 	describe("create new rental reservation", () => {
 
 		beforeEach(async function () {
@@ -155,9 +180,8 @@ contract('RentalReservation', function (accounts) {
 			);
 			rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
 			_rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
-			console.log(_rentalContractAddress);
-			rentalInsance = await IRental.at(_rentalContractAddress)
-
+			rentalInstance = await IRental.at(_rentalContractAddress)
+			rentalId = await rentalInstance.getRentalId();
 
 			ERC20Instance = await MintableToken.new({
 				from: _owner
@@ -166,7 +190,7 @@ contract('RentalReservation', function (accounts) {
 				from: _owner
 			});
 
-			let rentalReservation = await RentalReservation.new();
+			rentalReservation = await RentalReservation.new();
 
 			await rentalReservation.init();
 
@@ -180,8 +204,7 @@ contract('RentalReservation', function (accounts) {
 				from: customerAddress
 			});
 			let tokenInstanceAddress = await rentalReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
-			let value = await rentalInsance.getReservationCost(checkInDate, '3');
-			console.log(value.toString());
+			actualReservationCost = await rentalInstance.getReservationCost(checkInDate, '3');
 
 		})
 
@@ -189,16 +212,168 @@ contract('RentalReservation', function (accounts) {
 
 			await rentalReservationContract.createRentalReservation(
 				rentalReservationId,
-				checkInDate,
-				checkOutDate,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
 				numberOfTravelers,
 				_rentalContractAddress, {
 					from: customerAddress
 				}
 			);
-			console.log('test');
 			let reservationCount = await rentalReservationContract.getRentalReservationsCount();
 			assert.equal(reservationCount, 1, "The hotel reservation was not created properly");
+		})
+
+		it("should create new Rental Reservation and set the correct parameters", async function () {
+			await rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			);
+
+			let rentalReservationAddress = await rentalReservationContract.getRentalReservationContractAddress(rentalReservationId);
+			let rentalReservationInstance = await RentalReservation.at(rentalReservationAddress);
+			let result = await rentalReservationInstance.getRentalReservation();
+
+			assert.equal(removeNullBytes(ethers.utils.toUtf8String(result[0])), rentalReservationId, "The reservation id was not set correctly");
+			assert.strictEqual(result[1], customerAddress, "The customer address was not set correctly");
+			assert.strictEqual(result[2].toString(), actualReservationCost.toString(), "The reservation cost was not set correctly");
+			assert.strictEqual(result[3].toString(), (formatTimestamp(checkInDate)).toString(), "The check in date  was not set correctly");
+			assert.strictEqual(result[4].toString(), (formatTimestamp(checkOutDate)).toString(), "The check out date was not set correctly");
+			assert.strictEqual(result[5].toString(), numberOfTravelers, "The number of travelers was not set correctly");
+			assert.isFalse(result[6], "Dispute open should be false ");
+			assert.equal(result[7], rentalId, "The rental id was not set correctly");
+
+		});
+
+		it("should create new Rental reservation for today", async function () {
+			await rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDateToday),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			);
+			let reservationCount = await rentalReservationContract.getRentalReservationsCount();
+			assert.equal(reservationCount, 1, "The hotel reservation was not created properly");
+		});
+
+		it("should transfer tokens from the customer to the reservation contract when reservation is craeted", async function () {
+			let initialCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+
+			await rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			);
+			let rentalReservationAddress = await rentalReservationContract.getRentalReservationContractAddress(rentalReservationId);
+			let rentalReservationInstance = await RentalReservation.at(rentalReservationAddress);
+
+			let finalCustomerBalance = await ERC20Instance.balanceOf(customerAddress);
+			let finalContractBalance = await ERC20Instance.balanceOf(rentalReservationInstance.address);
+
+			assert.equal(finalCustomerBalance.toString(), (initialCustomerBalance.minus(actualReservationCost)).toString(), "The transfer wasn't successful. Customer balance is not decreased");
+			assert.equal(finalContractBalance.toString(), actualReservationCost.toString(), "The transfer wasn't successful. Contract balance is not increased");
+		});
+
+		it("should emit two events when creating a rental reservation", async function () {
+			const expectedEvent = 'LogReservationCreated';
+
+			let result = await rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			);
+			assert.lengthOf(result.logs, 2, "There should be 2 event emitted from creating new hotel reservation!");
+			assert.strictEqual(result.logs[0].event, expectedEvent, `The first event emitted was ${result.logs[0].event} instead of ${expectedEvent}`);
+			assert.strictEqual(result.logs[1].event, expectedEvent, `The second event emitted was ${result.logs[1].event} instead of ${expectedEvent}`)
+		});
+
+		it("should throw if the start date is in the past", async function () {
+			await expectThrow(rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(pastCheckInDate),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			));
+		});
+
+		it("should throw if the end date is before the start date", async function () {
+			await expectThrow(rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkInDateToday),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			));
+		});
+
+		it("should throw if the reservation id already exists", async function () {
+			await rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			);
+
+			await expectThrow(rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			));
+		})
+
+		it("should throw if you try to update existing reservation", async function () {
+			await rentalReservationContract.createRentalReservation(
+				rentalReservationId,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
+				numberOfTravelers,
+				_rentalContractAddress, {
+					from: customerAddress
+				}
+			);
+
+			let rentalReservationAddress = await rentalReservationContract.getRentalReservationContractAddress(rentalReservationId);
+			let rentalReservationInstance = await RentalReservation.at(rentalReservationAddress);
+
+			await expectThrow(rentalReservationInstance.createRentalReservation(
+				rentalReservationId,
+				customerAddress,
+				formatTimestamp(checkInDate),
+				formatTimestamp(checkOutDate),
+				newNumberOfTravelers,
+				rentalId,
+				actualReservationCost, {
+					from: customerAddress
+				}
+			));
+
 		})
 	})
 
