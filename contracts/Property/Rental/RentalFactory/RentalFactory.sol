@@ -34,12 +34,22 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         return rentals[_rentalId];
     }
 
+    //here we set the marketplace id because there is no other way of getting it
     function setMarkeplaceId(bytes32 _marketplaceId) public {
         marketplaceId = _marketplaceId;
     }
 
     function getMarketplaceId() public view returns(bytes32 _marketplaceId) {
         return marketplaceId;
+    }
+
+    function getRentalsArrayLenght() public view returns(uint _rentalsArrayLength) {
+       return rentalIds.length;
+    }
+
+    function addRentalToMapping(address _rentalAddress, bytes32 _rentalId) {
+        rentals[_rentalId] = _rentalAddress;
+        rentalIds.push(_rentalId);
     }
 
     function validateCreate(
@@ -64,15 +74,15 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         uint[] _refundPercentages,
         uint[] _daysBeforeStartForRefund,
         bool _isInstantBooking,
-        uint deposit,
-        uint minNightsStay,
-        string rentalTitle
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle,
+        address _channelManager
 		) public returns(bool)
 	{
         require(_hostAddress != address(0));
         validateCreate(_rentalId, getMarketplaceId());
 
-        // RentalProxy proxy = new RentalProxy(this);
         IRental rentalContract = IRental(new RentalProxy(this));
 
         rentalContract.createRental(
@@ -83,15 +93,14 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
             _cleaningFee,
             _refundPercentages,
             _daysBeforeStartForRefund,
-            rentalIds.length,
             _isInstantBooking,
-            deposit,
-            minNightsStay,
-            rentalTitle
+            _deposit,
+            _minNightsStay,
+            _rentalTitle,
+            _channelManager
             
         );
-		rentals[_rentalId] = rentalContract;
-        rentalIds.push(_rentalId);
+		addRentalToMapping(rentalContract, _rentalId);
 
        emit LogCreateRentalContract(_rentalId, _hostAddress, rentalContract);
 		return true;

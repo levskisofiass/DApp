@@ -55,7 +55,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	}
 
 	modifier onlyExisting(bytes32 _hotelReservationId) {
-		require(hotelReservations[_hotelReservationId].hotelReservationAddress != address(0),"TEST");
+		require(hotelReservations[_hotelReservationId].hotelReservationAddress != address(0));
 		_;
 	}
 
@@ -183,8 +183,11 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 		require(hotelReservationContract.validateCancelation(msg.sender));
 		unlinkHotelReservation(_hotelReservationId);
 		(locToBeRefunded, locRemainder) = hotelReservationContract.getLocToBeRefunded();
-
-		assert(LOCTokenContract.transfer(hotelReservationContract.getCustomerAddress(), locToBeRefunded));
+		
+		if (locToBeRefunded > 0) {
+			assert(LOCTokenContract.transfer(hotelReservationContract.getCustomerAddress(), locToBeRefunded));
+		} 
+		
 		locRefundsRemainder += locRemainder;
 		LogCancelHotelReservation(_hotelReservationId, msg.sender, locRefundsRemainder);
 		return true;

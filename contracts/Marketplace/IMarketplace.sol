@@ -66,13 +66,5 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
         string _rentalTitle
     ) public returns(bool success);
 
-    function createHotelRooms(
-        bytes32 _hotelId,
-		bytes32 _marketplaceId, 
-        uint _roomsCount,
-        bytes32 _roomsType,
-        uint _workingDayPrice
-    ) public returns (bool success);
-
     function getRentalAndMarketplaceHash(bytes32 _rentalId, bytes32 _marketplaceId) public pure returns(bytes32 _rentalIdHash);
 }

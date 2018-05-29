@@ -13,17 +13,18 @@ contract IRentalFactory is IOwnableUpgradeableImplementation, IPropertyFactory {
     ) public returns(bool success);
 
     function createNewRental(
-        bytes32 _rentalId,
+           bytes32 _rentalId,
         address _hostAddress,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
         uint[] _refundPercentages,
         uint[] _daysBeforeStartForRefund,
         bool _isInstantBooking,
         uint _deposit,
         uint _minNightsStay,
-        string _rentalTitle
+        string _rentalTitle,
+        address _channelManager
 		) public returns(bool success);
 
     function rentalsCount() public constant returns(uint);
@@ -32,4 +33,5 @@ contract IRentalFactory is IOwnableUpgradeableImplementation, IPropertyFactory {
     function getRentalContractAddress(bytes32 _rentalId) public constant returns(address rentalContract);
     function setMarkeplaceId(bytes32 _marketplaceId) public;
     function getMarketplaceId() public view returns(bytes32 _marketplaceId);
+    function getRentalsArrayLenght() public view returns(uint _rentalsArrayLength);
 }
