@@ -3,13 +3,14 @@ pragma solidity ^0.4.17;
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IHotelReservation.sol";
 import "./../Tokens/StandardToken.sol";
+import "./../Upgradeability/SharedStorage.sol";
 
-contract HotelReservation is OwnableUpgradeableImplementation {
+contract HotelReservation is SharedStorage {
 	bytes32 hotelReservationId;
 	address customerAddress;
 	uint reservationCostLOC;
-	uint reservationStartDate;
-	uint reservationEndDate;
+	uint reservationStartDate; //Check-in date
+	uint reservationEndDate; //Check-out date
 	bytes32 hotelId;
 	bytes32 roomId;
 	uint numberOfTravelers;
@@ -58,7 +59,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 			if ((now + ( daysBeforeStartForRefund[i] * 1 days )) > reservationStartDate) {
 				continue;
 			}
-			if(refundPercentages[i] <= 100 && refundPercentages[i] > 0 ) {
+			if(refundPercentages[i] <= 100 && refundPercentages[i] >= 0 ) {
 					return true;
 				}
 		}
@@ -66,7 +67,7 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 	}
 
 	function validateDispute(address _customerAddress) public view returns (bool success) {
-		require(now > reservationEndDate);
+		require(now > reservationStartDate && now < reservationEndDate);
 		require(customerAddress == _customerAddress);
 		require(!isDisputeOpen);
 
@@ -84,9 +85,17 @@ contract HotelReservation is OwnableUpgradeableImplementation {
 
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder) {
 
+		if (reservationStartDate - (daysBeforeStartForRefund[0] * 1 days)  > now && refundPercentages[0] > 0) {
+			return (reservationCostLOC , 0);
+		}
+		if (refundPercentages[0] == 0) {
+			return (0 , reservationCostLOC);
+		}
+
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
 			
 			if((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
+			
 				uint locToBeRefunded = (reservationCostLOC * refundPercentages[i]) / 100;
 				uint locRemainder = reservationCostLOC - locToBeRefunded;
 				return (locToBeRefunded, locRemainder);

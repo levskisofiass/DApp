@@ -86,7 +86,6 @@ module.exports = async function (deployer, network, accounts) {
 
     await deployer.deploy(HotelReservation);
     let HotelReservationImpl = await HotelReservation.deployed();
-    await HotelReservationImpl.init();
 
     await deployer.deploy(HotelReservationFactory);
     let HotelReservationFactoryImpl = await HotelReservationFactory.deployed();
