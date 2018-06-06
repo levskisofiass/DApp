@@ -32,6 +32,7 @@ contract('Rental factory', function (accounts) {
     const _notOwner = accounts[1];
     const _marketplaceAdmin = accounts[2];
     const _rentalHost = accounts[3];
+    const _channelManger = accounts[4];
 
     const _rentalId = "testId123";
     const _rentalId2 = "testId223";
@@ -143,7 +144,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             );
@@ -163,7 +165,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             );
@@ -185,7 +188,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             );
@@ -210,7 +214,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             );
@@ -219,6 +224,7 @@ contract('Rental factory', function (accounts) {
             let rentalContractLocal = await IRental.at(rentalContractAddress);
 
             let result = await rentalContractLocal.getRental();
+            let rentalChannelManager = await rentalContractLocal.getChannelManager();
 
             assert.strictEqual(result[0].toString(), rentalIdHash, "The rentalId was not set correctly");
             assert.strictEqual(result[1], _rentalHost, "The host was not set correctly");
@@ -232,6 +238,7 @@ contract('Rental factory', function (accounts) {
             assert.strictEqual(result[9].toString(), _deposit, "The deposit was not set correctly");
             assert.strictEqual(result[10].toString(), _minNightsStay, "The minimum nights stay was not set correctly");
             assert.strictEqual(result[11], _rentalTitle, "The rental title was not set correctly");
+            assert.strictEqual(rentalChannelManager, _channelManger, "The rental channel manager was not set correctly");
         });
 
         it("should throw if trying to create rental when contract is paused", async function () {
@@ -250,7 +257,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             ));
@@ -268,7 +276,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             );
@@ -284,7 +293,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             ));
@@ -302,7 +312,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             ));
@@ -326,7 +337,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             ));
@@ -379,7 +391,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             );
@@ -400,7 +413,8 @@ contract('Rental factory', function (accounts) {
                 _isInstantBooking,
                 _deposit,
                 _minNightsStay,
-                _rentalTitle, {
+                _rentalTitle,
+                _channelManger, {
                     from: _rentalHost
                 }
             );

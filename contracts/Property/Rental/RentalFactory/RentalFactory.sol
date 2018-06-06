@@ -9,9 +9,8 @@ import "./../../PropertyFactory/PropertyFactory.sol";
 contract RentalFactory is IRentalFactory, PropertyFactory {
     bytes32 marketplaceId;
     bytes32[] public rentalIds;
+    uint[] private _rates;
     mapping (bytes32 => address) public rentals;
-
-    event LogCreateRentalContract(bytes32 rentalId, address hostAddress, address rentalContract);
 
     /**
      * @dev modifier ensuring that the modified method is only called for not existing rentals
@@ -34,7 +33,7 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         return rentals[_rentalId];
     }
 
-    //here we set the marketplace id because there is no other way of getting it
+    //We are setting marketplaceId on each reservation globally and use it only on this reservation. Do not use it for other purposes.
     function setMarkeplaceId(bytes32 _marketplaceId) public {
         marketplaceId = _marketplaceId;
     }
@@ -43,11 +42,11 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         return marketplaceId;
     }
 
-    function getRentalsArrayLenght() public view returns(uint _rentalsArrayLength) {
+    function getRentalsArrayLength() public view returns(uint _rentalsArrayLength) {
        return rentalIds.length;
     }
 
-    function addRentalToMapping(address _rentalAddress, bytes32 _rentalId) {
+    function addRentalToMapping(address _rentalAddress, bytes32 _rentalId) internal {
         rentals[_rentalId] = _rentalAddress;
         rentalIds.push(_rentalId);
     }

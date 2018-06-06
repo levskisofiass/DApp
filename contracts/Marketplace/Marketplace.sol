@@ -9,6 +9,7 @@ import "./../Property/Hotel/HotelFactory/IHotelFactory.sol";
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
     IRentalFactory public RentalFactoryContract;
     IHotelFactory public HotelFactoryContract;
+    bytes32 private _rentalIdHash;
 
     struct MarketplaceStruct {
         address adminAddress;
@@ -244,7 +245,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
     ) public onlyValidMarketplace(_marketplaceId) whenNotPaused returns(bool success) 
     {
         require(_rentalId != "");
-        bytes32 _rentalIdHash = getRentalAndMarketplaceHash(_rentalId,_marketplaceId);
+        _rentalIdHash = getRentalAndMarketplaceHash(_rentalId,_marketplaceId);
 
         RentalFactoryContract.setMarkeplaceId(_marketplaceId);
 

@@ -39,12 +39,14 @@ contract IRental is IOwnableUpgradeableImplementation {
 
     function validateUpdate(
         bytes32 _rentalId,
-        address _newHostAddress
+        address _newHostAddress,
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund
         ) public view returns(bool success);
 
     function getRental() public constant
         returns(
-              bytes32 _rentalId,
+            bytes32 _rentalId,
             address _hostAddress,  
             uint _defaultDailyRate, 
             uint _weekendRate,
@@ -55,11 +57,17 @@ contract IRental is IOwnableUpgradeableImplementation {
             bool _isInstantBooking,
             uint _deposit,
             uint _minNightsStay,
-            string _rentalTitle,
-            address _channelManger);
+            string _rentalTitle);
 
     function setPrice(uint256 _timestampStart, uint256 _timestampEnd, uint256 _price) public returns(bool success);
+     function setPriceForDays(
+        uint[] _days,
+        uint[] _prices
+    ) public returns(bool success);
 
     function getPrice(uint256 _timestamp) public constant returns(uint price);
     function validateRefundPercentages( uint[] _refundPercentages) public view returns (bool success);
+    function setRentalArrayIndex(address _rentalFactoryContractAddress) internal;
+    function validateRentalId(bytes32 _rentalId) internal view returns(bool success);
+     function getChannelManager() public view returns (address _channelManager);
 }

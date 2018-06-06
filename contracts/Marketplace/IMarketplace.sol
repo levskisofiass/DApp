@@ -63,7 +63,8 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
         bool _isInstantBooking,
         uint _deposit,
         uint _minNightsStay,
-        string _rentalTitle
+        string _rentalTitle,
+        address _channelManager
     ) public returns(bool success);
 
     function getRentalAndMarketplaceHash(bytes32 _rentalId, bytes32 _marketplaceId) public pure returns(bytes32 _rentalIdHash);

@@ -21,10 +21,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
     address channelManager;
     mapping (uint256 => uint256) public customRate;
 
-    event LogCreateRental(bytes32 _rentalId, address _hostAddress);
-    event LogUpdateRental( bytes32 _rentalId, address _newHostAddress);
-    event LogSetPriceRental(bytes32 rentalId, uint256 timestamp, uint256 price);
-
+  
     /**
      * @dev modifier ensuring that the modified method is only called by the host of current rental
      */
@@ -33,24 +30,23 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         _;
     }
 
-    modifier onlyValidAddresesForPrices() {
+    modifier onlyPriceSetterAddress() {
         require(msg.sender == hostAddress || msg.sender == channelManager);
         _;
     }
 
     function validateRentalId(bytes32 _rentalId) internal view returns(bool success) {
         require(_rentalId != "");
-        return true;
     }
 
     modifier onlyNewRental() {
         require(rentalId == "");
         _;
     }
-    modifier onlyValidArraysForCancelation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages) {
+    function onlyValidArraysForCancelation(uint[] _daysBeforeStartForRefund, uint[] _refundPercentages) internal {
 		require(_daysBeforeStartForRefund.length == _refundPercentages.length);
 		require(_daysBeforeStartForRefund.length > 0 && _daysBeforeStartForRefund.length <= 7);
-		_; 
+		
 	}
 
     modifier onlyValidArraysForPrices(uint[] _days, uint[] _prices) {
@@ -66,9 +62,14 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
 		return true;
 	}
 
-    function setRentalArrayIndex(address _rentalFactoryContractAddress) {
+    function getChannelManager() public view returns (address _channelManager) {
+        return channelManager;
+    } 
+
+    //We are setting the array index of each rental in a separate function, because of the limit for local variables in each function
+    function setRentalArrayIndex(address _rentalFactoryContractAddress) internal {
         IRentalFactory rentalFactoryContract = IRentalFactory(_rentalFactoryContractAddress);
-        rentalArrayIndex = rentalFactoryContract.getRentalsArrayLenght();
+        rentalArrayIndex = rentalFactoryContract.getRentalsArrayLength();
     }
 
     function getRental() public constant
@@ -84,8 +85,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
             bool _isInstantBooking,
             uint _deposit,
             uint _minNightsStay,
-            string _rentalTitle,
-            address _channelManger)
+            string _rentalTitle)
     {
         return (
             rentalId,
@@ -99,8 +99,7 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
             isInstantBooking,
             deposit,
             minNightsStay,
-            rentalTitle,
-            channelManager
+            rentalTitle
         );
     }
 
@@ -117,11 +116,12 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         uint _minNightsStay,
         string _rentalTitle,
         address _channelManager
-		) public onlyNewRental onlyValidArraysForCancelation(_refundPercentages, _daysBeforeStartForRefund)  returns(bool success)
+		) public onlyNewRental returns(bool success)
 	{
         validateRentalId(_rentalId);
         validateRefundPercentages(_refundPercentages);
         setRentalArrayIndex(msg.sender);
+        onlyValidArraysForCancelation(_refundPercentages, _daysBeforeStartForRefund); 
 
         rentalId = _rentalId;
         hostAddress = _hostAddress;
@@ -147,12 +147,13 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
         address _newHostAddress,
         uint[] _refundPercentages,
         uint[] _daysBeforeStartForRefund
-    ) public onlyValidArraysForCancelation(_refundPercentages, _daysBeforeStartForRefund) view onlyHost
+    ) public view onlyHost
         returns(bool success) 
     {
         require(_newHostAddress != address(0));
         require(rentalId == _rentalId);
         validateRefundPercentages(_refundPercentages);
+        onlyValidArraysForCancelation(_refundPercentages, _daysBeforeStartForRefund);
         return true;
     }
 
@@ -191,18 +192,18 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
     }
 
     /**
-     * @dev function use to set price for rental in different days
-     * @param _timestampStart - the UNIX timestamp of start point
-     * @param _timestampEnd - the UNIX timestamp of end point
+     * @dev function use to set price for rental for period
+     * @param _timestampStart - the UNIX timestamp of start point, the timestamp should be in seconds formatted to 14:00h UTC
+     * @param _timestampEnd - the UNIX timestamp of end point, the timestamp should be in seconds formatted to 14:00h UTC
      * @param _price - price of rental
+     * This function should be called / set from the frontend
      */
 
-     // This should be set from the front end. The expected params should be timestamp in seconds formated to 14:00h
     function setPrice(
         uint256 _timestampStart,
         uint256 _timestampEnd,
         uint256 _price
-    )  public onlyValidAddresesForPrices returns(bool success) 
+    )  public onlyPriceSetterAddress returns(bool success) 
     {
         require(_timestampEnd >= _timestampStart);
         require(_timestampStart >= now);
@@ -218,15 +219,20 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
 
         return true;
     }
-
-    // This should be set from the front end. The expected params should be timestamp in seconds formated to 14:00h
+    /**
+     * @dev function use to set price for rental in specific days
+     * @param _days - the timestamp of the day we want to set the price for, should be in seconds formatted to 14:00h UTC
+     * @param _prices - price of rental for the spesific day
+     * This function should be called / set from the frontend
+     */
     function setPriceForDays(
         uint[] _days,
         uint[] _prices
-    ) public onlyValidAddresesForPrices onlyValidArraysForPrices(_days, _prices) returns(bool success) {
-
+    ) public onlyPriceSetterAddress onlyValidArraysForPrices(_days, _prices) returns(bool success) {
+        IRentalFactory rentalFactoryContract = IRentalFactory(rentalFactoryContractAddress);
+        require(_days.length <= rentalFactoryContract.getMaxBookingPeriod());
         for (uint i = 0 ; i < _days.length; i++) {
-          if(  _prices[i] > 0) {
+          if(  _prices[i] < 0) {
               continue;
           }
           customRate[_days[i]] = _prices[i];
