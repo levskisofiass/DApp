@@ -85,17 +85,14 @@ contract HotelReservation is SharedStorage {
 
 	function getLocToBeRefunded() public view returns (uint _locToBeRefunded, uint _locRemainder) {
 
-		if (reservationStartDate - (daysBeforeStartForRefund[0] * 1 days)  > now && refundPercentages[0] > 0) {
+		if (reservationStartDate - (daysBeforeStartForRefund[0] * 1 days)  > now ) {
 			return (reservationCostLOC , 0);
-		}
-		if (refundPercentages[0] == 0) {
-			return (0 , reservationCostLOC);
 		}
 
 		for (uint i = 0 ; i < daysBeforeStartForRefund.length; i++) {
 			
 			if((now + ( daysBeforeStartForRefund[i] * 1 days )) <= reservationStartDate) {
-			
+
 				uint locToBeRefunded = (reservationCostLOC * refundPercentages[i]) / 100;
 				uint locRemainder = reservationCostLOC - locToBeRefunded;
 				return (locToBeRefunded, locRemainder);
@@ -169,7 +166,6 @@ contract HotelReservation is SharedStorage {
 		uint _numberOfTravelers
 	) public onlyNewReservations onlyValidPeriodOfTime(_reservationStartDate, _reservationEndDate) onlyValidArraysForCancelation(_daysBeforeStartForRefund,_refundPercentages) returns(bool success) 
 		{
-		validateRefundForCreation(_daysBeforeStartForRefund,_refundPercentages, _reservationStartDate);
 
 		hotelReservationId = _hotelReservationId;
 		customerAddress = _customerAddress;
