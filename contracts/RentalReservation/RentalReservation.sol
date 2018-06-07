@@ -51,7 +51,6 @@ contract RentalReservation is SharedStorage, IRentalReservation {
 		reservationCostLOC = _reservationCostLOC;
 		customerAddress = _customerAddress;
 
-
 		emit LogReservationCreated(_rentalReservationId, msg.sender, reservationCostLOC);
 
 		return true;
