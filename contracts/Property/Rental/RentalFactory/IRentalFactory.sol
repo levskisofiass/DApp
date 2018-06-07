@@ -30,7 +30,7 @@ contract IRentalFactory is IOwnableUpgradeableImplementation, IPropertyFactory {
     function rentalsCount() public constant returns(uint);
     
     function getRentalId(uint index) public constant returns(bytes32);
-    function getRentalContractAddress(bytes32 _rentalId) public constant returns(address rentalContract);
+    function getRentalContractAddress(bytes32 _rentalId, bytes32 _marketplaceId) public constant returns(address rentalContract);
     function setMarkeplaceId(bytes32 _marketplaceId) public;
     function getMarketplaceId() public view returns(bytes32 _marketplaceId);
     function getRentalsArrayLength() public view returns(uint _rentalsArrayLength);

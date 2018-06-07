@@ -159,8 +159,8 @@ contract('Rental', function (accounts) {
           from: _rentalHost
         }
       );
-      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
-      const rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+      // const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
+      const rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
 
       let rentalContract = await IRental.at(rentalContractAddress);
       await expectThrow(rentalContract.createRental(
@@ -350,7 +350,7 @@ contract('Rental', function (accounts) {
       );
 
       const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
-      let rentalAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+      let rentalAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
       rentalContract = await IRental.at(rentalAddress);
 
     });
@@ -680,8 +680,8 @@ contract('Rental', function (accounts) {
       await factoryContract.setMaxBookingPeriod(maxPeriodDays);
 
       timestampStart = await currentTime(web3) + (randomDay);
-      timestampEnd = await currentTime(web3) + (maxPeriodDays);
-      rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+      timestampEnd = await currentTime(web3) + (maxPeriodDays + 86400);
+      rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
       rentalContract = await IRental.at(rentalContractAddress);
     });
 
@@ -753,6 +753,23 @@ contract('Rental', function (accounts) {
 
       amount = await rentalContract.getPrice(timestampEnd);
       assert(amount.eq(_defaultDailyRate), "The price was not correct in endday");
+    });
+
+    it("should set different price rental for one day and for another day should be the weekend price", async () => {
+      weekend = await currentTime(web3) + (maxPeriodDays);
+      await rentalContract.setPrice(
+        timestampStart,
+        timestampStart,
+        price, {
+          from: _rentalHost
+        }
+      );
+
+      amount = await rentalContract.getPrice(timestampStart);
+      assert(amount.eq(price), "The price was not correct set in startday");
+
+      amount = await rentalContract.getPrice(weekend);
+      assert(amount.eq(_weekendRate), "The price was not correct in endday");
     });
 
     it("should set different price for rental for array of days", async function () {
@@ -971,9 +988,8 @@ contract('Rental', function (accounts) {
 
       rentalImpl2 = await RentalUpgrade.new();
       await rentalImpl2.init();
-      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       await factoryContract.setImplAddress(rentalImpl2.address);
-      let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
       let rentalContract = IRentalUpgrade.at(rentalContractAddress);
 
       await rentalContract.updateCleaningFee(_cleaningFee2);
@@ -1005,8 +1021,7 @@ contract('Rental', function (accounts) {
       let rentalsCount = await factoryContract.rentalsCount();
       assert(rentalsCount.eq(1), "The rentals count was not correct");
 
-      const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
-      let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+      let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
       let rentalContract = IRentalUpgrade.at(rentalContractAddress);
 
       await expectThrow(rentalContract.updateCleaningFee(_cleaningFee2));

@@ -67,7 +67,10 @@ contract IRental is IOwnableUpgradeableImplementation {
 
     function getPrice(uint256 _timestamp) public constant returns(uint price);
     function validateRefundPercentages( uint[] _refundPercentages) public view returns (bool success);
+    function getReservationCost(uint _checkInDate ,uint _days) public view returns (uint _reservationCostLoc);
+    function getWeekday(uint timestamp) public pure returns (uint);
+    function getRentalId() public view returns(bytes32 _rentalId);
     function setRentalArrayIndex(address _rentalFactoryContractAddress) internal;
     function validateRentalId(bytes32 _rentalId) internal view returns(bool success);
-     function getChannelManager() public view returns (address _channelManager);
+    function getChannelManager() public view returns (address _channelManager);
 }

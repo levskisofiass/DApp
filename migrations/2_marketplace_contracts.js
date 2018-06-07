@@ -1,4 +1,4 @@
-// const web3 = require("web3");
+let ethers = require('ethers');
 let MarketplaceProxy = artifacts.require("./../Marketplace/MarketplaceProxy.sol");
 let Marketplace = artifacts.require("./../Marketplace/Marketplace.sol");
 let IMarketplace = artifacts.require("./../Marketplace/IMarketplace.sol");

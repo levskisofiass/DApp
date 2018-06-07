@@ -7,6 +7,8 @@ import "./../../PropertyFactory/PropertyFactory.sol";
 
 
 contract RentalFactory is IRentalFactory, PropertyFactory {
+
+    //This is only stored for creating a rental purposes because, we can't pass it as parameter because of the parameters limit
     bytes32 marketplaceId;
     bytes32[] public rentalIds;
     uint[] private _rates;
@@ -29,8 +31,8 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         return rentalIds[index];
     }
 
-    function getRentalContractAddress(bytes32 _rentalId) public constant returns(address rentalContract) {
-        return rentals[_rentalId];
+    function getRentalContractAddress(bytes32 _rentalId, bytes32 _marketplaceId) public constant returns(address rentalContract) {
+        return rentals[keccak256(_rentalId,_marketplaceId)];
     }
 
     //We are setting marketplaceId on each reservation globally and use it only on this reservation. Do not use it for other purposes.
@@ -38,6 +40,7 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         marketplaceId = _marketplaceId;
     }
 
+    //This is used only when creating a rental
     function getMarketplaceId() public view returns(bytes32 _marketplaceId) {
         return marketplaceId;
     }

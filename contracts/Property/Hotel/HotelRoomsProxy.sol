@@ -18,6 +18,6 @@ contract HotelRoomsProxy is Forwardable {
     */
     function () payable public {
 		address hotelRoomsImplAddress = hotelFactoryContract.getImplAddress();
-        delegatedFwd(hotelRoomsImplAddress, msg.data);
+        delegatedFwd(hotelRoomsImplAddress);
     }
 }

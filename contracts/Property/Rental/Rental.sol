@@ -250,7 +250,32 @@ contract Rental is IRental, OwnableUpgradeableImplementation {
 
         if (customRate[_timestamp] > 0) 
             return customRate[_timestamp];
-        else
+        
+        if(getWeekday(_timestamp) == 6 || getWeekday(_timestamp) == 7) {
+            return weekendRate;
+        }
             return defaultDailyRate;
+    }
+
+
+
+    function getReservationCost(uint _checkInDate ,uint _days) public view returns (uint _reservationCostLoc) {
+        
+        uint reservationCostLoc;
+
+        for( uint i =0; i<_days; i++) {
+            uint currentTimestamp = _checkInDate + (i * 1 days);
+            reservationCostLoc += getPrice(currentTimestamp);
+        }
+        
+    return reservationCostLoc;
+    }
+
+    function getWeekday(uint timestamp) public pure returns (uint) {
+                return uint((timestamp / 1 days + 4) % 7);
+        }
+
+    function getRentalId() public view returns(bytes32 _rentalId) {
+        return rentalId;
     }
 }

@@ -18,6 +18,6 @@ contract RentalProxy is Forwardable {
     */
     function () payable public {
 		address rentalImplAddress = rentalFactoryContract.getImplAddress();
-        delegatedFwd(rentalImplAddress, msg.data);
+        delegatedFwd(rentalImplAddress);
     }
 }

@@ -4,9 +4,8 @@ contract Forwardable {
     /**
     * @dev Performs a delegatecall and returns whatever the delegatecall returned (entire context execution will return!)
     * @param _dst Destination address to perform the delegatecall
-    * @param _calldata Calldata for the delegatecall
     */
-    function delegatedFwd(address _dst, bytes _calldata) internal {
+    function delegatedFwd(address _dst) internal {
         assembly {
        
             let ptr := mload(0x40)
