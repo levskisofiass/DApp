@@ -47,6 +47,7 @@ contract('Marketplace', function (accounts) {
   const _newMarketplaceAdmin = accounts[3];
   const _rentalHost = accounts[4];
   const _rentalHostUpdate = accounts[5];
+  const _channelManager = accounts[6];
 
   const _marketplaceId = util.toBytes32("5a9d0e1a87");
   const _marketplaceId2 = util.toBytes32("5a9d0e1a88");
@@ -89,6 +90,7 @@ contract('Marketplace', function (accounts) {
 
   describe("init contract", () => {
     beforeEach(async () => {
+
       marketplaceImpl = await Marketplace.new();
       marketplaceProxy = await MarketplaceProxy.new(marketplaceImpl.address);
       marketplaceContract = await IMarketplace.at(marketplaceProxy.address);
@@ -882,7 +884,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -902,7 +905,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -920,7 +924,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -944,13 +949,15 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
       let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
       let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
       let rentalContractLocal = await IRental.at(rentalContractAddress);
+      let rentalChannelManger = await rentalContractLocal.getChannelManager();
 
       let result = await rentalContractLocal.getRental();
 
@@ -966,6 +973,7 @@ contract('Marketplace', function (accounts) {
       assert.strictEqual(result[9].toString(), _deposit, "The deposit was not set correctly");
       assert.strictEqual(result[10].toString(), _minNightsStay, "The minimum nights stay was not set correctly");
       assert.strictEqual(result[11], _rentalTitle, "The rental title was not set correctly");
+      assert.strictEqual(rentalChannelManger, _channelManager, "The rental channel manager was not set correctly");
     });
 
     it("should append to the indexes array and set the last element correctly", async function () {
@@ -980,7 +988,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -1013,7 +1022,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -1031,7 +1041,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -1049,7 +1060,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -1073,7 +1085,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -1092,7 +1105,8 @@ contract('Marketplace', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -1102,7 +1116,7 @@ contract('Marketplace', function (accounts) {
     });
   });
 
-  describe("create hotel from Marketplace", () => {
+  xdescribe("create hotel from Marketplace", () => {
     beforeEach(async function () {
       factoryImpl = await HotelFactory.new();
       factoryProxy = await HotelFactoryProxy.new(factoryImpl.address);

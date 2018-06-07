@@ -15,6 +15,12 @@ module.exports = {
       },
       network_id: 3,
       gas: 4700036
+    },
+    rinkeby: {
+      provider: new HDWalletProvider(config.PRIVATE_KEY, "https://rinkeby.infura.io/" + config.INFURA_API_KEY),
+      network_id: 4,
+      port: 8545,
+      gas: 4000000
     }
   },
   solc: {

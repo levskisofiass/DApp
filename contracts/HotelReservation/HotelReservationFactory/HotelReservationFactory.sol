@@ -55,7 +55,7 @@ contract HotelReservationFactory is IHotelReservationFactory, OwnableUpgradeable
 	}
 
 	modifier onlyExisting(bytes32 _hotelReservationId) {
-		require(hotelReservations[_hotelReservationId].hotelReservationAddress != address(0),"TEST");
+		require(hotelReservations[_hotelReservationId].hotelReservationAddress != address(0));
 		_;
 	}
 

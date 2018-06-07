@@ -9,6 +9,7 @@ import "./../Property/Hotel/HotelFactory/IHotelFactory.sol";
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
     IRentalFactory public RentalFactoryContract;
     IHotelFactory public HotelFactoryContract;
+    bytes32 private _rentalIdHash;
 
     struct MarketplaceStruct {
         address adminAddress;
@@ -238,11 +239,13 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         bool _isInstantBooking,
         uint _deposit,
         uint _minNightsStay,
-        string _rentalTitle
+        string _rentalTitle,
+        address _channelManager
+
     ) public onlyValidMarketplace(_marketplaceId) whenNotPaused returns(bool success) 
     {
         require(_rentalId != "");
-        bytes32 _rentalIdHash = getRentalAndMarketplaceHash(_rentalId,_marketplaceId);
+        _rentalIdHash = getRentalAndMarketplaceHash(_rentalId,_marketplaceId);
 
         RentalFactoryContract.setMarkeplaceId(_marketplaceId);
 
@@ -257,7 +260,8 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
             _isInstantBooking,
             _deposit,
             _minNightsStay,
-            _rentalTitle
+            _rentalTitle,
+            _channelManager
 
         );
 
@@ -266,25 +270,4 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return true;
     }
 
-    function createHotelRooms(
-        bytes32 _hotelId,
-		bytes32 _marketplaceId, 
-        uint _roomsCount,
-        bytes32 _roomsType,
-        uint _defaultDailyRate
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns (bool success)
-    {
-        HotelFactoryContract.createHotelRooms(
-            _hotelId,
-            _marketplaceId, 
-            msg.sender,
-            _roomsCount,
-            _roomsType,
-            _defaultDailyRate
-        );
-
-       emit LogCreateHotelFromMarketplace(_hotelId, msg.sender, _marketplaceId);
-
-        return true;
-    }
 }

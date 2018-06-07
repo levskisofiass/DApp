@@ -11,9 +11,8 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
     //This is only stored for creating a rental purposes because, we can't pass it as parameter because of the parameters limit
     bytes32 marketplaceId;
     bytes32[] public rentalIds;
+    uint[] private _rates;
     mapping (bytes32 => address) public rentals;
-
-    event LogCreateRentalContract(bytes32 rentalId, address hostAddress, address rentalContract);
 
     /**
      * @dev modifier ensuring that the modified method is only called for not existing rentals
@@ -36,6 +35,7 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         return rentals[keccak256(_rentalId,_marketplaceId)];
     }
 
+    //We are setting marketplaceId on each reservation globally and use it only on this reservation. Do not use it for other purposes.
     function setMarkeplaceId(bytes32 _marketplaceId) public {
         marketplaceId = _marketplaceId;
     }
@@ -43,6 +43,15 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
     //This is used only when creating a rental
     function getMarketplaceId() public view returns(bytes32 _marketplaceId) {
         return marketplaceId;
+    }
+
+    function getRentalsArrayLength() public view returns(uint _rentalsArrayLength) {
+       return rentalIds.length;
+    }
+
+    function addRentalToMapping(address _rentalAddress, bytes32 _rentalId) internal {
+        rentals[_rentalId] = _rentalAddress;
+        rentalIds.push(_rentalId);
     }
 
     function validateCreate(
@@ -67,15 +76,15 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         uint[] _refundPercentages,
         uint[] _daysBeforeStartForRefund,
         bool _isInstantBooking,
-        uint deposit,
-        uint minNightsStay,
-        string rentalTitle
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle,
+        address _channelManager
 		) public returns(bool)
 	{
         require(_hostAddress != address(0));
         validateCreate(_rentalId, getMarketplaceId());
 
-        // RentalProxy proxy = new RentalProxy(this);
         IRental rentalContract = IRental(new RentalProxy(this));
 
         rentalContract.createRental(
@@ -86,15 +95,14 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
             _cleaningFee,
             _refundPercentages,
             _daysBeforeStartForRefund,
-            rentalIds.length,
             _isInstantBooking,
-            deposit,
-            minNightsStay,
-            rentalTitle
+            _deposit,
+            _minNightsStay,
+            _rentalTitle,
+            _channelManager
             
         );
-		rentals[_rentalId] = rentalContract;
-        rentalIds.push(_rentalId);
+		addRentalToMapping(rentalContract, _rentalId);
 
        emit LogCreateRentalContract(_rentalId, _hostAddress, rentalContract);
 		return true;

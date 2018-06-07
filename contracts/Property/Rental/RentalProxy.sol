@@ -7,7 +7,7 @@ contract RentalProxy is Forwardable {
 	address public rentalFactoryAddress;
 	IRentalFactory rentalFactoryContract;
 
-	function RentalProxy(address _rentalFactoryAddress) public {
+	constructor(address _rentalFactoryAddress) public {
 		rentalFactoryAddress = _rentalFactoryAddress;
 		rentalFactoryContract = IRentalFactory(rentalFactoryAddress);
 	}

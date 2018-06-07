@@ -1,4 +1,4 @@
-const web3 = require("web3");
+// const web3 = require("web3");
 
 const MarketplaceProxy = artifacts.require("./Marketplace/MarketplaceProxy.sol");
 const Marketplace = artifacts.require("./Marketplace/Marketplace.sol");
@@ -19,6 +19,7 @@ const IOwnableUpgradeableImplementation = artifacts.require("./Upgradeability/Ow
 const util = require('./util');
 const expectThrow = util.expectThrow;
 const getFutureTimestamp = util.getFutureTimestamp;
+const currentTime = util.web3Now;
 
 contract('Rental', function (accounts) {
   let rentalContract;
@@ -38,12 +39,14 @@ contract('Rental', function (accounts) {
   const _marketplaceAdmin = accounts[2];
   const _rentalHost = accounts[3];
   const _rentalHostUpdate = accounts[4];
+  const _channelManager = accounts[5];
+  const _newChannelManager = accounts[6];
 
   const _rentalId = "testId123";
   const _rentalId2 = "testId223";
   const _marketplaceId = "ID123";
   const _marketplaceIdUpdate = "ID1234";
-  const _defaultDailyRate = '1000000000000000000';
+  const _defaultDailyRate = '1500000000000000000';
   const _defaultDailyRateUpdate = '2000000000000000000';
   const _weekendRateUpdate = '3000000000000000000';
   const _weekendRate = '2000000000000000000';
@@ -64,6 +67,11 @@ contract('Rental', function (accounts) {
   const _depositUpdate = '300000000000';
   const _minNightsStayUpadate = '4';
   const _rentalTitleUpdate = 'Poor Rental'
+  const _daysPriceArray = ['1535119200', '1535637600']
+  const _priceArray = ['100', '200']
+  const _priceArrayWithZero = ['0', '200']
+  const _maxPriceArrayDays = ['1535119200', '1535637600', '1535119200', '1535637600', '1535119200', '1535637600', '1535119200', '1535637600', '1535119200', '1535637600', '1535119200', '1535637600', '1535119200', '1535637600', '1535119200', '1535637600']
+  const _maxPriceArray = ['90', '80', '70', '60', '50', '40', '30', '20', '90', '80', '70', '60', '50', '40', '30', '20'];
 
   const _wrongRefundPercentages = ['80', '70'];
   const _wrongRefundDays = ['3', '2'];
@@ -125,7 +133,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -145,7 +154,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -161,11 +171,11 @@ contract('Rental', function (accounts) {
         _cleaningFee,
         _refundPercentages,
         _daysBeforeStartForRefund,
-        _rentalArrayIndex,
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -183,7 +193,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -201,7 +212,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -219,7 +231,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -237,7 +250,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -255,7 +269,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -273,7 +288,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       ));
@@ -327,7 +343,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -351,7 +368,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       );
@@ -371,12 +389,15 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       );
 
       let result = await rentalContract.getRental();
+      let rentalChannelManager = await rentalContract.getChannelManager();
+
       assert.strictEqual(result[1].toString(), _rentalHostUpdate, "The Host was not update correctly")
       assert.strictEqual(result[2].toString(), _defaultDailyRateUpdate, "The workingDayPrice was not update correctly");
       assert.strictEqual(result[3].toString(), _weekendRateUpdate, "The nonWorkingDayPrice was not update correctly");
@@ -387,6 +408,7 @@ contract('Rental', function (accounts) {
       assert.strictEqual(result[9].toString(), _depositUpdate, "The cleaningFee was not update correctly");
       assert.strictEqual(result[10].toString(), _minNightsStayUpadate, "The cleaningFee was not update correctly");
       assert.strictEqual(result[11].toString(), _rentalTitleUpdate, "The cleaningFee was not update correctly");
+      assert.strictEqual(rentalChannelManager, _newChannelManager, "The channel manager was not update correctly");
     });
 
     it("should throw if trying to update rental with empty rentalId", async function () {
@@ -401,7 +423,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }));
     });
@@ -418,7 +441,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }));
     });
@@ -436,7 +460,8 @@ contract('Rental', function (accounts) {
         "",
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }));
     });
@@ -454,7 +479,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _owner
         }));
     });
@@ -473,7 +499,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       );
@@ -495,7 +522,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       ));
@@ -515,7 +543,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       ));
@@ -535,7 +564,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       ));
@@ -555,7 +585,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       ));
@@ -575,7 +606,8 @@ contract('Rental', function (accounts) {
         _rentalHostUpdate,
         _depositUpdate,
         _minNightsStayUpadate,
-        _rentalTitleUpdate, {
+        _rentalTitleUpdate,
+        _newChannelManager, {
           from: _rentalHost
         }
       ));
@@ -584,10 +616,10 @@ contract('Rental', function (accounts) {
   });
 
   describe("set different price for specific date for rental", () => {
-    let anotherDayinSecunds = 1 * 24 * 60 * 1000;
-    let randomDay = 2 * 24 * 60;
-    let maxPeriodDays = 30 * 24 * 60;
-    let closeOfMaxBookingDays = 60 * 24 * 60;
+    let anotherDayinSecunds = 1 * 24 * 60 * 60;
+    let randomDay = 2 * 24 * 60 * 60;
+    let maxPeriodDays = 30 * 24 * 60 * 60;
+    let closeOfMaxBookingDays = 60 * 24 * 60 * 60;
     let price = 2000000000000000000;
     let timestampStart;
     let timestampEnd;
@@ -639,14 +671,16 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
       const rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
-      await factoryContract.setMaxBookingPeriod(maxPeriodDays * 1000);
-      timestampStart = await getFutureTimestamp(randomDay);
-      timestampEnd = await getFutureTimestamp(maxPeriodDays);
+      await factoryContract.setMaxBookingPeriod(maxPeriodDays);
+
+      timestampStart = await currentTime(web3) + (randomDay);
+      timestampEnd = await currentTime(web3) + (maxPeriodDays);
       rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
       rentalContract = await IRental.at(rentalContractAddress);
     });
@@ -720,6 +754,56 @@ contract('Rental', function (accounts) {
       amount = await rentalContract.getPrice(timestampEnd);
       assert(amount.eq(_defaultDailyRate), "The price was not correct in endday");
     });
+
+    it("should set different price for rental for array of days", async function () {
+      await rentalContract.setPriceForDays(
+        _daysPriceArray,
+        _priceArray, {
+          from: _rentalHost
+        });
+      amount = await rentalContract.getPrice(_daysPriceArray[0]);
+      assert.strictEqual(amount.toString(), _priceArray[0], "The price was not correct set for the first day");
+
+
+      amount = await rentalContract.getPrice(_daysPriceArray[1]);
+      assert.strictEqual(amount.toString(), _priceArray[1], "The price was not correct set for the second day");
+
+    })
+    it("should throw when non-host trying to set price for days", async () => {
+      await expectThrow(
+        rentalContract.setPriceForDays(
+          _daysPriceArray,
+          _priceArray, {
+            from: _rentalHostUpdate
+          })
+      );
+    });
+
+    it("should not set a price if the price is not greater than 0", async function () {
+      await rentalContract.setPriceForDays(
+        _daysPriceArray,
+        _priceArrayWithZero, {
+          from: _rentalHost
+        });
+      amount = await rentalContract.getPrice(_daysPriceArray[0]);
+      assert.strictEqual(amount.toString(), _defaultDailyRate, "The price was not correct set for the first day");
+
+
+      amount = await rentalContract.getPrice(_daysPriceArray[1]);
+      assert.strictEqual(amount.toString(), _priceArray[1], "The price was not correct set for the second day");
+    })
+
+    it("should throw on interval pricing > max booking days interval", async function () {
+      maxPeriodDays = 10 * 24 * 60 * 60;
+      await factoryContract.setMaxBookingPeriod(maxPeriodDays);
+      await expectThrow(
+        rentalContract.setPriceForDays(
+          _maxPriceArrayDays,
+          _maxPriceArray, {
+            from: _rentalHostUpdate
+          })
+      );
+    })
 
     it("should throw when non-host trying to set price", async () => {
       await expectThrow(
@@ -848,7 +932,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -876,7 +961,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
@@ -911,7 +997,8 @@ contract('Rental', function (accounts) {
         _isInstantBooking,
         _deposit,
         _minNightsStay,
-        _rentalTitle, {
+        _rentalTitle,
+        _channelManager, {
           from: _rentalHost
         }
       );
