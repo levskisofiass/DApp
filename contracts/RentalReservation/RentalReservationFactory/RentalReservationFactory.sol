@@ -10,13 +10,12 @@ import "./../../Property/Rental/IRental.sol";
 
 contract RentalReservationFactory is IRentalReservationFactory, OwnableUpgradeableImplementation {
 
-	address public implContract;
+	address public RentalReservationImplAddress;
 	bytes32[] public rentalReservationIds;
 
 	struct RentalReservationStruct {
 		address rentalReservationAddress;
 		uint rentalReservationArrayIndex;
-
 	}
 
     mapping (bytes32 => RentalReservationStruct) public rentalReservations;
@@ -30,16 +29,16 @@ contract RentalReservationFactory is IRentalReservationFactory, OwnableUpgradeab
         _;
     }
 	
-	function setImplAddress(address implAddress) public onlyOwner {
-        implContract = implAddress;
+	function setImplAddress(address _implAddress) public onlyOwner {
+        RentalReservationImplAddress = _implAddress;
     }
 
 	function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
 		LOCTokenContract = StandardToken(locTokenContractAddress);
 	}
 
-	function getImplAddress() public view returns(address implAddress) {
-        return implContract;
+	function getImplAddress() public view returns(address _implAddress) {
+        return RentalReservationImplAddress;
     }
 
 	function getRentalReservationsCount() public view returns(uint _rentalReservationCount) {
@@ -49,8 +48,6 @@ contract RentalReservationFactory is IRentalReservationFactory, OwnableUpgradeab
 	 function getRentalReservationContractAddress(bytes32 _rentalReservationId) public view returns(address rentalReservationContract) {
         return rentalReservations[_rentalReservationId].rentalReservationAddress;
     }
-
-
 
 	function createRentalReservation(
 		bytes32 _rentalReservationId,
@@ -79,8 +76,6 @@ contract RentalReservationFactory is IRentalReservationFactory, OwnableUpgradeab
 			 _reservationCostLOC
 		);
 
-	
-
 		rentalReservationIds.push(_rentalReservationId);
 		rentalReservations[_rentalReservationId] = RentalReservationStruct({
 			rentalReservationAddress: rentalReservationContract,
@@ -88,11 +83,9 @@ contract RentalReservationFactory is IRentalReservationFactory, OwnableUpgradeab
 
 		});
 
-
 		assert(LOCTokenContract.transferFrom(msg.sender, address(rentalReservationContract), _reservationCostLOC));
 
 		emit LogReservationCreated(_rentalReservationId, msg.sender, _reservationCostLOC);
-
 		return true;
 	}
 }

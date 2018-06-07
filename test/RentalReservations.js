@@ -192,8 +192,6 @@ contract('RentalReservation', function (accounts) {
 
 			rentalReservation = await RentalReservation.new();
 
-			await rentalReservation.init();
-
 			rentalReservationFactoryImpl = await RentalReservationFactory.new();
 			rentalReservationFactoryProxy = await RentalReservationFactoryProxyy.new(rentalReservationFactoryImpl.address);
 			rentalReservationContract = await IRentalReservationFactory.at(rentalReservationFactoryProxy.address);

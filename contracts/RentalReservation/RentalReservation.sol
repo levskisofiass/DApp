@@ -6,7 +6,7 @@ import "./../Tokens/StandardToken.sol";
 import "./../Property/Rental/IRental.sol";
 import "./../Property/Rental/RentalFactory/IRentalFactory.sol";
 
-contract RentalReservation is SharedStorage {
+contract RentalReservation is SharedStorage, IRentalReservation {
 
 	bytes32 rentalReservationId;
 	address customerAddress;
@@ -20,9 +20,6 @@ contract RentalReservation is SharedStorage {
 	StandardToken public LOCTokenContract;
 	IRentalReservation public rentalReservationContract;
 	IRentalFactory public rentalFactoryContract;
-
-
-	event LogReservationCreated(bytes32 rentalReservationId, address _customerAddress, uint _reservationCostLOC );
 
 	modifier onlyValidPeriodOfTime(uint _startDate, uint _endDate) {
 		require(_startDate >= now);

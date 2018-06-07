@@ -4,13 +4,14 @@ import "./../../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradea
 
 contract IRentalReservationFactory is IOwnableUpgradeableImplementation {
 
+	event LogReservationCreated(bytes32 rentalReservationId, address _customerAddress, uint _reservationCostLOC );
+
 	function setImplAddress(address implAddress) public;
     function getImplAddress() public view returns(address implAddress);
 	function getRentalReservationsCount() public view returns(uint _rentalReservationCount);
 	function setLOCTokenContractAddress(address locTokenContractAddress) public;
 	function getRentalReservationContractAddress(bytes32 _rentalReservationId) public view returns(address rentalReservationContract);
-	event LogReservationCreated(bytes32 rentalReservationId, address _customerAddress, uint _reservationCostLOC );
-
+	
 	function createRentalReservation(
 		bytes32 _rentalReservationId,
 		uint _checkInDate,
