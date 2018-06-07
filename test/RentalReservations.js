@@ -55,6 +55,7 @@ contract('RentalReservation', function (accounts) {
 	const _marketplaceAdmin = accounts[2];
 	const _rentalHost = accounts[3];
 	let _rentalContractAddress;
+	const _channelManager = accounts[5];
 
 
 	//Utils
@@ -174,7 +175,8 @@ contract('RentalReservation', function (accounts) {
 				_isInstantBooking,
 				_deposit,
 				_minNightsStay,
-				_rentalTitle, {
+				_rentalTitle,
+				_channelManager, {
 					from: _rentalHost
 				}
 			);

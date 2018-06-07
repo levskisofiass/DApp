@@ -194,7 +194,7 @@ contract('Rental factory', function (accounts) {
                 }
             );
             let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
-            let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+            let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
             let rentalContractLocal = await IRental.at(rentalContractAddress);
 
             let result = await rentalContractLocal.getRental();
@@ -220,7 +220,7 @@ contract('Rental factory', function (accounts) {
                 }
             );
             let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
-            let rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+            let rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
             let rentalContractLocal = await IRental.at(rentalContractAddress);
 
             let result = await rentalContractLocal.getRental();
@@ -431,7 +431,7 @@ contract('Rental factory', function (accounts) {
 
         it("should get correct rental contract address by rentalId", async function () {
             let rentalIdHash = await marketplaceContract.getRentalAndMarketplaceHash(_rentalId, _marketplaceId);
-            const rentalContractAddress = await factoryContract.getRentalContractAddress(rentalIdHash);
+            const rentalContractAddress = await factoryContract.getRentalContractAddress(_rentalId, _marketplaceId);
 
             let rentalContract = await IRental.at(rentalContractAddress);
             let result = await rentalContract.getRental();
