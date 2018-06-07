@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/OwnableUpgradeableImplementation.sol";
 import "./IMarketplace.sol";
@@ -9,6 +9,7 @@ import "./../Property/Hotel/HotelFactory/IHotelFactory.sol";
 contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable {
     IRentalFactory public RentalFactoryContract;
     IHotelFactory public HotelFactoryContract;
+    bytes32 private _rentalIdHash;
 
     struct MarketplaceStruct {
         address adminAddress;
@@ -94,6 +95,13 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         _;
     }
 
+    modifier onlyValidMarketplace(bytes32 marketplaceId) {
+        require(marketplaceId != "" , "Invalid Marketplace Id");
+        require(marketplaces[marketplaceId].isApproved, "Marketplace is not approved");
+        require(marketplaces[marketplaceId].isActive, "Marketplace is not active");
+        _;
+    }
+
     function isApprovedMarketplace(bytes32 marketplaceId) public constant returns(bool result) {
         return marketplaces[marketplaceId].isApproved;
     }
@@ -147,7 +155,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         });
 
         marketplaceIds.push(_marketplaceId);
-        LogCreateMarketplace(_marketplaceId, msg.sender, _url);
+        emit LogCreateMarketplace(_marketplaceId, msg.sender, _url);
 		return true;
 	}
 
@@ -158,7 +166,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
 		bytes32 _disputeAPI,
 		address _exchangeContractAddress,
         address _newAdmin
-		) public onlyAdmin(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success)
+		) public onlyActive(_marketplaceId) onlyAdmin(_marketplaceId) whenNotPaused returns(bool success)
 	{
         require(_url != "");
         require(_rentalAPI != "");
@@ -174,7 +182,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         marketplace.disputeAPI = _disputeAPI;
         marketplace.exchangeContractAddress = _exchangeContractAddress;
 
-        LogUpdateMarketplace(_marketplaceId, _newAdmin, _url);
+        emit LogUpdateMarketplace(_marketplaceId, _newAdmin, _url);
 		return true;
 	}
 
@@ -183,7 +191,7 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         ) public onlyOwner onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
     {
         marketplaces[_marketplaceId].isApproved = true;
-	    LogApproveMarketplace(_marketplaceId);
+	    emit LogApproveMarketplace(_marketplaceId);
 
         return true;
     }
@@ -193,21 +201,21 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         ) public onlyOwner onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
     {
         marketplaces[_marketplaceId].isApproved = false;
-	    LogRejectMarketplace(_marketplaceId);
+	    emit LogRejectMarketplace(_marketplaceId);
 
         return true;
     }
 
     function activateApprovalPolicy() public onlyOwner whenNotPaused returns(bool success) {
         approveOnCreation = false;
-	    LogChangeApprovalPolicy(true);
+	    emit LogChangeApprovalPolicy(true);
 
         return true;
     }
 
     function deactivateApprovalPolicy() public onlyOwner whenNotPaused returns(bool success) {
         approveOnCreation = true;
-	    LogChangeApprovalPolicy(false);
+	    emit LogChangeApprovalPolicy(false);
 
         return true;
     }
@@ -216,53 +224,50 @@ contract Marketplace is IMarketplace, OwnableUpgradeableImplementation, Pausable
         return !approveOnCreation;
     }
 
+    function getRentalAndMarketplaceHash(bytes32 _rentalId, bytes32 _marketplaceId) public pure returns(bytes32 _rentalIdHash) {
+        return keccak256(_rentalId,_marketplaceId);
+    }
+
     function createRental(
         bytes32 _rentalId,
 		bytes32 _marketplaceId, 
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns(bool success) 
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
+        bool _isInstantBooking,
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle,
+        address _channelManager
+
+    ) public onlyValidMarketplace(_marketplaceId) whenNotPaused returns(bool success) 
     {
+        require(_rentalId != "");
+        _rentalIdHash = getRentalAndMarketplaceHash(_rentalId,_marketplaceId);
+
+        RentalFactoryContract.setMarkeplaceId(_marketplaceId);
+
         RentalFactoryContract.createNewRental(
-            _rentalId,
-            _marketplaceId, 
+            _rentalIdHash,
             msg.sender,
-            _workingDayPrice,
-            _nonWorkingDayPrice,
+            _defaultDailyRate,
+            _weekendRate,
             _cleaningFee,
-            _refundPercent,
+            _refundPercentages,
             _daysBeforeStartForRefund,
-            _isInstantBooking
+            _isInstantBooking,
+            _deposit,
+            _minNightsStay,
+            _rentalTitle,
+            _channelManager
+
         );
 
-        LogCreateRentalFromMarketplace(_rentalId, msg.sender, _marketplaceId);
+        emit LogCreateRentalFromMarketplace(_rentalId, msg.sender, _marketplaceId);
 
         return true;
     }
 
-    function createHotelRooms(
-        bytes32 _hotelId,
-		bytes32 _marketplaceId, 
-        uint _roomsCount,
-        bytes32 _roomsType,
-        uint _workingDayPrice
-    ) public onlyApproved(_marketplaceId) onlyActive(_marketplaceId) whenNotPaused returns (bool success)
-    {
-        HotelFactoryContract.createHotelRooms(
-            _hotelId,
-            _marketplaceId, 
-            msg.sender,
-            _roomsCount,
-            _roomsType,
-            _workingDayPrice
-        );
-
-        LogCreateHotelFromMarketplace(_hotelId, msg.sender, _marketplaceId);
-
-        return true;
-    }
 }

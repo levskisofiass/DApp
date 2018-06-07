@@ -1,7 +1,7 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../Upgradeability/UpgradeableProxy.sol";
 
 contract MarketplaceProxy is UpgradeableProxy {
-	function MarketplaceProxy(address initialImplementation) public UpgradeableProxy(initialImplementation) {}
+	constructor(address initialImplementation) public UpgradeableProxy(initialImplementation) {}
 }

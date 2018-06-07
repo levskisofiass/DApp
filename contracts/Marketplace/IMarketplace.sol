@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../Upgradeability/OwnableUpgradeableImplementation/IOwnableUpgradeableImplementation.sol";
 import "./../Lifecycle/IPausable.sol";
@@ -55,19 +55,17 @@ contract IMarketplace is IOwnableUpgradeableImplementation, IPausable {
     function createRental(
         bytes32 _rentalId,
 		bytes32 _marketplaceId, 
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
+        bool _isInstantBooking,
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle,
+        address _channelManager
     ) public returns(bool success);
 
-    function createHotelRooms(
-        bytes32 _hotelId,
-		bytes32 _marketplaceId, 
-        uint _roomsCount,
-        bytes32 _roomsType,
-        uint _workingDayPrice
-    ) public returns (bool success);
+    function getRentalAndMarketplaceHash(bytes32 _rentalId, bytes32 _marketplaceId) public pure returns(bytes32 _rentalIdHash);
 }

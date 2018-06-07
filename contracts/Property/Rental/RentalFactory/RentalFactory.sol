@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.23;
 
 import "./../RentalProxy.sol";
 import "./../IRental.sol";
@@ -7,10 +7,10 @@ import "./../../PropertyFactory/PropertyFactory.sol";
 
 
 contract RentalFactory is IRentalFactory, PropertyFactory {
+    bytes32 marketplaceId;
     bytes32[] public rentalIds;
+    uint[] private _rates;
     mapping (bytes32 => address) public rentals;
-
-    event LogCreateRentalContract(bytes32 rentalId, address hostAddress, address rentalContract);
 
     /**
      * @dev modifier ensuring that the modified method is only called for not existing rentals
@@ -33,6 +33,24 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
         return rentals[_rentalId];
     }
 
+    //We are setting marketplaceId on each reservation globally and use it only on this reservation. Do not use it for other purposes.
+    function setMarkeplaceId(bytes32 _marketplaceId) public {
+        marketplaceId = _marketplaceId;
+    }
+
+    function getMarketplaceId() public view returns(bytes32 _marketplaceId) {
+        return marketplaceId;
+    }
+
+    function getRentalsArrayLength() public view returns(uint _rentalsArrayLength) {
+       return rentalIds.length;
+    }
+
+    function addRentalToMapping(address _rentalAddress, bytes32 _rentalId) internal {
+        rentals[_rentalId] = _rentalAddress;
+        rentalIds.push(_rentalId);
+    }
+
     function validateCreate(
         bytes32 rentalId,
         bytes32 marketplaceId
@@ -48,39 +66,42 @@ contract RentalFactory is IRentalFactory, PropertyFactory {
 
     function createNewRental(
         bytes32 _rentalId,
-		bytes32 _marketplaceId, 
         address _hostAddress,
-		uint _workingDayPrice,
-        uint _nonWorkingDayPrice,
+		uint _defaultDailyRate,
+        uint _weekendRate,
         uint _cleaningFee,
-        uint _refundPercent,
-        uint _daysBeforeStartForRefund,
-        bool _isInstantBooking
-		) public returns(bool success)
+        uint[] _refundPercentages,
+        uint[] _daysBeforeStartForRefund,
+        bool _isInstantBooking,
+        uint _deposit,
+        uint _minNightsStay,
+        string _rentalTitle,
+        address _channelManager
+		) public returns(bool)
 	{
         require(_hostAddress != address(0));
-        validateCreate(_rentalId, _marketplaceId);
+        validateCreate(_rentalId, getMarketplaceId());
 
-        RentalProxy proxy = new RentalProxy(this);
-        IRental rentalContract = IRental(proxy);
+        IRental rentalContract = IRental(new RentalProxy(this));
 
         rentalContract.createRental(
             _rentalId,
-            _marketplaceId, 
             _hostAddress,
-            _workingDayPrice,
-            _nonWorkingDayPrice,
+            _defaultDailyRate,
+            _weekendRate,
             _cleaningFee,
-            _refundPercent,
+            _refundPercentages,
             _daysBeforeStartForRefund,
-            rentalIds.length,
             _isInstantBooking,
-            this
+            _deposit,
+            _minNightsStay,
+            _rentalTitle,
+            _channelManager
+            
         );
-		rentals[_rentalId] = rentalContract;
-        rentalIds.push(_rentalId);
+		addRentalToMapping(rentalContract, _rentalId);
 
-        LogCreateRentalContract(_rentalId, _hostAddress, rentalContract);
+       emit LogCreateRentalContract(_rentalId, _hostAddress, rentalContract);
 		return true;
 	}
 }
