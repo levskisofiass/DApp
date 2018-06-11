@@ -172,7 +172,52 @@ contract('SimpleHotelReservation', function (accounts) {
 					from: customerAddress
 				}
 			));
-		})
+		});
 
+		it("should throw if there is no approval for the address", async function () {
+			await expectThrow(simpleHotelReservationContract.createHotelReservation(
+				hotelReservationId,
+				newReservationCostLOC,
+				formatTimestamp(reservationWithdrawDate),
+				recipientAddress, {
+					from: recipientAddress
+				}
+			));
+		})
 	})
+
+	describe("set loc token address", () => {
+		beforeEach(async function () {
+
+			ERC20Instance = await MintableToken.new({
+				from: _owner
+			});
+			await ERC20Instance.mint(customerAddress, LOCAmount, {
+				from: _owner
+			});
+
+			simpleHotelReservationContract = await SimpleHotelReservation.new();
+			await ERC20Instance.approve(simpleHotelReservationContract.address, LOCAmount, {
+				from: customerAddress
+			});
+
+		});
+
+		it("should set the address correctly", async function () {
+			await simpleHotelReservationContract.setLOCTokenContractAddress(ERC20Instance.address);
+			let tokenInstanceAddress = await simpleHotelReservationContract.LOCTokenContract.call();
+
+			assert.equal(tokenInstanceAddress, ERC20Instance.address, "The LocToken address was not set correctly");
+
+		});
+
+		it("should throw if not owner tries to set the loc token address", async function () {
+			await expectThrow(simpleHotelReservationContract.setLOCTokenContractAddress(
+				ERC20Instance.address, {
+					from: recipientAddress
+				}
+			));
+		});
+
+	});
 })
