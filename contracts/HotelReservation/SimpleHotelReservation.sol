@@ -1,8 +1,8 @@
-	pragma solidity ^0.4.23;
-	import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-	import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
+pragma solidity ^0.4.23;
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
-	contract SimpleHotelReservation is Ownable {
+contract SimpleHotelReservation is Ownable {
 
 	bytes32[] public hotelReservationIds;
 
@@ -10,7 +10,7 @@
 		address recipientAddress;
 		uint reservationCostLOC;
 		uint dateForWithdraw;
-		}
+	}
 
 	mapping (bytes32 => HotelReservationStruct) public hotelReservations;
 	StandardToken public LOCTokenContract;
@@ -20,14 +20,15 @@
 	modifier onlyNotExisting(bytes32 _hotelReservationId) {
 		require(hotelReservations[_hotelReservationId].recipientAddress == address(0));
 		_;
-		}
+	}
+	
 	function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
 		LOCTokenContract = StandardToken(locTokenContractAddress);
-		}
+	}
 
 	function getHotelReservationsCount() public view returns(uint _hotelReservationCount) {
 		return hotelReservationIds.length;
-		}
+	}
 
 	function createHotelReservation(
 		bytes32 _hotelReservationId,
@@ -48,5 +49,5 @@
 
 		emit LogCreateHotelReservation(_hotelReservationId, msg.sender, _recipientAddress, _dateForWithdraw, _reservationCostLOC);
 		return true;
-		}
-	}	
+	}
+}	
