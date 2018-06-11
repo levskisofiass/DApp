@@ -4,7 +4,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 contract SimpleHotelReservation is Ownable {
 
-	bytes32[] public hotelReservationIds;
+bytes32[] public hotelReservationIds;
 
 	struct HotelReservationStruct {
 		address recipientAddress;
@@ -12,42 +12,42 @@ contract SimpleHotelReservation is Ownable {
 		uint dateForWithdraw;
 	}
 
-    mapping (bytes32 => HotelReservationStruct) public hotelReservations;
-	StandardToken public LOCTokenContract;
-	 
-	event LogCreateHotelReservation(bytes32 indexed _hotelReservationId, address indexed _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+mapping (bytes32 => HotelReservationStruct) public hotelReservations;
+StandardToken public LOCTokenContract;
 
-	modifier onlyNotExisting(bytes32 _hotelReservationId) {
-        require(hotelReservations[_hotelReservationId].recipientAddress == address(0));
-        _;
-    }
-	function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
-		LOCTokenContract = StandardToken(locTokenContractAddress);
-	}
+event LogCreateHotelReservation(bytes32 indexed _hotelReservationId, address indexed _customerAddress, address indexed _recipientAddress uint _reservationStartDate, uint _reservationEndDate);
 
-	function getHotelReservationsCount() public view returns(uint _hotelReservationCount) {
-		return hotelReservationIds.length;
-	}
+modifier onlyNotExisting(bytes32 _hotelReservationId) {
+	require(hotelReservations[_hotelReservationId].recipientAddress == address(0));
+	_;
+}
+function setLOCTokenContractAddress(address locTokenContractAddress) public onlyOwner {
+	LOCTokenContract = StandardToken(locTokenContractAddress);
+}
 
-	function createHotelReservation(
-		bytes32 _hotelReservationId,
-		uint _reservationCostLOC,
-		uint _dateForWithdraw,
-		address _recipientAddress
-	) public onlyNotExisting(_hotelReservationId) returns(bool success)
-	{
+function getHotelReservationsCount() public view returns(uint _hotelReservationCount) {
+	return hotelReservationIds.length;
+}
+
+function createHotelReservation(
+	bytes32 _hotelReservationId,
+	uint _reservationCostLOC,
+	uint _dateForWithdraw,
+	address _recipientAddress
+) public onlyNotExisting(_hotelReservationId) returns(bool success)
+{
 	require(_reservationCostLOC > 0);
 
 	hotelReservationIds.push(_hotelReservationId);
 	hotelReservations[_hotelReservationId] = HotelReservationStruct({
-        recipientAddress: _recipientAddress,
-        reservationCostLOC: _reservationCostLOC,
+		recipientAddress: _recipientAddress,
+		reservationCostLOC: _reservationCostLOC,
 		dateForWithdraw: _dateForWithdraw     
-        });
+});
 
 	assert(LOCTokenContract.transferFrom(msg.sender, this, _reservationCostLOC));
 
-	emit LogCreateHotelReservation(_hotelReservationId, msg.sender, _dateForWithdraw, _reservationCostLOC);
+	emit LogCreateHotelReservation(_hotelReservationId, msg.sender, _recipientAddress, _dateForWithdraw, _reservationCostLOC);
 	return true;
-	}
+}
 }	
