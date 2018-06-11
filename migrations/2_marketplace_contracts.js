@@ -32,6 +32,8 @@ var ExchangeOracle = artifacts.require("./Exchange/ExchangeOracle.sol");
 var LOCExchange = artifacts.require("./Exchange/LOCExchange.sol");
 var MintableToken = artifacts.require("./Tokens/MintableToken.sol");
 
+let SimpleHotelReservation = artifacts.require("./../HotelReservation/SimpleHotelReservation.sol");
+
 
 module.exports = async function (deployer, network, accounts) {
 
@@ -96,6 +98,9 @@ module.exports = async function (deployer, network, accounts) {
 
 
     await HotelReservationFactoryContract.init();
+
+    await deployer.deploy(SimpleHotelReservation);
+    let SimpleHotelReservationImpl = await HotelReservation.deployed();
     // await RentalFactoryContract.init();
     // await HotelFactoryContract.init();
     // await MarketplaceContract.init();

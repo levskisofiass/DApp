@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
-import "./../Tokens/StandardToken.sol";
-import "./../../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 contract SimpleHotelReservation is Ownable {
 
@@ -10,17 +10,12 @@ contract SimpleHotelReservation is Ownable {
 		address recipientAddress;
 		uint reservationCostLOC;
 		uint dateForWithdraw;
-
 	}
 
     mapping (bytes32 => HotelReservationStruct) public hotelReservations;
 	StandardToken public LOCTokenContract;
 	 
 	event LogCreateHotelReservation(bytes32 indexed _hotelReservationId, address indexed _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
-
-	constructor() public {
-		owner = msg.sender;
-	}
 
 	modifier onlyNotExisting(bytes32 _hotelReservationId) {
         require(hotelReservations[_hotelReservationId].recipientAddress == address(0));
@@ -45,9 +40,9 @@ contract SimpleHotelReservation is Ownable {
 
 	hotelReservationIds.push(_hotelReservationId);
 	hotelReservations[_hotelReservationId] = HotelReservationStruct({
-            recipientAddress: _recipientAddress,
-            reservationCostLOC: _reservationCostLOC,
-			dateForWithdraw: _dateForWithdraw     
+        recipientAddress: _recipientAddress,
+        reservationCostLOC: _reservationCostLOC,
+		dateForWithdraw: _dateForWithdraw     
         });
 
 	assert(LOCTokenContract.transferFrom(msg.sender, this, _reservationCostLOC));
