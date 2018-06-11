@@ -1,8 +1,8 @@
 pragma solidity ^0.4.23;
 import "./../Tokens/StandardToken.sol";
-import "./../Ownership/NotInitedOwnable.sol";
+import "./../../node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract SimpleHotelReservation is NotInitedOwnable {
+contract SimpleHotelReservation is Ownable {
 
 	bytes32[] public hotelReservationIds;
 
@@ -16,7 +16,7 @@ contract SimpleHotelReservation is NotInitedOwnable {
     mapping (bytes32 => HotelReservationStruct) public hotelReservations;
 	StandardToken public LOCTokenContract;
 	 
-	event LogCreateHotelReservation(bytes32 _hotelReservationId, address _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
+	event LogCreateHotelReservation(bytes32 indexed _hotelReservationId, address indexed _customerAddress, uint _reservationStartDate, uint _reservationEndDate);
 
 	constructor() public {
 		owner = msg.sender;

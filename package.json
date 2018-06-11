@@ -9,6 +9,7 @@
   "dependencies": {
     "ethers": "^3.0.17",
     "moment": "^2.20.1",
+    "openzeppelin-solidity": "1.10.0",
     "solc": "^0.4.23",
     "truffle": "^4.1.8",
     "truffle-hdwallet-provider": "^0.0.3",
