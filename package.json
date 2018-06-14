@@ -16,7 +16,10 @@
     "truffle-hdwallet-provider-privkey": "^0.1.0",
     "web3": "^1.0.0-beta.26"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eth-gas-reporter": "^0.1.7",
+    "solidity-coverage": "^0.5.4"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

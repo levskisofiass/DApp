@@ -8,3 +8,6 @@ liferay-theme.json
 .idea
 config.json
 .vscode
+coverageEnv/
+coverage/
+coverage.json
